@@ -38,11 +38,10 @@ const GitHubAPI = {
     // 1. 获取目录下的文件列表
     async getFiles(path = 'notes') {
         try {
-            const data = await this._request(`/contents/${path}`);
-            // 过滤掉文件夹，目前我们只做一层扁平化的文件编辑
+            // 加入 ?t=时间戳，强制 GitHub 不走缓存，实时返回最新列表！
+            const data = await this._request(`/contents/${path}?t=${Date.now()}`);
             return data.filter(item => item.type === 'file');
         } catch (error) {
-            // 如果 notes 目录不存在，返回空数组而不是报错
             if (error.status === 404) return [];
             throw error;
         }
@@ -81,5 +80,14 @@ const GitHubAPI = {
         
         // 返回新的 sha 值给前端更新状态
         return data.content.sha;
+    }, // <-- 注意这里的逗号，很可能是之前漏掉导致报错的原因
+
+    // 4. 删除文件
+    async deleteFile(path, sha) {
+        const body = {
+            message: `Delete ${path} via UniDoc`,
+            sha: sha
+        };
+        await this._request(`/contents/${path}`, 'DELETE', body);
     }
 };
