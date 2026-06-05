@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UniDoc Editor</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <nav class="navbar navbar-expand navbar-dark bg-dark flex-shrink-0 px-2 px-md-3">
+        <div class="container-fluid p-0">
+            <!-- 手机端专属：唤出左侧文件树的汉堡菜单 -->
+            <button class="btn text-white d-md-none border-0 px-2 me-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
+                <i class="fa-solid fa-bars fs-5"></i>
+            </button>
+            
+            <a class="navbar-brand fs-6 fs-md-5 text-truncate" href="#"><i class="fa-solid fa-book-journal-whills me-2"></i><span class="d-none d-sm-inline">UniDoc</span></a>
+            
+            <div class="d-flex align-items-center ms-auto">
+                <!-- 手机端专属：切换预览/编辑状态按钮 (默认隐藏，打开MD时显示) -->
+                <button id="btn-toggle-preview" class="btn btn-sm btn-outline-info me-2 d-md-none d-none">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+
+                <span id="save-status" class="text-secondary me-2 me-md-3 small">
+                    <i class="fa-solid fa-cloud me-1"></i><span class="d-none d-md-inline">已保存</span>
+                </span>
+                
+                <button id="btn-save" class="btn btn-sm btn-success me-2" title="Ctrl+S / Cmd+S">
+                    <i class="fa-solid fa-floppy-disk"></i><span class="d-none d-md-inline ms-1">保存</span>
+                </button>
+                
+                <button id="btn-settings" class="btn btn-sm btn-outline-light">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主体工作区 -->
+    <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
+        
+        <!-- 左侧文件树：利用 Bootstrap 5 的 offcanvas-md，在手机端变抽屉，在电脑端是普通固定栏 -->
+        <div class="offcanvas-md offcanvas-start bg-light border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px;">
+            <div class="offcanvas-header border-bottom d-md-none py-2">
+                <h6 class="offcanvas-title fw-bold text-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes 目录</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+            </div>
+            
+            <div class="sidebar-header p-2 border-bottom bg-light fw-bold text-secondary d-none d-md-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-folder-tree me-1"></i> /notes 目录</span>
+                <button id="btn-refresh-tree" class="btn btn-sm btn-link text-secondary p-0"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            
+            <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2">
+                <div class="text-muted small p-2">正在加载文件...</div>
+            </div>
+        </div>
+
+        <!-- 右侧主编辑区 -->
+        <div class="main-content d-flex flex-grow-1 overflow-hidden position-relative">
+            <!-- Monaco 编辑器 -->
+            <div id="editor-container" class="flex-grow-1"></div>
+            
+            <!-- Markdown 预览容器 -->
+            <!-- 增加 mobile-overlay 类，方便手机端作为浮层全屏覆盖 -->
+            <div id="preview-container" class="preview-panel border-start p-3 overflow-auto bg-white d-none mobile-overlay">
+                <div id="markdown-preview" class="markdown-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏区域：全局 Toast -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
+
+    <!-- 隐藏区域：Token 设置 Modal -->
+    <div class="modal fade" id="tokenModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fs-6"><i class="fa-brands fa-github me-2"></i>GitHub 授权</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Repository (拥有者/仓库名)</label>
+                        <input type="text" id="input-repo" class="form-control form-control-sm" placeholder="如: myname/myrepo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Personal Access Token</label>
+                        <input type="password" id="input-token" class="form-control form-control-sm" placeholder="ghp_xxxx">
+                    </div>
+                </div>
+                <div class="modal-footer p-1">
+                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-save-token">连接并保存到本地</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 依赖 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-base64/base64.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/loader.min.js"></script>
+
+    <!-- 业务逻辑 -->
+    <script src="toast.js"></script>
+    <script src="modal.js"></script>
+    <script src="token.js"></script>
+    <script src="api.js"></script>
+    <script src="editor.js"></script>
+    <script src="fileTree.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

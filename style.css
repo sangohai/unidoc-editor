@@ -1,0 +1,91 @@
+/* 基础容器防滚动 */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* 禁止手机端拉伸缩放和默认点击高亮 */
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 侧边栏文件项美化 */
+.file-item {
+    cursor: pointer;
+    padding: 8px 10px; /* 手机端增大触摸区域 */
+    border-radius: 6px;
+    transition: all 0.2s;
+    user-select: none;
+    font-size: 14px;
+    margin-bottom: 2px;
+    word-break: break-all;
+}
+.file-item:hover {
+    background-color: #e9ecef;
+}
+.file-item.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* 编辑器需要指定高宽 */
+#editor-container {
+    height: 100%;
+    width: 100%;
+}
+
+/* 电脑端默认预览区宽度 50% */
+.preview-panel {
+    width: 50%;
+}
+
+/* ================================== */
+/* 手机端专属适配 (屏幕宽度 < 768px)  */
+/* ================================== */
+@media (max-width: 767.98px) {
+    /* 在手机上如果显示预览区，则让它绝对定位铺满全屏，遮住编辑器 */
+    .mobile-overlay:not(.d-none) {
+        position: absolute !important;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 10;
+        border-start: none !important;
+    }
+}
+
+/* Markdown 渲染基础样式 */
+.markdown-body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    font-size: 15px;
+}
+.markdown-body h1, .markdown-body h2 {
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 0.3em;
+    margin-top: 1.5em;
+    margin-bottom: 16px;
+}
+.markdown-body p, .markdown-body ul, .markdown-body ol {
+    margin-bottom: 16px;
+}
+.markdown-body code {
+    background-color: rgba(27,31,35,0.05);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 85%;
+}
+.markdown-body pre {
+    background-color: #f6f8fa;
+    border-radius: 6px;
+    padding: 16px;
+    overflow: auto;
+}
+.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+}
