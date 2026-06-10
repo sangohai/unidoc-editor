@@ -24,7 +24,8 @@ https://youtu.be/vMBJ6C8VpjY?si=W2aQ8fVUz4_eTjI6
 ***      
 #### Pixelorama 像素风游戏素材工具 
 Pixelorama - pixelate your dreams!           
-Unleash your creativity with Pixelorama, a powerful and accessible open-source pixel art multitool. Whether you want to create sprites, tiles,       animations, or just express yourself in the language of pixel art, this software will realize your pixel-perfect dreams with a vast toolbox of features.
+Unleash your creativity with Pixelorama, a powerful and accessible open-source pixel art multitool. Whether you want to create sprites, tiles,       animations, or just express yourself in the language of pixel art, this software will realize your pixel-perfect dreams with a vast toolbox of features.     
+
 https://github.com/Orama-Interactive/Pixelorama
 
 ***      
