@@ -6,7 +6,7 @@
 
 目标：生成一个可直接在浏览器运行的 Bomberman / 炸弹人网页游戏。             
 
-输出格式：完整 HTML 文件，包括 ;  <html>、<head>、<style>  和 <script>，无需外部依赖。            
+输出格式：完整 HTML 文件，包括 ;  `<html>`、`<head>`、`<style>`  和 `<script>`，无需外部依赖。            
 
 核心功能：            
 玩家控制：使用箭头键移动角色（上下左右/WASD）空格键放置炸弹; 玩家碰到敌人或爆炸死亡，显示“游戏结束”，提供重新开始按钮;           
@@ -22,7 +22,7 @@
 
 动画与视觉效果：移动平滑，炸弹爆炸动画清晰道具掉落动画可见2D 像素风格，颜色鲜明，游戏风格可爱          
 
-技术实现：使用纯 JavaScript 实现游戏逻辑渲染使用 HTML <canvas> 或 div+CSS grid游戏循环使用 requestAnimationFrame所有资源内嵌，                 
+技术实现：使用纯 JavaScript 实现游戏逻辑渲染使用 HTML `<canvas>` 或 div+CSS grid游戏循环使用 requestAnimationFrame所有资源内嵌，                 
 不依赖外部库代码结构清晰，便于阅读和修改               
 
 
