@@ -138,6 +138,34 @@
         </div>
     </div>
 
+    <!-- 隐藏区域：重命名文件 Modal -->
+    <div class="modal fade" id="renameFileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-body-tertiary">
+                    <h5 class="modal-title fs-6">重命名文件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-body">
+                    <div class="mb-2">
+                        <label class="form-label small text-body-secondary">新文件名称 (不包含后缀)</label>
+                        <div class="input-group">
+                            <input type="text" id="input-rename-filename" class="form-control">
+                            <span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span>
+                        </div>
+                        <!-- 隐藏字段用于存储旧数据 -->
+                        <input type="hidden" id="input-rename-oldpath">
+                        <input type="hidden" id="input-rename-sha">
+                    </div>
+                </div>
+                <div class="modal-footer p-1 bg-body">
+                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏区域：新建文件 Modal (升级版：下拉菜单分离后缀) -->
     <div class="modal fade" id="newFileModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -147,8 +175,19 @@
                 </div>
                 <div class="modal-body bg-body">
                     <div class="mb-2">
-                        <label class="form-label small text-body-secondary">文件名称 (需包含后缀，如 .md, .json)</label>
-                        <input type="text" id="input-new-filename" class="form-control" placeholder="例如: config.yaml">
+                        <label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label>
+                        <div class="input-group">
+                            <input type="text" id="input-new-filename" class="form-control" placeholder="例如: config">
+                            <!-- 下拉菜单按钮 -->
+                            <button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button>
+                            <!-- 下拉菜单列表 (未来加格式就在这里加) -->
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md (Markdown)</a></li>
+                                <li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json (JSON)</a></li>
+                                <li><a class="dropdown-item ext-select-item" href="#" data-ext=".yaml">.yaml (YAML)</a></li>
+                                <li><a class="dropdown-item ext-select-item" href="#" data-ext=".txt">.txt (纯文本)</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer p-1 bg-body">

@@ -2,46 +2,46 @@
 
 ## 🎯 项目定位与当前状态
 - **项目名称**: UniDoc Editor
-- **核心目标**: 构建一个纯前端的 `.md`, `.json`, `.yaml` 专用编辑器，完全无后端，直接部署于 GitHub Pages。数据持久化依赖 GitHub REST API，通过用户的 PAT 直连仓库的 `notes/` 目录。
-- **核心理念**: 为开发者与 LLM 提供一个高密度、结构化的纯文本协同维护工作台。
-- **当前进度**: **V1.0 基础阶段开发完毕**（已实现完整的文件增删改查、移动端适配、暗黑模式支持与沉浸式 Markdown 写作体验）。
+- **核心目标**: 构建一个纯前端的结构化文档 (`.md`, `.json`, `.yaml`, `.txt`) 专用编辑器，完全无后端，直接部署于 GitHub Pages。数据持久化依赖 GitHub REST API，通过用户的 PAT 直连仓库的 `notes/` 目录。
+- **核心理念**: 为开发者与 LLM 提供一个高密度、无干扰、纯文本的协同知识库工作台。
+- **当前进度**: **V1.1 核心功能完善版**（实现了完整的文件 CRUD、多格式支持、暗黑模式切换、后缀名防呆隔离设计、UI 操作栏解耦与全屏锁屏拦截）。
 
-## 📁 项目目录与依赖结构
+## 📁 项目目录与职责映射
 `unidoc-editor/`
-- `notes/`       : 业务数据源，存放实际编写的 md/json/yaml 纯文本文件（扁平化单层结构）。
-- `doc/`         : 项目的“大脑”和架构上下文（存放此 blue-print.md 及其它规范说明），供 LLM 和开发者随时查阅。
-- `index.html`   : 唯一 HTML 骨架，引入所有 CDN 依赖，包含全局弹窗与结构布局。
-- `style.css`    : 纯前端响应式样式、暗黑模式代码块适配、UI 细节微调。
-- `main.js`      : **[核心主板]** 全局状态机 (`AppState`)、主题管理器、快捷键拦截、各组件调度与组装。
-- `api.js`       : **[数据总线]** 封装 GitHub REST API，处理带时间戳的缓存穿透、文件的增删查改。
-- `editor.js`    : **[编辑引擎]** Monaco Editor 的初始化、动态语言切换、工具栏注入、Marked.js 按需渲染。
-- `fileTree.js`  : **[侧边栏]** 负责目录树的拉取与渲染、PC/移动端点击交互、删除按钮的生命周期管理。
-- `token.js`     : **[鉴权]** 从 `localStorage` 存取 GitHub Repository 与 PAT (Personal Access Token)。
-- `modal.js`     : **[弹窗]** 控制 Token 录入弹窗。
-- `toast.js`     : **[提示]** 负责右下角的轻量级全局 Toast 通知，并在动画结束后清理 DOM。
+- `notes/`       : 业务数据源，存放实际编写的纯文本文件（强制扁平化目录，不引入树状深层文件夹）。
+- `doc/`         : 项目的“大脑”和架构上下文（存放此 blue-print.md），供 LLM 和开发者随时查阅。
+- `index.html`   : 唯一 HTML 骨架。包含全局响应式布局、下拉后缀名的新建弹窗、重命名弹窗、锁屏 Loading 等。
+- `style.css`    : 纯前端响应式样式。包含暗黑模式代码块适配、文件树悬浮操作按钮分离美化。
+- `main.js`      : **[核心主板]** 全局状态机 (`AppState`)、主题管理器 (`ThemeManager`)、文件流转调度（新建/重命名/删除）、快捷键拦截与全局锁屏。
+- `api.js`       : **[数据总线]** 封装 GitHub REST API。注意：拉取列表必须带时间戳 `?t=` 防止 CDN 缓存穿透。
+- `editor.js`    : **[编辑引擎]** Monaco Editor 懒加载、`.md/.json/.yaml/.txt` 语言动态切换、Markdown 快捷输入工具栏、Marked.js 沉浸式图层预览。
+- `fileTree.js`  : **[侧边栏]** 负责目录树拉取渲染。采用“高亮名字区与操作图标区解耦”的 DOM 设计，绑定 PC/移动端点击交互。
+- `token.js`     : **[鉴权]** 负责在 `localStorage` 存取 GitHub Repository 与 PAT。
+- `modal.js`     : **[弹窗]** 控制 Token 录入弹窗生命周期。
+- `toast.js`     : **[提示]** 负责右下角轻量级自动销毁的 Toast 通知。
 
-## 📦 外部核心依赖 (CDN 引入，无 Bundler)
-- **UI 框架**: Bootstrap v5 (JS Bundle + CSS，用于网格、Offcanvas 抽屉、Modal、Toast、Theme切换)。
-- **图标库**: FontAwesome v6 (使用 `fa-solid`, `fa-brands`)。
-- **编辑器核心**: Monaco Editor (AMD Loader 方式懒加载，确保性能)。
-- **渲染引擎**: Marked.js (Markdown 转 HTML，仅在预览模式触发)。
-- **编码工具**: js-base64 (解决原生 `atob/btoa` 处理 UTF-8 中文报错的问题)。
+## 📦 外部核心依赖 (CDN)
+- **UI 框架**: Bootstrap v5 (用于网格、Offcanvas 抽屉、Modal、下拉菜单 Dropdown、Theme 切换)。
+- **图标库**: FontAwesome v6。
+- **编辑器核心**: Monaco Editor (AMD Loader 方式按需懒加载)。
+- **渲染引擎**: Marked.js (Markdown 转 HTML)。
+- **编码工具**: js-base64 (解决原生 `atob/btoa` 处理 UTF-8 中文报错死穴)。
 
-## 🔄 核心状态管理 (AppState in main.js)
-任何接手此项目的 LLM 必须严格遵循以下状态流转：
-1. `currentFilePath`: 当前打开文件的路径 (如 `notes/arch.md`)。
-2. `currentFileSha`: 当前文件在 GitHub 的 SHA 值。**API 更新文件时必须携带此值，更新成功后必须立即同步新的 SHA 以防 409 冲突。**
-3. `isDirty`: 脏标记。用于控制右上角“未保存”状态提示，并在 `beforeunload` 时拦截浏览器关闭操作。
-4. `isSaving`: 防抖标记。拦截 `Ctrl+S` 的连击，防止并发 API 请求。
+## 🔄 核心状态流转 (AppState in main.js)
+任何接手此项目的 LLM 需严格遵守以下状态维护逻辑：
+1. `currentFilePath`: 当前打开文件的路径。
+2. `currentFileSha`: 当前文件在 GitHub 的 SHA 值。**更新文件时必须携带此值，API 返回后必须立即更新内存中的 SHA 以防 409 冲突。**
+3. `isDirty`: 脏标记。拦截 `Ctrl+S` 的无效请求，并在 `beforeunload` 时拦截浏览器关闭操作防丢失。
 
-## 🚦 核心架构与交互决策 (Design Decisions)
-1. **扁平化文件结构**：暂时不支持深层文件夹创建。原因：扁平化结构对移动端 UI 最友好，且能最大程度减少 LLM 读取上下文时的层级解析消耗。
-2. **沉浸式预览，而非双屏渲染**：放弃双屏实时预览。使用全屏居中覆盖图层展示 Markdown，提升阅读心流，彻底避免 Marked.js 实时编译带来的 CPU 消耗。
-3. **缓存穿透机制**：GitHub API 请求文件列表时极易命中 CDN 缓存。`api.js` 中拉取列表必须附带 `?t=${Date.now()}`，确保每次新建/删除后列表能实时更新。
-4. **主题与色彩引擎**：通过 `ThemeManager` 监听 HTML 的 `data-bs-theme` 属性，实现 Bootstrap 组件与 Monaco Editor 主题（vs-light / vs-dark）的无缝同步，并支持顶部导航栏的个性化强调色切换。
-5. **移动端优先适配**：利用 Bootstrap 的 `.offcanvas-md` 实现左侧文件树在手机端自动转为左滑抽屉，在 PC 端自动展平。
+## 🚦 核心架构与“克制化”设计决策 (Design Decisions)
+1. **后缀名防呆设计 (分离输入)**：在新建文件 (`newFileModal`) 和重命名 (`renameFileModal`) 中，严禁用户直接手打后缀。采用 Input + Bootstrap Dropdown (或纯文本标签) 的方式强绑定 `.md/.json/.yaml/.txt`，便于后台一键生成对应的 Init Content。
+2. **三步走重命名逻辑**：由于 GitHub API 缺乏原生重命名接口，`main.js` 中的重命名逻辑被强行设计为：`获取原文件内容 -> 以新路径 Save -> Delete 原文件` 事务。必须加上全屏 Loading 防止用户打断。
+3. **高亮 UI 物理隔离**：侧边栏 `.file-row` 被拆分为局部的 `.file-item` (控制蓝色高亮) 和 `.file-actions` (重命名/删除按钮)，防止选取框颜色吞没操作按钮。
+4. **.txt 洗格式模式**：特意引入 `.txt` 支持，挂载 Monaco 的 `plaintext` 语言模式，用于清除外部复制带来的富文本脏格式。
+5. **拒绝自动保存**：为避免触发 GitHub API 限流及 Git Commit 历史爆炸，仅通过 `Ctrl+S` / `Cmd+S` 或点击按钮触发手动 Push。
 
 ## 🚀 未来扩展预留方向 (Roadmap)
-- [ ] 增加图床支持（自动将粘贴的图片转为 Base64 或上传至特定图床目录）。
-- [ ] 增加多文件标签页 (Tabs) 切换功能，便于在文档间快速核对。
-- [ ] 引入 LLM Chat 悬浮窗，可读取当前 Monaco 里的内容作为 Context 进行直接问答。
+- [ ] **PWA 渐进式应用支持**：增加 `manifest.json` 与 Service Worker，允许用户将此编辑器作为原生 App 安装到手机桌面。
+- [ ] **纯前端图片图床化**：拦截 Monaco Editor 的粘贴事件，将剪贴板的图片转为 Base64 并通过 GitHub API 存入 `notes/images/` 目录，回写 Markdown 语法。
+- [ ] **前端极速毫秒级搜索**：在左侧文件树顶部增加过滤输入框，基于已加载的 DOM 列表进行纯本地正则隐藏/显示。
+- [ ] **灾备级草稿静默缓存**：使用 `localStorage` 每 10 秒静默保存一次当前内容草稿，仅防断电或异常关闭刷新。

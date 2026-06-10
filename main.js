@@ -32,24 +32,21 @@ const ThemeManager = {
         document.documentElement.setAttribute('data-bs-theme', mode);
         localStorage.setItem('unidoc_theme_mode', mode);
         
-        // 设置 Monaco 编辑器主题 (如果已初始化)
+        // 设置 Monaco 编辑器主题
         if (typeof monaco !== 'undefined' && EditorManager.instance) {
             monaco.editor.setTheme(mode === 'dark' ? 'vs-dark' : 'vs-light');
         }
 
-        // 更新菜单的勾选状态
         document.querySelectorAll('.theme-mode-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.theme-mode-btn[data-mode="${mode}"]`)?.classList.add('active');
     },
 
     applyNavColor(colorClass) {
         const nav = document.getElementById('top-navbar');
-        // 移除原有的背景色，贴上新颜色
         nav.classList.remove('bg-dark', 'bg-primary', 'bg-success');
         nav.classList.add(colorClass);
         localStorage.setItem('unidoc_nav_color', colorClass);
 
-        // 更新菜单的勾选状态
         document.querySelectorAll('.theme-nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.theme-nav-btn[data-color="${colorClass}"]`)?.classList.add('active');
     }
@@ -155,25 +152,49 @@ async function handleDeleteFile(file) {
     }
 }
 
+// 4. 处理新建文件逻辑
 function setupNewFileLogic() {
     const newFileModal = new bootstrap.Modal(document.getElementById('newFileModal'));
+    
+    // 唤起弹窗
     document.getElementById('btn-new-file-pc')?.addEventListener('click', () => newFileModal.show());
     document.getElementById('btn-new-file-mobile')?.addEventListener('click', () => newFileModal.show());
 
-    document.getElementById('btn-confirm-new').addEventListener('click', async () => {
-        let fileName = document.getElementById('input-new-filename').value.trim();
-        if (!fileName) return Toast.show('文件名不能为空', 'error');
-        if (!fileName.match(/\.(md|json|yaml|yml)$/i)) fileName += '.md'; 
+    // 监听后缀名下拉菜单的选择事件
+    document.querySelectorAll('.ext-select-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            // 将选中的后缀名更新到按钮的文字上
+            document.getElementById('btn-new-ext-display').innerText = e.currentTarget.dataset.ext;
+        });
+    });
 
+    // 确认创建提交
+    document.getElementById('btn-confirm-new').addEventListener('click', async () => {
+        // 提取纯文件名
+        let baseName = document.getElementById('input-new-filename').value.trim();
+        if (!baseName) return Toast.show('文件名不能为空', 'error');
+        
+        // 提取当前选中的后缀名，并组合成完整文件名
+        const ext = document.getElementById('btn-new-ext-display').innerText.trim();
+        const fileName = baseName + ext;
         const path = `notes/${fileName}`;
+        
         newFileModal.hide();
         document.getElementById('input-new-filename').value = ''; 
+        
         UI.showGlobalLoader('正在创建并同步至 GitHub...');
 
         try {
-            const initContent = fileName.endsWith('.json') ? '{\n\n}' : '# ' + fileName.replace(/\.[^/.]+$/, "");
+            // 根据选中的后缀名，生成不同的初始模板内容
+            let initContent = '';
+            if (ext === '.md') initContent = '# ' + baseName;
+            else if (ext === '.json') initContent = '{\n\n}';
+            else if (ext === '.yaml' || ext === '.txt') initContent = ''; 
+
             const newSha = await GitHubAPI.saveFile(path, initContent, null, 'Create new file via UniDoc');
             Toast.show('创建成功！', 'success');
+            
             setTimeout(async () => {
                 await FileTree.load();
                 handleFileSelected({ path: path, name: fileName, sha: newSha });
@@ -187,20 +208,92 @@ function setupNewFileLogic() {
     });
 }
 
+// 5. 重命名文件逻辑
+function setupRenameLogic() {
+    const renameModal = new bootstrap.Modal(document.getElementById('renameFileModal'));
+
+    // 暴露给 fileTree 调用的弹窗唤醒函数
+    window.handleRenameFile = (file) => {
+        // 防止重命名带有未保存修改的文件
+        if (AppState.currentFilePath === file.path && AppState.isDirty) {
+            Toast.show('请先保存当前文件的修改，再进行重命名', 'info');
+            return;
+        }
+
+        const oldName = file.name;
+        const extIndex = oldName.lastIndexOf('.');
+        const nameWithoutExt = extIndex > 0 ? oldName.substring(0, extIndex) : oldName;
+        const ext = extIndex > 0 ? oldName.substring(extIndex) : '';
+
+        document.getElementById('input-rename-filename').value = nameWithoutExt;
+        document.getElementById('input-rename-ext').innerText = ext;
+        document.getElementById('input-rename-oldpath').value = file.path;
+        document.getElementById('input-rename-sha').value = file.sha;
+
+        renameModal.show();
+    };
+
+    // 确认重命名提交
+    document.getElementById('btn-confirm-rename').addEventListener('click', async () => {
+        const newBaseName = document.getElementById('input-rename-filename').value.trim();
+        if (!newBaseName) return Toast.show('文件名不能为空', 'error');
+
+        const oldPath = document.getElementById('input-rename-oldpath').value;
+        const oldSha = document.getElementById('input-rename-sha').value;
+        const ext = document.getElementById('input-rename-ext').innerText;
+        
+        const newName = newBaseName + ext;
+        const newPath = `notes/${newName}`;
+
+        if (oldPath === newPath) {
+            renameModal.hide();
+            return;
+        }
+
+        renameModal.hide();
+        UI.showGlobalLoader('正在重命名并同步至 GitHub...');
+
+        try {
+            // 步骤1：获取原文件内容
+            const fileData = await GitHubAPI.getFile(oldPath);
+            // 步骤2：以新名称保存文件
+            const newSha = await GitHubAPI.saveFile(newPath, fileData.content, null, `Rename ${oldPath} to ${newPath}`);
+            // 步骤3：删除原文件
+            await GitHubAPI.deleteFile(oldPath, oldSha);
+
+            Toast.show('重命名成功！', 'success');
+
+            // 如果重命名的正是当前打开的文件，默默更新它的后台指向，不打断用户编辑
+            if (AppState.currentFilePath === oldPath) {
+                AppState.currentFilePath = newPath;
+                AppState.currentFileSha = newSha;
+            }
+
+            await FileTree.load();
+        } catch (error) {
+            Toast.show(`重命名失败: ${error.message}`, 'error');
+        } finally {
+            UI.hideGlobalLoader();
+        }
+    });
+}
+
 // ==========================================
-// 4. 初始化与事件绑定
+// 6. 初始化与事件绑定
 // ==========================================
 async function initApp() {
-    // 初始化皮肤管理
     ThemeManager.init();
 
-    TokenModal.init(() => FileTree.load());
-    FileTree.init(handleFileSelected, handleDeleteFile);
+    // 【关键修复】：必须先把新建和重命名的逻辑加载进内存
     setupNewFileLogic();
+    setupRenameLogic();
 
+    TokenModal.init(() => FileTree.load());
+    // 此时 window.handleRenameFile 已经有值了，安全传入！
+    FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
+    
     await EditorManager.init();
     
-    // 初始化编辑器后，补发一次主题同步，确保 Monaco 是黑底的
     const currentMode = document.documentElement.getAttribute('data-bs-theme');
     monaco.editor.setTheme(currentMode === 'dark' ? 'vs-dark' : 'vs-light');
 

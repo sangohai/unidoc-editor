@@ -75,23 +75,52 @@ html, body {
     background-color: rgba(255,255,255,0.1);
 }
 
-/* 垃圾桶图标动态显示 */
-.file-item .btn-delete {
+/* ================= 左侧文件树排版美化 ================= */
+/* 外层行级容器控制图标显示 */
+.file-row .file-actions {
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
 }
-.file-item:hover .btn-delete,
-.file-item.active .btn-delete {
+/* 鼠标滑过整行，或当前文件被选中时，显示右侧图标 */
+.file-row:hover .file-actions,
+.file-actions.show-actions {
     opacity: 1;
     pointer-events: auto;
 }
 @media (max-width: 767.98px) {
-    .file-item .btn-delete {
-        opacity: 0.6;
+    .file-row .file-actions {
+        opacity: 0.8;
         pointer-events: auto;
     }
-    .file-item.active .btn-delete {
-        opacity: 1;
-    }
+}
+
+/* 按钮的悬浮变色系统 */
+.file-row .action-btn {
+    cursor: pointer;
+    transition: color 0.2s, transform 0.1s;
+}
+.file-row .fa-pen-to-square:hover {
+    color: var(--bs-primary) !important;
+    transform: scale(1.1);
+}
+.file-row .fa-trash-can:hover {
+    color: var(--bs-danger) !important;
+    transform: scale(1.1);
+}
+
+/* 左侧文件树：名字部分变成独立的高亮选取框 */
+.file-item {
+    cursor: pointer;
+    user-select: none;
+    font-size: 14px;
+    color: var(--bs-body-color);
+    transition: background-color 0.2s;
+}
+.file-item:hover {
+    background-color: var(--bs-secondary-bg);
+}
+.file-item.active {
+    background-color: #0d6efd;
+    color: white;
 }

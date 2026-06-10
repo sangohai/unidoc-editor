@@ -116,6 +116,7 @@ const EditorManager = {
         if (ext === 'md') lang = 'markdown';
         else if (ext === 'json') lang = 'json';
         else if (ext === 'yaml' || ext === 'yml') lang = 'yaml';
+        else if (ext === 'txt') lang = 'plaintext'; // 新增 txt 纯文本支持
 
         this.currentLanguage = lang;
         monaco.editor.setModelLanguage(this.instance.getModel(), lang);
