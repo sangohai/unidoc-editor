@@ -124,3 +124,44 @@ html, body {
     background-color: #0d6efd;
     color: white;
 }
+
+/* ================= 表情与特殊符号面板 (终极修复版) ================= */
+.dropdown-menu.char-picker-panel {
+    width: 260px;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--bs-body-bg);
+    /* 关键：突破 Monaco 编辑器的层级遮挡！ */
+    z-index: 1055 !important; 
+    margin-top: 5px;
+}
+
+/* 必须配合 !important 强制覆盖 Bootstrap 默认的 block 属性 */
+.dropdown-menu.char-picker-panel.show {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.char-btn {
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 18px;
+    user-select: none;
+    transition: background-color 0.2s;
+    color: var(--bs-body-color);
+}
+
+.char-btn:hover, .char-btn:active {
+    background-color: var(--bs-secondary-bg);
+}
+
+.char-btn.symbol-btn {
+    font-size: 15px;
+    font-family: monospace;
+}

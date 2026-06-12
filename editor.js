@@ -1,8 +1,17 @@
-// editor.js - 封装 Monaco Editor 与 Markdown 预览逻辑
+// editor.js - 封装 Monaco Editor、Markdown 预览与快捷输入面板
 const EditorManager = {
     instance: null,
     currentLanguage: 'markdown',
+    isKeyboardLocked: false, 
     onChangeCallback: null,
+
+    // 1. 基础表情与符号 (默认显示，秒开)
+    emojiBase: ['😀','😂','😅','😍','🤔','😎','😭','👍','🙏','🔥','⭐','✨','💡','🎉','📌','✅','❌','⚠️','❤️','🚀','👀','🎯','⚙️','📁','📝'],
+    symbolBase: ['【】','「」','《》','（）','［］','｛｝','￥','€','©','®','←','→','↑','↓','★','♥','■','▶','—','…','°','±','×','÷'],
+
+    // 2. 扩展表情与符号 (点击 + 号后懒加载追加)
+    emojiExtended: ['😁','😆','😉','😊','😇','🥰','🤩','😘','😜','🤪','🤫','🤭','🧐','🤓','😈','👻','👽','🤖','💩','💀','🐒','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🍎','🍊','🍋','🍉','🍇','🍓','🍔','🍕','🍟','🌭','🍿','🍩','🧊','🍹','☕','⚽','🏀','🏈','⚾','🎾','🚗','🚕','🚙','🚌','🚎','✈️','🚢','⌚','📱','💻','⌨️','🖥️','🖱️','🖨️','📷','📺','📻','🧭','⏱️','⌛','⏳','⚖️','🧲','🧪','🧬','🔬','🔭','📡','💉','💊','🚪','🛏️','🛋️','🚽','🚿','🛁','🛒','🚬','⚰️','⚱️'],
+    symbolExtended: ['『』','〖〗','〔〕','‖','｜','～','℃','℉','‰','§','№','℡','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','❶','❷','❸','❹','❺','❻','❼','❽','❾','❿','≈','≡','≠','＝','≤','≥','＜','＞','≮','≯','∷','±','＋','－','×','÷','／','∫','∮','∝','∞','∧','∨','∑','∏','∪','∩','∈','∵','∴','⊥','∥','∠','⌒','⊙','≌','∽','√','♂','♀','♠','♣','♦','♤','♡','♢','♧','♨','♩','♪','♫','♬','♭','♮','♯'],
 
     init() {
         return new Promise((resolve) => {
@@ -31,38 +40,117 @@ const EditorManager = {
                     }
                 });
 
-                // 预览/编辑 切换逻辑
+                // ================= 预览切换逻辑 =================
                 document.getElementById('btn-toggle-preview').addEventListener('click', () => {
                     const preview = document.getElementById('preview-container');
                     const btnIcon = document.querySelector('#btn-toggle-preview i');
                     const btnText = document.querySelector('#btn-toggle-preview .btn-text');
+                    const toolbar = document.getElementById('editor-toolbar');
                     
                     if (preview.classList.contains('d-none')) {
                         this.updatePreview(this.getContent());
                         preview.classList.remove('d-none');
                         btnIcon.classList.replace('fa-eye', 'fa-pen');
                         if(btnText) btnText.innerText = '编辑';
-                        // 隐藏工具栏
-                        document.getElementById('editor-toolbar').style.setProperty('display', 'none', 'important');
+                        toolbar.style.setProperty('display', 'none', 'important');
                     } else {
                         preview.classList.add('d-none');
                         btnIcon.classList.replace('fa-pen', 'fa-eye');
                         if(btnText) btnText.innerText = '预览';
                         this.instance.focus();
-                        // 恢复显示工具栏
-                        document.getElementById('editor-toolbar').style.setProperty('display', 'flex', 'important');
+                        toolbar.style.setProperty('display', 'flex', 'important');
                     }
                 });
 
-                // 绑定工具栏按钮事件
+                // ================= 键盘控制锁 =================
+                document.getElementById('btn-toggle-keyboard').addEventListener('click', () => {
+                    const kbBtn = document.getElementById('btn-toggle-keyboard');
+                    this.isKeyboardLocked = !this.isKeyboardLocked;
+                    
+                    if (this.isKeyboardLocked) {
+                        this.instance.updateOptions({ readOnly: true });
+                        kbBtn.classList.replace('btn-outline-warning', 'btn-warning');
+                    } else {
+                        this.instance.updateOptions({ readOnly: false });
+                        kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
+                        this.instance.focus();
+                    }
+                });
+
                 this.initToolbarEvents();
+                this.renderCharPanels();
 
                 resolve();
             });
         });
     },
 
-    // 绑定顶部工具栏事件
+    // 🌟 动态渲染 Emoji 和符号下拉面板 (包含懒加载逻辑)
+    renderCharPanels() {
+        const emojiPanel = document.getElementById('emoji-panel');
+        const symbolPanel = document.getElementById('symbol-panel');
+
+        emojiPanel.innerHTML = '';
+        symbolPanel.innerHTML = '';
+
+        // 1. 先渲染基础列表
+        this.renderList(this.emojiBase, emojiPanel);
+        this.renderList(this.symbolBase, symbolPanel, true);
+
+        // 2. 在末尾追加“加载更多”按钮
+        this.renderMoreButton(emojiPanel, this.emojiExtended, false);
+        this.renderMoreButton(symbolPanel, this.symbolExtended, true);
+    },
+
+    // 辅助方法：将数组渲染为按钮
+    renderList(list, container, isSymbol = false) {
+        list.forEach(char => {
+            const btn = document.createElement('div');
+            btn.className = isSymbol ? 'char-btn symbol-btn' : 'char-btn';
+            btn.innerText = char;
+            btn.addEventListener('click', () => this.insertTextAtCursor(char));
+            container.appendChild(btn);
+        });
+    },
+
+    // 辅助方法：生成“更多”按钮，并绑定懒加载事件
+    renderMoreButton(container, extendedList, isSymbol) {
+        const btn = document.createElement('div');
+        // 加一点点深色背景凸显它是一个功能按钮
+        btn.className = 'char-btn bg-secondary bg-opacity-10 text-secondary'; 
+        btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+        btn.title = "加载更多";
+        
+        btn.addEventListener('click', (e) => {
+            // 阻止事件冒泡，防止点击时 Bootstrap 把下拉菜单关掉
+            e.stopPropagation();
+            // 点击后自己消失
+            btn.remove();
+            // 将扩充库追加到面板中
+            this.renderList(extendedList, container, isSymbol);
+        });
+
+        container.appendChild(btn);
+    },
+
+    // 插入字符并控制光标居中
+    insertTextAtCursor(text) {
+        if (!this.instance) return;
+        const selection = this.instance.getSelection();
+        
+        this.instance.executeEdits("toolbar", [{
+            range: selection,
+            text: text,
+            forceMoveMarkers: true
+        }]);
+
+        if (text.length === 2 && ['【】','「」','《》','（）','［］','｛｝','『』','〖〗','〔〕'].includes(text)) {
+            const position = this.instance.getPosition();
+            this.instance.setPosition({ lineNumber: position.lineNumber, column: position.column - 1 });
+        }
+        this.instance.focus();
+    },
+
     initToolbarEvents() {
         document.querySelectorAll('#editor-toolbar button[data-action]').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -72,17 +160,14 @@ const EditorManager = {
         });
     },
 
-    // 执行具体的工具栏指令
     executeToolbarAction(action) {
         if (!this.instance) return;
 
-        // 格式化 JSON/YAML
         if (action === 'format') {
             this.instance.getAction('editor.action.formatDocument').run();
             return;
         }
 
-        // 处理 Markdown 插入逻辑
         const selection = this.instance.getSelection();
         const model = this.instance.getModel();
         const selectedText = model.getValueInRange(selection);
@@ -91,16 +176,13 @@ const EditorManager = {
         switch (action) {
             case 'bold': insertText = `**${selectedText || '加粗文字'}**`; break;
             case 'italic': insertText = `*${selectedText || '斜体文字'}*`; break;
-            case 'link': insertText = `[${selectedText || '链接描述'}](http://)`; break;
+            case 'link': insertText = `[${selectedText || '链接'}](http://)`; break;
             case 'image': insertText = `![${selectedText || '图片描述'}](http://)`; break;
             case 'code': 
-                insertText = selectedText.includes('\n') ? 
-                    `\n\`\`\`\n${selectedText}\n\`\`\`\n` : 
-                    `\`${selectedText || '代码'}\``; 
+                insertText = selectedText.includes('\n') ? `\n\`\`\`\n${selectedText}\n\`\`\`\n` : `\`${selectedText || '代码'}\``; 
                 break;
         }
 
-        // 利用 Monaco 官方 API 插入文字并保留撤销历史
         this.instance.executeEdits("toolbar", [{
             range: selection,
             text: insertText,
@@ -116,7 +198,7 @@ const EditorManager = {
         if (ext === 'md') lang = 'markdown';
         else if (ext === 'json') lang = 'json';
         else if (ext === 'yaml' || ext === 'yml') lang = 'yaml';
-        else if (ext === 'txt') lang = 'plaintext'; // 新增 txt 纯文本支持
+        else if (ext === 'txt') lang = 'plaintext';
 
         this.currentLanguage = lang;
         monaco.editor.setModelLanguage(this.instance.getModel(), lang);
@@ -140,10 +222,9 @@ const EditorManager = {
     handlePreviewLayout(lang) {
         const previewContainer = document.getElementById('preview-container');
         const toggleBtn = document.getElementById('btn-toggle-preview');
+        const kbBtn = document.getElementById('btn-toggle-keyboard');
         const btnIcon = document.querySelector('#btn-toggle-preview i');
         const btnText = document.querySelector('#btn-toggle-preview .btn-text');
-        
-        // 控制工具栏显示逻辑
         const toolbar = document.getElementById('editor-toolbar');
         const tbMd = document.getElementById('toolbar-md');
         const tbCode = document.getElementById('toolbar-code');
@@ -151,9 +232,12 @@ const EditorManager = {
         previewContainer.classList.add('d-none');
         if(btnIcon) btnIcon.classList.replace('fa-pen', 'fa-eye');
         if(btnText) btnText.innerText = '预览';
-        
-        // 显示工具栏总容器
         toolbar.style.setProperty('display', 'flex', 'important');
+        
+        kbBtn.classList.remove('d-none');
+        this.isKeyboardLocked = false;
+        this.instance.updateOptions({ readOnly: false });
+        kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
 
         if (lang === 'markdown') {
             toggleBtn.classList.remove('d-none');

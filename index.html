@@ -20,6 +20,12 @@
             <a class="navbar-brand fs-6 fs-md-5 text-truncate fw-bold" href="#"><i class="fa-solid fa-book-journal-whills me-2"></i><span class="d-none d-sm-inline">UniDoc</span></a>
             
             <div class="d-flex align-items-center ms-auto">
+                <!-- 移动端专属：单独控制虚拟键盘弹出的锁 -->
+                <button id="btn-toggle-keyboard" class="btn btn-sm btn-outline-warning me-2 d-md-none d-none" title="锁定/开启键盘">
+                    <i class="fa-solid fa-keyboard"></i>
+                </button>
+
+                <!-- 恢复原状的预览/编辑切换按钮 -->
                 <button id="btn-toggle-preview" class="btn btn-sm btn-outline-info me-2 d-none">
                     <i class="fa-solid fa-eye"></i><span class="btn-text d-none d-md-inline ms-1">预览</span>
                 </button>
@@ -85,16 +91,34 @@
         <!-- 右侧主编辑区 -->
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
             
-            <!-- 编辑器工具栏 -->
+            <!-- 编辑器快捷工具栏 -->
             <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center" style="display: none !important;">
-                <div id="toolbar-md" class="d-none w-100">
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
-                    <span class="border-end mx-1"></span>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="link"><i class="fa-solid fa-link"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="image"><i class="fa-regular fa-image"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="code"><i class="fa-solid fa-code"></i></button>
+                <div id="toolbar-md" class="d-none w-100 align-items-center">
+                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold" title="加粗"><i class="fa-solid fa-bold"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic" title="斜体"><i class="fa-solid fa-italic"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="link" title="链接"><i class="fa-solid fa-link"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="image" title="图片"><i class="fa-regular fa-image"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="code" title="代码"><i class="fa-solid fa-code"></i></button>
+                    
+                    <span class="border-end mx-1" style="height: 18px;"></span>
+                    
+                    <!-- Emoji 下拉面板 (加入了 data-bs-display="static" 防止定位失效) -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="插入表情">
+                            <i class="fa-regular fa-face-smile"></i>
+                        </button>
+                        <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel"></div>
+                    </div>
+
+                    <!-- 符号与括号下拉面板 (图标换成纯文本 Ω，100%显示) -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="插入特殊符号">
+                            Ω
+                        </button>
+                        <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel"></div>
+                    </div>
                 </div>
+                
                 <div id="toolbar-code" class="d-none w-100 justify-content-end">
                     <button class="btn btn-sm btn-outline-primary py-0 px-2" data-action="format" style="font-size: 13px;">
                         <i class="fa-solid fa-wand-magic-sparkles me-1"></i>自动排版
