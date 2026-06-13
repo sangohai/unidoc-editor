@@ -5,11 +5,9 @@ const EditorManager = {
     isKeyboardLocked: false, 
     onChangeCallback: null,
 
-    // 1. 基础表情与符号 (默认显示，秒开)
     emojiBase: ['😀','😂','😅','😍','🤔','😎','😭','👍','🙏','🔥','⭐','✨','💡','🎉','📌','✅','❌','⚠️','❤️','🚀','👀','🎯','⚙️','📁','📝'],
     symbolBase: ['【】','「」','《》','（）','［］','｛｝','￥','€','©','®','←','→','↑','↓','★','♥','■','▶','—','…','°','±','×','÷'],
 
-    // 2. 扩展表情与符号 (点击 + 号后懒加载追加)
     emojiExtended: ['😁','😆','😉','😊','😇','🥰','🤩','😘','😜','🤪','🤫','🤭','🧐','🤓','😈','👻','👽','🤖','💩','💀','🐒','🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🍎','🍊','🍋','🍉','🍇','🍓','🍔','🍕','🍟','🌭','🍿','🍩','🧊','🍹','☕','⚽','🏀','🏈','⚾','🎾','🚗','🚕','🚙','🚌','🚎','✈️','🚢','⌚','📱','💻','⌨️','🖥️','🖱️','🖨️','📷','📺','📻','🧭','⏱️','⌛','⏳','⚖️','🧲','🧪','🧬','🔬','🔭','📡','💉','💊','🚪','🛏️','🛋️','🚽','🚿','🛁','🛒','🚬','⚰️','⚱️'],
     symbolExtended: ['『』','〖〗','〔〕','‖','｜','～','℃','℉','‰','§','№','℡','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','❶','❷','❸','❹','❺','❻','❼','❽','❾','❿','≈','≡','≠','＝','≤','≥','＜','＞','≮','≯','∷','±','＋','－','×','÷','／','∫','∮','∝','∞','∧','∨','∑','∏','∪','∩','∈','∵','∴','⊥','∥','∠','⌒','⊙','≌','∽','√','♂','♀','♠','♣','♦','♤','♡','♢','♧','♨','♩','♪','♫','♬','♭','♮','♯'],
 
@@ -40,7 +38,7 @@ const EditorManager = {
                     }
                 });
 
-                // ================= 预览切换逻辑 =================
+                // ================= 预览模式切换 =================
                 document.getElementById('btn-toggle-preview').addEventListener('click', () => {
                     const preview = document.getElementById('preview-container');
                     const btnIcon = document.querySelector('#btn-toggle-preview i');
@@ -62,7 +60,7 @@ const EditorManager = {
                     }
                 });
 
-                // ================= 键盘控制锁 (加入透明遮罩逻辑) =================
+                // ================= 键盘防误触锁 =================
                 document.getElementById('btn-toggle-keyboard').addEventListener('click', () => {
                     const kbBtn = document.getElementById('btn-toggle-keyboard');
                     const glassShield = document.getElementById('editor-glass-shield');
@@ -70,28 +68,63 @@ const EditorManager = {
                     this.isKeyboardLocked = !this.isKeyboardLocked;
                     
                     if (this.isKeyboardLocked) {
-                        // 锁定状态：盖上隐形玻璃板，编辑器设为只读
                         this.instance.updateOptions({ readOnly: true });
                         kbBtn.classList.replace('btn-outline-warning', 'btn-warning');
                         if (glassShield) glassShield.classList.remove('d-none');
                     } else {
-                        // 开启状态：抽走玻璃板，解除只读，并强制唤起键盘
                         this.instance.updateOptions({ readOnly: false });
                         kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
                         if (glassShield) glassShield.classList.add('d-none');
-                        this.instance.focus();
+                        this.instance.focus(); // 解锁瞬间强行唤起键盘
                     }
                 });
 
                 this.initToolbarEvents();
                 this.renderCharPanels();
+                
+                // 🌟 初始化隐形玻璃板的“触摸滚动代理”
+                this.initGlassShieldScroll();
 
                 resolve();
             });
         });
     },
 
-    // 🌟 动态渲染 Emoji 和符号下拉面板 (包含懒加载逻辑)
+    // 🌟 核心黑科技：将玻璃板变成触摸板
+    initGlassShieldScroll() {
+        const shield = document.getElementById('editor-glass-shield');
+        if (!shield) return;
+
+        let lastX = 0, lastY = 0;
+
+        shield.addEventListener('touchstart', (e) => {
+            // 记录手指按下的初始位置
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+        }, { passive: true });
+
+        shield.addEventListener('touchmove', (e) => {
+            if (!this.instance) return;
+            
+            const currentX = e.touches[0].clientX;
+            const currentY = e.touches[0].clientY;
+            
+            // 计算手指滑动的距离
+            const deltaX = lastX - currentX;
+            const deltaY = lastY - currentY;
+            
+            lastX = currentX;
+            lastY = currentY;
+            
+            // 将滑动距离等比映射给 Monaco 的内置滚动条
+            const currentScrollTop = this.instance.getScrollTop();
+            const currentScrollLeft = this.instance.getScrollLeft();
+            
+            this.instance.setScrollTop(currentScrollTop + deltaY);
+            this.instance.setScrollLeft(currentScrollLeft + deltaX);
+        }, { passive: true });
+    },
+
     renderCharPanels() {
         const emojiPanel = document.getElementById('emoji-panel');
         const symbolPanel = document.getElementById('symbol-panel');
@@ -99,16 +132,13 @@ const EditorManager = {
         emojiPanel.innerHTML = '';
         symbolPanel.innerHTML = '';
 
-        // 1. 先渲染基础列表
         this.renderList(this.emojiBase, emojiPanel);
         this.renderList(this.symbolBase, symbolPanel, true);
 
-        // 2. 在末尾追加“加载更多”按钮
         this.renderMoreButton(emojiPanel, this.emojiExtended, false);
         this.renderMoreButton(symbolPanel, this.symbolExtended, true);
     },
 
-    // 辅助方法：将数组渲染为按钮
     renderList(list, container, isSymbol = false) {
         list.forEach(char => {
             const btn = document.createElement('div');
@@ -119,27 +149,21 @@ const EditorManager = {
         });
     },
 
-    // 辅助方法：生成“更多”按钮，并绑定懒加载事件
     renderMoreButton(container, extendedList, isSymbol) {
         const btn = document.createElement('div');
-        // 加一点点深色背景凸显它是一个功能按钮
         btn.className = 'char-btn bg-secondary bg-opacity-10 text-secondary'; 
         btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
         btn.title = "加载更多";
         
         btn.addEventListener('click', (e) => {
-            // 阻止事件冒泡，防止点击时 Bootstrap 把下拉菜单关掉
             e.stopPropagation();
-            // 点击后自己消失
             btn.remove();
-            // 将扩充库追加到面板中
             this.renderList(extendedList, container, isSymbol);
         });
 
         container.appendChild(btn);
     },
 
-    // 插入字符并控制光标居中
     insertTextAtCursor(text) {
         if (!this.instance) return;
         const selection = this.instance.getSelection();
@@ -241,7 +265,7 @@ const EditorManager = {
         if(btnText) btnText.innerText = '预览';
         toolbar.style.setProperty('display', 'flex', 'important');
         
-        // 重置键盘锁：默认抽走玻璃，允许输入
+        // UI重置：默认不锁键盘，不盖玻璃
         kbBtn.classList.remove('d-none');
         this.isKeyboardLocked = false;
         this.instance.updateOptions({ readOnly: false });
