@@ -2,7 +2,6 @@
 const EditorManager = {
     instance: null,
     currentLanguage: 'markdown',
-    isKeyboardLocked: false, 
     onChangeCallback: null,
 
     emojiBase: ['😀','😂','😅','😍','🤔','😎','😭','👍','🙏','🔥','⭐','✨','💡','🎉','📌','✅','❌','⚠️','❤️','🚀','👀','🎯','⚙️','📁','📝'],
@@ -60,69 +59,40 @@ const EditorManager = {
                     }
                 });
 
-                // ================= 键盘防误触锁 =================
-                document.getElementById('btn-toggle-keyboard').addEventListener('click', () => {
-                    const kbBtn = document.getElementById('btn-toggle-keyboard');
-                    const glassShield = document.getElementById('editor-glass-shield');
-                    
-                    this.isKeyboardLocked = !this.isKeyboardLocked;
-                    
-                    if (this.isKeyboardLocked) {
-                        this.instance.updateOptions({ readOnly: true });
-                        kbBtn.classList.replace('btn-outline-warning', 'btn-warning');
-                        if (glassShield) glassShield.classList.remove('d-none');
-                    } else {
-                        this.instance.updateOptions({ readOnly: false });
-                        kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
-                        if (glassShield) glassShield.classList.add('d-none');
-                        this.instance.focus(); // 解锁瞬间强行唤起键盘
-                    }
-                });
-
                 this.initToolbarEvents();
                 this.renderCharPanels();
                 
-                // 🌟 初始化隐形玻璃板的“触摸滚动代理”
-                this.initGlassShieldScroll();
+                // 🌟 初始化左侧专属滑轨引擎
+                this.initLeftScrollZone();
 
                 resolve();
             });
         });
     },
 
-    // 🌟 核心黑科技：将玻璃板变成触摸板
-    initGlassShieldScroll() {
-        const shield = document.getElementById('editor-glass-shield');
-        if (!shield) return;
+    // 🌟 左侧专属滑轨滑动逻辑
+    initLeftScrollZone() {
+        const zone = document.getElementById('left-scroll-zone');
+        if (!zone) return;
 
-        let lastX = 0, lastY = 0;
+        let lastY = 0;
 
-        shield.addEventListener('touchstart', (e) => {
-            // 记录手指按下的初始位置
-            lastX = e.touches[0].clientX;
+        zone.addEventListener('touchstart', (e) => {
             lastY = e.touches[0].clientY;
         }, { passive: true });
 
-        shield.addEventListener('touchmove', (e) => {
+        // 注意：passive 必须为 false，才能调用 preventDefault 阻止网页原生拉扯
+        zone.addEventListener('touchmove', (e) => {
             if (!this.instance) return;
+            e.preventDefault(); 
             
-            const currentX = e.touches[0].clientX;
             const currentY = e.touches[0].clientY;
-            
-            // 计算手指滑动的距离
-            const deltaX = lastX - currentX;
             const deltaY = lastY - currentY;
-            
-            lastX = currentX;
             lastY = currentY;
             
-            // 将滑动距离等比映射给 Monaco 的内置滚动条
             const currentScrollTop = this.instance.getScrollTop();
-            const currentScrollLeft = this.instance.getScrollLeft();
-            
             this.instance.setScrollTop(currentScrollTop + deltaY);
-            this.instance.setScrollLeft(currentScrollLeft + deltaX);
-        }, { passive: true });
+        }, { passive: false });
     },
 
     renderCharPanels() {
@@ -252,25 +222,20 @@ const EditorManager = {
     handlePreviewLayout(lang) {
         const previewContainer = document.getElementById('preview-container');
         const toggleBtn = document.getElementById('btn-toggle-preview');
-        const kbBtn = document.getElementById('btn-toggle-keyboard');
-        const glassShield = document.getElementById('editor-glass-shield');
         const btnIcon = document.querySelector('#btn-toggle-preview i');
         const btnText = document.querySelector('#btn-toggle-preview .btn-text');
         const toolbar = document.getElementById('editor-toolbar');
         const tbMd = document.getElementById('toolbar-md');
         const tbCode = document.getElementById('toolbar-code');
 
+        // UI 初始化：隐藏预览，打开代码区
         previewContainer.classList.add('d-none');
         if(btnIcon) btnIcon.classList.replace('fa-pen', 'fa-eye');
         if(btnText) btnText.innerText = '预览';
         toolbar.style.setProperty('display', 'flex', 'important');
         
-        // UI重置：默认不锁键盘，不盖玻璃
-        kbBtn.classList.remove('d-none');
-        this.isKeyboardLocked = false;
+        // 彻底抛弃各种锁，让 Monaco 回归纯净的可读写状态
         this.instance.updateOptions({ readOnly: false });
-        kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
-        if (glassShield) glassShield.classList.add('d-none');
 
         if (lang === 'markdown') {
             toggleBtn.classList.remove('d-none');
