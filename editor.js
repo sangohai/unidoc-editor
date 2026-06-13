@@ -62,17 +62,23 @@ const EditorManager = {
                     }
                 });
 
-                // ================= 键盘控制锁 =================
+                // ================= 键盘控制锁 (加入透明遮罩逻辑) =================
                 document.getElementById('btn-toggle-keyboard').addEventListener('click', () => {
                     const kbBtn = document.getElementById('btn-toggle-keyboard');
+                    const glassShield = document.getElementById('editor-glass-shield');
+                    
                     this.isKeyboardLocked = !this.isKeyboardLocked;
                     
                     if (this.isKeyboardLocked) {
+                        // 锁定状态：盖上隐形玻璃板，编辑器设为只读
                         this.instance.updateOptions({ readOnly: true });
                         kbBtn.classList.replace('btn-outline-warning', 'btn-warning');
+                        if (glassShield) glassShield.classList.remove('d-none');
                     } else {
+                        // 开启状态：抽走玻璃板，解除只读，并强制唤起键盘
                         this.instance.updateOptions({ readOnly: false });
                         kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
+                        if (glassShield) glassShield.classList.add('d-none');
                         this.instance.focus();
                     }
                 });
@@ -223,6 +229,7 @@ const EditorManager = {
         const previewContainer = document.getElementById('preview-container');
         const toggleBtn = document.getElementById('btn-toggle-preview');
         const kbBtn = document.getElementById('btn-toggle-keyboard');
+        const glassShield = document.getElementById('editor-glass-shield');
         const btnIcon = document.querySelector('#btn-toggle-preview i');
         const btnText = document.querySelector('#btn-toggle-preview .btn-text');
         const toolbar = document.getElementById('editor-toolbar');
@@ -234,10 +241,12 @@ const EditorManager = {
         if(btnText) btnText.innerText = '预览';
         toolbar.style.setProperty('display', 'flex', 'important');
         
+        // 重置键盘锁：默认抽走玻璃，允许输入
         kbBtn.classList.remove('d-none');
         this.isKeyboardLocked = false;
         this.instance.updateOptions({ readOnly: false });
         kbBtn.classList.replace('btn-warning', 'btn-outline-warning');
+        if (glassShield) glassShield.classList.add('d-none');
 
         if (lang === 'markdown') {
             toggleBtn.classList.remove('d-none');

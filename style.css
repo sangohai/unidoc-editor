@@ -165,3 +165,21 @@ html, body {
     font-size: 15px;
     font-family: monospace;
 }
+
+/* ================= 移动端专属体验优化 ================= */
+@media (max-width: 767.98px) {
+    /* 将下拉面板强制居中，伪装成 Modal 弹窗 */
+    .dropdown-menu.char-picker-panel.show {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: 90vw !important;
+        max-height: 60vh !important;
+        z-index: 1060 !important;
+        /* 利用超级巨大的阴影，伪造一个变暗的背景遮罩 */
+        box-shadow: 0 0 0 100vw rgba(0,0,0,0.5), 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+        border-radius: 8px;
+    }
+}

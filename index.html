@@ -126,8 +126,12 @@
                 </div>
             </div>
 
-            <!-- Monaco -->
-            <div id="editor-container" class="flex-grow-1 w-100"></div>
+            <!-- Monaco 编辑器容器及防误触遮罩 -->
+            <div class="position-relative flex-grow-1 w-100 d-flex">
+                <div id="editor-container" class="flex-grow-1 w-100"></div>
+                <!-- 键盘锁的“隐形玻璃板” -->
+                <div id="editor-glass-shield" class="position-absolute top-0 start-0 w-100 h-100 d-none" style="z-index: 5;"></div>
+            </div>
             
             <!-- 预览区 -->
             <div id="preview-container" class="preview-panel bg-body d-none position-absolute top-0 start-0 w-100 h-100 overflow-auto p-3 p-md-5" style="z-index: 10;">
