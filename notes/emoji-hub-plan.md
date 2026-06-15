@@ -1,6 +1,6 @@
 #### emoji-hub-plan        
-
-我为你精心编写了这份关于 emoji-hub (Emoji 中心化资产仓库) 的详细开发方案。你可以把它新建并保存在你电脑里，比如命名为 emoji-hub-plan.md，随时留作日后开工的“系统提示词”。         
+---    
+##### 我为你精心编写了这份关于 emoji-hub (Emoji 中心化资产仓库) 的详细开发方案。你可以把它新建并保存在你电脑里，比如命名为 emoji-hub-plan.md，           随时留作日后开工“系统提示词”。         
 ---        
 📦 Emoji-Hub 独立项目架构蓝图 (Draft)           
 
@@ -14,20 +14,20 @@
 📁 2. 仓库目录结构规划        
 ---         
 
-emoji-hub/
+emoji-hub/             
+ │            
+ ├─ data/          
+ │   └─ emoji-map.json    ← 核心索引库（记录字符、分类、名称与图片路径的映射）         
  │
- ├─ data/
- │   └─ emoji-map.json    ← 核心索引库（记录字符、分类、名称与图片路径的映射）
+ ├─ assets/           
+ │   ├─ svg/              ← 高清无损矢量库（供游戏引擎无限放大使用）       
+ │   └─ png_64x64/        ← 轻量级栅格图（供 Web 项目、富文本框快速加载）        
  │
- ├─ assets/
- │   ├─ svg/              ← 高清无损矢量库（供游戏引擎无限放大使用）
- │   └─ png_64x64/        ← 轻量级栅格图（供 Web 项目、富文本框快速加载）
- │
- ├─ docs/                 ← GitHub Pages 静态网站源码
- │   ├─ index.html        ← 可视化表情搜索与展示控制台
- │   └─ app.js            ← 搜索过滤与“一键复制 CDN 链接”的逻辑
- │
- └─ README.md             ← 接入文档与 CDN 使用说明
+ ├─ docs/                 ← GitHub Pages 静态网站源码       
+ │   ├─ index.html        ← 可视化表情搜索与展示控制台       
+ │   └─ app.js            ← 搜索过滤与“一键复制 CDN 链接”的逻辑         
+ │         
+ └─ README.md             ← 接入文档与 CDN 使用说明           
 
  🛠️ 3. 数据层设计 (JSON Schema)           
  ---      
