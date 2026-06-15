@@ -3,43 +3,40 @@
 ## 🎯 项目定位与当前状态
 - **项目名称**: UniDoc Editor
 - **核心目标**: 构建一个纯前端的结构化文档 (`.md`, `.json`, `.yaml`, `.txt`) 专用编辑器，完全无后端，通过 GitHub PAT 直连仓库的 `notes/` 目录。
-- **核心理念**: 为开发者与 LLM 提供一个高密度、无干扰、纯文本的协同知识库工作台。
-- **当前进度**: **V1.3 移动端交互完全体**（实现了完整的文件 CRUD、多格式支持、防呆后缀名隔离、表情面板懒加载、以及极其硬核的“左侧滑轨防误触”物理隔离设计）。
+- **当前进度**: **V1.5 极客安全与生产力完全体**（完成高度模块化重构、实现了纯前端图床自动长传、本地缓存防 404 渲染、隐形追踪符清洗、以及操作系统级的剪贴板粉碎机）。
 
-## 📁 项目目录与职责映射
+## 📁 项目目录与职责解耦 (Decoupled Architecture)
 `unidoc-editor/`
-- `notes/`       : 业务数据源，存放实际编写的纯文本文件（强制扁平化目录）。
-- `doc/`         : 存放此 blue-print.md，项目的“大脑”和架构上下文。
-- `index.html`   : 唯一 HTML 骨架。包含全局响应式布局、下拉后缀控制、以及覆盖在行号上的左侧滑轨 (`#left-scroll-zone`)。
-- `style.css`    : 纯前端响应式样式。包含暗黑模式代码块适配、文件树操作按钮解耦、移动端表情面板强制居中与阴影伪遮罩黑科技。
-- `main.js`      : **[核心主板]** 全局状态机 (`AppState`)、主题管理、文件流转调度（新建/重命名/删除）、快捷键拦截与全局锁屏 Loading。
-- `api.js`       : **[数据总线]** 封装 GitHub REST API。列表拉取强绑 `?t=` 时间戳防 CDN 缓存穿透。
-- `editor.js`    : **[编辑引擎]** Monaco Editor 控制中心。管理 `.md/.txt` 语言动态切换、表情面板懒加载渲染、以及左侧滑轨的触摸滚动代理 (`initLeftScrollZone`)。
-- `fileTree.js`  : **[侧边栏]** 负责目录树拉取渲染。采用“高亮区与图标区解耦”的防误触设计。
-- `token.js` & `modal.js` & `toast.js`: 鉴权与 UI 反馈基础组件。
+- `notes/`                 : 业务数据源。包含纯文本文件及 `images/` 图床目录。
+- `doc/`                   : 存放此 blue-print.md，项目的“大脑”和架构上下文。
+- `index.html` & `style.css`: 骨架与样式。包含左侧物理滑轨、下拉弹窗、居中表情面板黑科技。
+- `main.js`                : **[核心主板]** 全局状态机 (`AppState`)、主题管理、文件流转调度、快捷键拦截与初始化串联。
+- `api.js`                 : **[数据总线]** 封装 GitHub REST API。新增了 `uploadImage` 专线接口。
+- `editor.js`              : **[编辑引擎]** 极致瘦身的 Monaco 控制中心。仅负责语言切换、左侧物理滑轨的触摸代理、及 Marked.js 图层渲染（包含图片内存缓存读取机制）。
+- `fileTree.js`            : **[侧边栏]** 负责目录树拉取渲染。采用“高亮区与图标区物理解耦”的防误触设计。
+- `charPicker.js`          : **[新] [表情库]** 独立接管表情与特殊符号的静态数据、懒加载渲染及插入逻辑。
+- `clipboardManager.js`    : **[新] [安全管家]** 独立接管 `paste` 事件拦截。负责 Base64 图床直传、文本隐形字符清洗、及 `navigator.clipboard` 的粉碎与查看。
 
 ## 📦 外部核心依赖 (CDN)
-- Bootstrap v5 (网格、Offcanvas、Modal、Dropdown)
-- FontAwesome v6
+- Bootstrap v5 / FontAwesome v6
 - Monaco Editor (AMD Loader 懒加载)
-- Marked.js (Markdown 纯净图层渲染)
+- Marked.js (Markdown 图层渲染，已重写图片解析规则)
 - js-base64 (解决中文字符 API 传输报错)
 
-## 🔄 核心状态流转 (AppState in main.js)
-1. `currentFilePath`: 当前打开文件的路径。
-2. `currentFileSha`: 当前文件在 GitHub 的 SHA 值。**API 更新成功后必须立即同步更新以防 409 冲突。**
-3. `isDirty`: 脏标记。拦截无效的 `Ctrl+S` 请求及 `beforeunload` 防丢。
-
 ## 🚦 核心架构与“黑科技”设计决策 (Design Decisions)
-1. **左侧滑轨防误触设计 (Spatial Isolation)**：
-   - **痛点**：移动端触控代码区极易意外唤起虚拟键盘。
-   - **方案**：彻底放弃复杂的逻辑拦截。在编辑器左侧行号上方覆盖一层 45px 宽的透明 `div` (`#left-scroll-zone`)。在 `editor.js` 中拦截其 `touchmove` 事件，将滑动差值映射给 Monaco 的 `setScrollTop`。**实现左手安全滑动（不弹键盘），右手精准点击（唤起键盘）的物理空间隔离体验。**
-2. **移动端面板纯 CSS 居中伪装**：表情与符号的 Dropdown 在手机端强制 `position: fixed` 居中，利用 `box-shadow` 投射超大半透明阴影，伪造出全屏 Modal 的变暗效果。
-3. **按需懒加载 (Lazy Load) 扩展面板**：表情和符号默认仅渲染 24 个基础字符保障秒开。点击底部的 `+` 号按钮后，再通过 JS 动态追加几百个扩展字符（包括罗马数字、食物等）。
-4. **成对符号光标穿透**：工具栏插入 `【】`、`《》` 等长度为 2 的成对符号时，通过 `instance.setPosition` 自动将光标左移 1 位进入括号中间。
-5. **后缀名防呆强绑定**：新建/重命名全面采用 Input + Bootstrap Dropdown 拆分输入，避免正则模糊猜测。
+1. **纯前端图床引擎 (Frontend Image Hosting)**：
+   - 拦截 Monaco 的 `paste` 事件（在 Capture 阶段提前截胡）。
+   - 将剪贴板二进制流转为纯 Base64，调用 GitHub API 直接推入 `notes/images/` 目录。
+   - 上传期间在光标处生成 `![正在上传...]()` 占位符，完成后利用 `findMatches` 保护历史记录并优雅替换为相对路径 `![图片](images/xxx.png)`。
+2. **内存级图片缓存 (In-Memory Image Cache)**：
+   - **痛点**：图片传到 GitHub 后，本地还没执行 `git pull` 时，预览区会因找不到本地图片而报 404。
+   - **方案**：在上传图片时，将 Base64 字符串同步存入 `ClipboardManager.imageCache`。重写 `marked.use` 渲染器，优先从内存读取 Base64 直接秒渲染，彻底解决开发环境的时空错位。
+3. **剪贴板极客防护 (Clipboard Security)**：
+   - **清洗机**：使用正则 `/[\u200B-\u200D\uFEFF\u202A-\u202E]/g` 嗅探并剥离外来文本中的零宽追踪字符。
+   - **粉碎机**：调用 `navigator.clipboard.writeText(' ')` 强制覆写操作系统底层剪贴板，防后台流氓软件窃密。
+4. **移动端左侧实体滑轨 (Physical Scroll Rail)**：
+   - 彻底废弃复杂的逻辑只读锁，利用透明 div 覆盖行号区，计算触摸滑动的 Delta Y 与总高度的比率，映射到底层滚动条，实现绝对防误触。
 
-## 🚀 未来扩展预留方向 (Roadmap)
-- [ ] **Emoji 中心化资产仓库**：另起 `emoji-hub` 项目存放高清 SVG/PNG，彻底解决游戏引擎的跨平台表情乱码问题。
-- [ ] **纯前端图片图床化**：拦截 Monaco 的粘贴事件，将剪贴板图片转 Base64 走 API 存入 `notes/images/`。
-- [ ] **PWA 渐进式应用支持**：配置 `manifest.json` 与 Service Worker，允许用户将 UniDoc 安装到手机桌面，去除浏览器地址栏。
+## 🚀 下一阶段开发计划 (Roadmap)
+- [ ] **图片垃圾回收机制 (Garbage Collection)**：针对废弃图片占用空间的问题，开发删除机制（可选择在删除 `.md` 文件时级联删除图片，或开发独立的未引用图片清理器）。
+- [ ] **PWA 渐进式应用支持 (形态升维)**：配置 `manifest.json` 与 `sw.js`，允许用户将其“添加到主屏幕”，变为全屏独立 App。

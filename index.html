@@ -9,19 +9,15 @@
     <link href="style.css" rel="stylesheet">
 </head>
 <body>
-    <!-- 顶部导航栏 (加入 id="top-navbar" 以便切换颜色) -->
+    <!-- 顶部导航栏 -->
     <nav id="top-navbar" class="navbar navbar-expand navbar-dark bg-dark flex-shrink-0 px-2 px-md-3 shadow-sm">
         <div class="container-fluid p-0">
-            <!-- 手机端汉堡菜单 -->
             <button class="btn text-white d-md-none border-0 px-2 me-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
                 <i class="fa-solid fa-bars fs-5"></i>
             </button>
-            
             <a class="navbar-brand fs-6 fs-md-5 text-truncate fw-bold" href="#"><i class="fa-solid fa-book-journal-whills me-2"></i><span class="d-none d-sm-inline">UniDoc</span></a>
             
             <div class="d-flex align-items-center ms-auto">
-                
-                <!-- 恢复原状的预览/编辑切换按钮 -->
                 <button id="btn-toggle-preview" class="btn btn-sm btn-outline-info me-2 d-none">
                     <i class="fa-solid fa-eye"></i><span class="btn-text d-none d-md-inline ms-1">预览</span>
                 </button>
@@ -34,9 +30,8 @@
                     <i class="fa-solid fa-floppy-disk"></i><span class="d-none d-md-inline ms-1">保存</span>
                 </button>
 
-                <!-- 新增：颜色与主题切换菜单 -->
                 <div class="dropdown me-2">
-                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" title="外观设置">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-palette"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 140px; font-size: 14px;">
@@ -61,13 +56,12 @@
     <!-- 主体工作区 -->
     <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
         
-        <!-- 左侧文件树 -->
         <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px;">
             <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
                     <button id="btn-new-file-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3"><i class="fa-solid fa-plus fs-5"></i></button>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas"></button>
                 </div>
             </div>
             
@@ -84,63 +78,70 @@
             </div>
         </div>
 
-        <!-- 右侧主编辑区 -->
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
             
-            <!-- 编辑器快捷工具栏 -->
-            <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center" style="display: none !important;">
-                <div id="toolbar-md" class="d-none w-100 align-items-center">
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold" title="加粗"><i class="fa-solid fa-bold"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic" title="斜体"><i class="fa-solid fa-italic"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="link" title="链接"><i class="fa-solid fa-link"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="image" title="图片"><i class="fa-regular fa-image"></i></button>
-                    <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="code" title="代码"><i class="fa-solid fa-code"></i></button>
-                    
-                    <span class="border-end mx-1" style="height: 18px;"></span>
-                    
-                    <!-- Emoji 下拉面板 (加入了 data-bs-display="static" 防止定位失效) -->
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="插入表情">
-                            <i class="fa-regular fa-face-smile"></i>
-                        </button>
-                        <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel"></div>
-                    </div>
+            <!-- 编辑器工具栏 (升级了 Flex 布局，隔离了左右区域) -->
+            <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center justify-content-between" style="display: none !important;">
+                
+                <!-- 左侧：根据不同语言动态切换的工具 -->
+                <div class="d-flex align-items-center">
+                    <div id="toolbar-md" class="d-none align-items-center">
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="link"><i class="fa-solid fa-link"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="image"><i class="fa-regular fa-image"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="code"><i class="fa-solid fa-code"></i></button>
+                        
+                        <span class="border-end mx-1" style="height: 18px;"></span>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
+                                <i class="fa-regular fa-face-smile"></i>
+                            </button>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel"></div>
+                        </div>
 
-                    <!-- 符号与括号下拉面板 (图标换成纯文本 Ω，100%显示) -->
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="插入特殊符号">
-                            Ω
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
+                                Ω
+                            </button>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="toolbar-code" class="d-none align-items-center">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" data-action="format" style="font-size: 13px;">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>自动排版
                         </button>
-                        <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel"></div>
                     </div>
                 </div>
-                
-                <div id="toolbar-code" class="d-none w-100 justify-content-end">
-                    <button class="btn btn-sm btn-outline-primary py-0 px-2" data-action="format" style="font-size: 13px;">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>自动排版
+
+                <!-- 🌟 右侧：全局数据安全中心 -->
+                <div class="d-flex align-items-center border-start ps-2">
+                    <button class="btn btn-sm btn-outline-info border-0 py-0 px-2 me-1" id="btn-view-clipboard" title="查看当前剪贴板内容">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0 py-0 px-2" id="btn-shred-clipboard" title="粉碎系统剪贴板 (防止隐私窃取)">
+                        <i class="fa-solid fa-broom"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- Monaco 编辑器容器及左侧滑动滑轨 -->
+            <!-- Monaco 与 左侧滑动滑轨 -->
             <div class="position-relative flex-grow-1 w-100 d-flex">
                 <div id="editor-container" class="flex-grow-1 w-100"></div>
-                
-                <!-- 左侧边缘专属安全滑动区 (带虚线边框轨道) -->
                 <div id="left-scroll-zone" class="position-absolute top-0 start-0 h-100" style="width: 45px; z-index: 5; touch-action: none; border-right: 1px dashed rgba(128,128,128,0.2);">
-                    <!-- 动态半透明圆形滑块 (修改为正圆) -->
                     <div id="left-scroll-thumb" class="position-absolute bg-primary rounded-circle opacity-50 shadow-sm" style="width: 20px; height: 20px; right: 12px; top: 0; transition: transform 0.05s linear, opacity 0.2s;"></div>
                 </div>
             </div>
             
-            <!-- 预览区 -->
             <div id="preview-container" class="preview-panel bg-body d-none position-absolute top-0 start-0 w-100 h-100 overflow-auto p-3 p-md-5" style="z-index: 10;">
                 <div id="markdown-preview" class="markdown-body mx-auto" style="max-width: 800px;"></div>
             </div>
         </div>
     </div>
 
-    <!-- Toast & Modals... (和之前一样，颜色换成适配类) -->
+    <!-- 弹窗组件 -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
 
     <div class="modal fade" id="tokenModal" tabindex="-1" data-bs-backdrop="static">
@@ -166,34 +167,6 @@
         </div>
     </div>
 
-    <!-- 隐藏区域：重命名文件 Modal -->
-    <div class="modal fade" id="renameFileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-body-tertiary">
-                    <h5 class="modal-title fs-6">重命名文件</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body bg-body">
-                    <div class="mb-2">
-                        <label class="form-label small text-body-secondary">新文件名称 (不包含后缀)</label>
-                        <div class="input-group">
-                            <input type="text" id="input-rename-filename" class="form-control">
-                            <span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span>
-                        </div>
-                        <!-- 隐藏字段用于存储旧数据 -->
-                        <input type="hidden" id="input-rename-oldpath">
-                        <input type="hidden" id="input-rename-sha">
-                    </div>
-                </div>
-                <div class="modal-footer p-1 bg-body">
-                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 隐藏区域：新建文件 Modal (升级版：下拉菜单分离后缀) -->
     <div class="modal fade" id="newFileModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -206,9 +179,7 @@
                         <label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label>
                         <div class="input-group">
                             <input type="text" id="input-new-filename" class="form-control" placeholder="例如: config">
-                            <!-- 下拉菜单按钮 -->
                             <button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button>
-                            <!-- 下拉菜单列表 (未来加格式就在这里加) -->
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md (Markdown)</a></li>
                                 <li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json (JSON)</a></li>
@@ -225,6 +196,53 @@
         </div>
     </div>
 
+    <div class="modal fade" id="renameFileModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-body-tertiary">
+                    <h5 class="modal-title fs-6">重命名文件</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-body">
+                    <div class="mb-2">
+                        <label class="form-label small text-body-secondary">新文件名称 (不包含后缀)</label>
+                        <div class="input-group">
+                            <input type="text" id="input-rename-filename" class="form-control">
+                            <span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span>
+                        </div>
+                        <input type="hidden" id="input-rename-oldpath">
+                        <input type="hidden" id="input-rename-sha">
+                    </div>
+                </div>
+                <div class="modal-footer p-1 bg-body">
+                    <button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看剪贴板 Modal -->
+    <div class="modal fade" id="clipboardModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-body-tertiary">
+                    <h5 class="modal-title fs-6"><i class="fa-solid fa-user-secret me-2"></i>剪贴板内存快照</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-body p-2">
+                    <textarea id="clipboard-content-view" class="form-control bg-dark text-success font-monospace" rows="5" readonly style="font-size: 13px;"></textarea>
+                </div>
+                <div class="modal-footer p-1 bg-body justify-content-between">
+                    <span class="small text-muted ps-2">如果包含敏感数据，请立即粉碎</span>
+                    <div>
+                        <button type="button" class="btn btn-sm btn-danger me-1" id="btn-modal-shred"><i class="fa-solid fa-broom me-1"></i>立刻粉碎</button>
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 全局 Loading -->
     <div id="global-loader" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none justify-content-center align-items-center" style="z-index: 1055;">
         <div class="text-center text-white">
@@ -233,17 +251,19 @@
         </div>
     </div>
 
-    <!-- 依赖 -->
+    <!-- 依赖 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-base64/base64.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs/loader.min.js"></script>
 
-    <!-- 业务逻辑 -->
+    <!-- 🌟 我们自己的业务逻辑脚本 (注意：charPicker 必须放在 editor.js 前面) -->
     <script src="toast.js"></script>
     <script src="modal.js"></script>
     <script src="token.js"></script>
     <script src="api.js"></script>
+    <script src="charPicker.js"></script>
+    <script src="clipboardManager.js"></script> <!-- 新增：剪贴板与图床管家 --> 
     <script src="editor.js"></script>
     <script src="fileTree.js"></script>
     <script src="main.js"></script>

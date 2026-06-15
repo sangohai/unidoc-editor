@@ -293,6 +293,11 @@ async function initApp() {
     FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
     
     await EditorManager.init();
+
+        // 🌟 初始化独立的剪贴板安全与图床引擎
+    if (typeof ClipboardManager !== 'undefined') {
+        ClipboardManager.init(EditorManager);
+    }
     
     const currentMode = document.documentElement.getAttribute('data-bs-theme');
     monaco.editor.setTheme(currentMode === 'dark' ? 'vs-dark' : 'vs-light');

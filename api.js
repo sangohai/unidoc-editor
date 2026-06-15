@@ -26,7 +26,7 @@ const GitHubAPI = {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            // 特殊处理：404 有时是因为文件不存在（比如获取空目录），409 是因为 SHA 冲突
+            // 特殊处理：404 有时是因为文件不存在，409 是因为 SHA 冲突
             const error = new Error(errorData.message || `请求失败: ${response.status}`);
             error.status = response.status;
             throw error;
@@ -35,11 +35,11 @@ const GitHubAPI = {
         return response.json();
     },
 
-    // 1. 获取目录下的文件列表
+    // 1. 获取目录下的文件列表（带时间戳防缓存）
     async getFiles(path = 'notes') {
         try {
-            // 加入 ?t=时间戳，强制 GitHub 不走缓存，实时返回最新列表！
             const data = await this._request(`/contents/${path}?t=${Date.now()}`);
+            // 过滤掉文件夹，只返回文件列表
             return data.filter(item => item.type === 'file');
         } catch (error) {
             if (error.status === 404) return [];
@@ -49,21 +49,20 @@ const GitHubAPI = {
 
     // 2. 获取单个文件内容与 SHA 值
     async getFile(path) {
-        const data = await this._request(`/contents/${path}`);
+        const data = await this._request(`/contents/${path}?t=${Date.now()}`);
         
-        // 【核心防坑点】: GitHub 返回的是 Base64，如果是中文，直接 atob 会乱码
-        // 这里必须使用我们在 index.html 中引入的 js-base64 库 (Base64.decode)
+        // 纯文本使用 js-base64 库安全解码中文
         const content = Base64.decode(data.content);
         
         return {
             content: content,
-            sha: data.sha  // 保存时必须带上这个 sha 防冲突
+            sha: data.sha 
         };
     },
 
-    // 3. 保存（更新/创建）文件
+    // 3. 保存（更新/创建）纯文本文件
     async saveFile(path, content, sha, commitMessage = 'Update via UniDoc Editor') {
-        // 中文转 Base64，同样使用 js-base64 库
+        // 纯文本使用 js-base64 库安全编码
         const encodedContent = Base64.encode(content);
         
         const body = {
@@ -71,16 +70,14 @@ const GitHubAPI = {
             content: encodedContent
         };
         
-        // 如果是更新已有文件，必须提供它当前的 sha 值
         if (sha) {
             body.sha = sha;
         }
 
         const data = await this._request(`/contents/${path}`, 'PUT', body);
         
-        // 返回新的 sha 值给前端更新状态
         return data.content.sha;
-    }, // <-- 注意这里的逗号，很可能是之前漏掉导致报错的原因
+    },
 
     // 4. 删除文件
     async deleteFile(path, sha) {
@@ -89,5 +86,21 @@ const GitHubAPI = {
             sha: sha
         };
         await this._request(`/contents/${path}`, 'DELETE', body);
+    },
+
+    // 🌟 5. 【新增】上传图片图床专用接口
+    async uploadImage(path, pureBase64Data, commitMessage = 'Upload image via UniDoc') {
+        // 图片本身已经是完美的 Base64，不需要任何额外的库去转码，直接传给 GitHub
+        const body = {
+            message: commitMessage,
+            content: pureBase64Data
+        };
+        
+        // 调用 PUT 创建图片文件 (因为是以时间戳命名，不会有重复，所以不需要传 sha)
+        const data = await this._request(`/contents/${path}`, 'PUT', body);
+        
+        // 上传成功后，返回 GitHub 中的文件相对路径 (如 notes/images/img_123.png)
+        return data.content.path;
     }
 };
+
