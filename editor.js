@@ -31,15 +31,13 @@ const EditorManager = {
                     renderWhitespace: 'selection'
                 });
 
-                // 监听内容改变
                 this.instance.onDidChangeModelContent(() => {
                     if (this.onChangeCallback) {
                         this.onChangeCallback(this.instance.getValue());
                     }
-                    this.updateLeftScrollThumb(); // 内容改变可能导致高度变化，刷新滑块
+                    this.updateLeftScrollThumb();
                 });
 
-                // 🌟 核心：监听 Monaco 的原生滚动事件，实时同步我们左侧的滑块
                 this.instance.onDidScrollChange(() => {
                     this.updateLeftScrollThumb();
                 });
@@ -69,7 +67,7 @@ const EditorManager = {
                 this.initToolbarEvents();
                 this.renderCharPanels();
                 
-                // 初始化左侧滑轨引擎
+                // 初始化左侧实体滑轨引擎
                 this.initLeftScrollZone();
 
                 resolve();
@@ -77,7 +75,7 @@ const EditorManager = {
         });
     },
 
-    // 🌟 左侧专属滑轨滑动逻辑
+    // 🌟 全新重构：物理推杆滑动逻辑
     initLeftScrollZone() {
         const zone = document.getElementById('left-scroll-zone');
         const thumb = document.getElementById('left-scroll-thumb');
@@ -87,7 +85,6 @@ const EditorManager = {
 
         zone.addEventListener('touchstart', (e) => {
             lastY = e.touches[0].clientY;
-            // 手指按上去时，滑块变深色高亮显示
             if (thumb) thumb.classList.replace('opacity-25', 'opacity-75');
         }, { passive: true });
 
@@ -96,25 +93,36 @@ const EditorManager = {
             e.preventDefault(); 
             
             const currentY = e.touches[0].clientY;
-            const deltaY = lastY - currentY;
+            // 【核心改变 1】：计算方向。正数代表手指正在往下推
+            const deltaY = currentY - lastY; 
             lastY = currentY;
             
+            const contentHeight = this.instance.getContentHeight();
+            const layoutInfo = this.instance.getLayoutInfo();
+            if (!layoutInfo || contentHeight <= layoutInfo.height) return;
+            
+            const viewHeight = layoutInfo.height;
+            const thumbHeight = Math.max(30, (viewHeight / contentHeight) * viewHeight); 
+            
+            // 【核心改变 2】：齿轮比计算（手指移动 1px，文档实际滚动 N px）
+            // 比例 = 可滚动的内容总高度 / 滑轨的可用总高度
+            const ratio = (contentHeight - viewHeight) / (viewHeight - thumbHeight);
+            
             const currentScrollTop = this.instance.getScrollTop();
-            this.instance.setScrollTop(currentScrollTop + deltaY);
+            
+            // 手指向下推(deltaY为正) -> 文档向下滚(增加scrollTop) -> 实现了物理滑块操控感！
+            this.instance.setScrollTop(currentScrollTop + (deltaY * ratio));
         }, { passive: false });
 
         zone.addEventListener('touchend', () => {
-            // 手指离开时，滑块恢复半透明
             if (thumb) thumb.classList.replace('opacity-75', 'opacity-25');
         }, { passive: true });
         
-        // 窗口大小变化时，重新计算滑块
         window.addEventListener('resize', () => {
             setTimeout(() => this.updateLeftScrollThumb(), 100);
         });
     },
 
-    // 🌟 动态计算并更新左侧滑块的位置与高度
     updateLeftScrollThumb() {
         const thumb = document.getElementById('left-scroll-thumb');
         if (!thumb || !this.instance) return;
@@ -126,7 +134,6 @@ const EditorManager = {
         const viewHeight = layoutInfo.height;
         const scrollTop = this.instance.getScrollTop();
 
-        // 如果内容还没一屏幕高，隐藏滑块
         if (contentHeight <= viewHeight) {
             thumb.style.display = 'none';
             return;
@@ -134,21 +141,17 @@ const EditorManager = {
 
         thumb.style.display = 'block';
         
-        // 1. 计算滑块的动态高度（最小 30px，防太短点不到）
         const heightPct = viewHeight / contentHeight;
         const thumbHeight = Math.max(30, heightPct * viewHeight); 
         
-        // 2. 计算滑块的具体 Y 轴偏移量
         const scrollAvailable = contentHeight - viewHeight;
         const scrollPct = scrollAvailable > 0 ? scrollTop / scrollAvailable : 0;
         const topPos = scrollPct * (viewHeight - thumbHeight);
 
-        // 应用样式 (利用 transform 的 GPU 硬件加速，保证绝对丝滑)
         thumb.style.height = `${thumbHeight}px`;
         thumb.style.transform = `translateY(${topPos}px)`;
     },
 
-    // ======== 下方是工具栏渲染及其他业务逻辑 (维持不变) ========
     renderCharPanels() {
         const emojiPanel = document.getElementById('emoji-panel');
         const symbolPanel = document.getElementById('symbol-panel');
@@ -260,7 +263,6 @@ const EditorManager = {
 
         this.handlePreviewLayout(lang);
         
-        // 文件加载完毕后，初始化滑块
         setTimeout(() => this.updateLeftScrollThumb(), 100);
     },
 
