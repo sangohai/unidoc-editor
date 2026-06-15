@@ -42,7 +42,6 @@ const EditorManager = {
                     this.updateLeftScrollThumb();
                 });
 
-                // ================= 预览模式切换 =================
                 document.getElementById('btn-toggle-preview').addEventListener('click', () => {
                     const preview = document.getElementById('preview-container');
                     const btnIcon = document.querySelector('#btn-toggle-preview i');
@@ -66,8 +65,6 @@ const EditorManager = {
 
                 this.initToolbarEvents();
                 this.renderCharPanels();
-                
-                // 初始化左侧实体滑轨引擎
                 this.initLeftScrollZone();
 
                 resolve();
@@ -75,17 +72,20 @@ const EditorManager = {
         });
     },
 
-    // 🌟 全新重构：物理推杆滑动逻辑
+    // 🌟 滑轨物理引擎 (已针对固定圆形高度进行优化)
     initLeftScrollZone() {
         const zone = document.getElementById('left-scroll-zone');
         const thumb = document.getElementById('left-scroll-thumb');
         if (!zone) return;
 
         let lastY = 0;
+        // 圆形的固定高度为 20px (与 CSS 中 height 保持一致)
+        const thumbHeight = 20; 
 
         zone.addEventListener('touchstart', (e) => {
             lastY = e.touches[0].clientY;
-            if (thumb) thumb.classList.replace('opacity-25', 'opacity-75');
+            // 手指按下时，圆形变得更加不透明，反馈感更强
+            if (thumb) thumb.classList.replace('opacity-50', 'opacity-100');
         }, { passive: true });
 
         zone.addEventListener('touchmove', (e) => {
@@ -93,7 +93,6 @@ const EditorManager = {
             e.preventDefault(); 
             
             const currentY = e.touches[0].clientY;
-            // 【核心改变 1】：计算方向。正数代表手指正在往下推
             const deltaY = currentY - lastY; 
             lastY = currentY;
             
@@ -102,20 +101,16 @@ const EditorManager = {
             if (!layoutInfo || contentHeight <= layoutInfo.height) return;
             
             const viewHeight = layoutInfo.height;
-            const thumbHeight = Math.max(30, (viewHeight / contentHeight) * viewHeight); 
-            
-            // 【核心改变 2】：齿轮比计算（手指移动 1px，文档实际滚动 N px）
-            // 比例 = 可滚动的内容总高度 / 滑轨的可用总高度
+            // 【核心变化】齿轮比采用固定的圆形高度计算
             const ratio = (contentHeight - viewHeight) / (viewHeight - thumbHeight);
             
             const currentScrollTop = this.instance.getScrollTop();
-            
-            // 手指向下推(deltaY为正) -> 文档向下滚(增加scrollTop) -> 实现了物理滑块操控感！
             this.instance.setScrollTop(currentScrollTop + (deltaY * ratio));
         }, { passive: false });
 
         zone.addEventListener('touchend', () => {
-            if (thumb) thumb.classList.replace('opacity-75', 'opacity-25');
+            // 手指松开，恢复半透明
+            if (thumb) thumb.classList.replace('opacity-100', 'opacity-50');
         }, { passive: true });
         
         window.addEventListener('resize', () => {
@@ -123,6 +118,7 @@ const EditorManager = {
         });
     },
 
+    // 🌟 同步圆形滑块位置
     updateLeftScrollThumb() {
         const thumb = document.getElementById('left-scroll-thumb');
         if (!thumb || !this.instance) return;
@@ -134,6 +130,7 @@ const EditorManager = {
         const viewHeight = layoutInfo.height;
         const scrollTop = this.instance.getScrollTop();
 
+        // 内容不满一屏时隐藏
         if (contentHeight <= viewHeight) {
             thumb.style.display = 'none';
             return;
@@ -141,14 +138,15 @@ const EditorManager = {
 
         thumb.style.display = 'block';
         
-        const heightPct = viewHeight / contentHeight;
-        const thumbHeight = Math.max(30, heightPct * viewHeight); 
-        
+        // 固定的圆形高度
+        const thumbHeight = 20; 
         const scrollAvailable = contentHeight - viewHeight;
         const scrollPct = scrollAvailable > 0 ? scrollTop / scrollAvailable : 0;
+        
+        // 计算圆形顶部的 Y 轴偏移量
         const topPos = scrollPct * (viewHeight - thumbHeight);
 
-        thumb.style.height = `${thumbHeight}px`;
+        // 仅修改位移，不再修改 height
         thumb.style.transform = `translateY(${topPos}px)`;
     },
 
