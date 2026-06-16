@@ -93,21 +93,26 @@ const EditorManager = {
         });
     },
 
-    // ================= 🌟 修复版：永不停转的虚拟摇杆引擎 =================
+    // ================= 🌟 革命性虚拟摇杆物理引擎 (加入非线性调校) =================
     initJoystickScrollZone() {
         const zone = document.getElementById('left-scroll-zone');
         const joystick = document.getElementById('left-joystick-thumb');
         if (!zone || !joystick) return;
 
         let startY = 0;
-        const maxOffset = 60; 
+        const maxOffset = 60; // 摇杆最大拉动距离 60px
 
         const scrollLoop = () => {
-            // 💥 修复 1：只要没松手，哪怕回到中心点，引擎也绝不熄火！
             if (!this.isJoystickDragging) return;
 
             if (this.joystickOffset !== 0 && this.instance) {
-                const speed = this.joystickOffset * 0.8; // 微微调高灵敏度，更顺滑
+                // 💥 游戏手柄级调校：非线性加速算法
+                // 1. 计算当前推力比例 (0.0 ~ 1.0)
+                const pushRatio = Math.abs(this.joystickOffset) / maxOffset;
+                // 2. 采用二次方曲线 (pushRatio * pushRatio) 让微推极其缓慢，重推才爆发速度
+                // 3. 乘以最大速度限制 (15px/帧)
+                const speed = Math.sign(this.joystickOffset) * (pushRatio * pushRatio) * 15; 
+                
                 const currentScrollTop = this.instance.getScrollTop();
                 this.instance.setScrollTop(currentScrollTop + speed);
             }
@@ -116,7 +121,6 @@ const EditorManager = {
         };
 
         zone.addEventListener('pointerdown', (e) => {
-            // 安全捕获光标
             try { zone.setPointerCapture(e.pointerId); } catch(err){} 
             
             startY = e.clientY;
@@ -147,7 +151,6 @@ const EditorManager = {
         const resetJoystick = (e) => {
             if (!this.isJoystickDragging) return;
             
-            // 安全释放光标
             try { if (zone.hasPointerCapture(e.pointerId)) zone.releasePointerCapture(e.pointerId); } catch(err){}
             
             this.isJoystickDragging = false;
@@ -169,7 +172,7 @@ const EditorManager = {
 
     updateProgressBar() {
         const bar = document.getElementById('left-progress-bar');
-        const thumb = document.getElementById('left-joystick-thumb'); // 获取摇杆元素
+        const thumb = document.getElementById('left-joystick-thumb'); 
         if (!bar || !this.instance) return;
 
         const contentHeight = this.instance.getContentHeight();
@@ -179,14 +182,12 @@ const EditorManager = {
         const viewHeight = layoutInfo.height;
         const scrollTop = this.instance.getScrollTop();
 
-        // 💥 修复 2：如果文档很短不满一屏，连同摇杆一起彻底隐藏！
         if (contentHeight <= viewHeight) {
             bar.style.display = 'none';
             if (thumb) thumb.style.setProperty('display', 'none', 'important');
             return;
         }
 
-        // 恢复显示
         bar.style.display = 'block';
         if (thumb) thumb.style.setProperty('display', 'flex', 'important');
         
