@@ -1,13 +1,13 @@
 ### News💥 thinking       
 
 ***      
-#####  lan_postal core :      
+####  lan_postal core :      
 1- 手機📱快速建立通信基站；     
 2- 對話 pin 加密，pin 錯誤對話自動銷毀；     
 
 ***        
 
-#####  Unidoc-Editor :           
+####  Unidoc-Editor :           
 
 1 - 增加 重命名 文档的功能 ；     ✅      
 2 - 增加对于， .txt 格式文档的支持，方便无预定格式文档的保存；      ✅      
@@ -15,7 +15,7 @@
 
 ***       
 
-#####  衝塔games  Impact Tower      
+####  衝塔games  Impact Tower      
 
 顯示模式 ：［豎屏］+ ［無限地圖］
 
@@ -25,14 +25,14 @@
 
 ***       
 
-#####  FIFA games      
+####  FIFA games      
 
 🇺🇸 United State    ⚽⚽⚽          
 🇦🇷 Aguting         ⚽⚽⚽⚽         
 
 ***       
 
-##### emoji 資源倉庫 調度      
+#### emoji 資源倉庫 調度      
 
 1- 管理 3000+ emoji 表情 和 素材         
 2- 為不同項目和或遊戲，CDN 分發到不同項目！        
@@ -40,7 +40,7 @@
 
 ***        
 
-#####  🥅  Goal Moving  🥅       
+####  🥅  Goal Moving  🥅       
   
 ---       
 
