@@ -12,7 +12,7 @@
 多项目（Web、App、Game）维护多套表情包图片，导致冗余和管理混乱。        
 解决方案: 建立一个单一事实来源 (SSOT) 的云端资产仓库。利用 GitHub 存储 + 免费全球 CDN（如 jsDelivr），为所有项目提供标准化的“高可用图片集 + JSON 映射索引”。         
 
-📁 2. 仓库目录结构规划        
+📁 2. 仓库目录结构规划          
 ---         
 
 emoji-hub/             
@@ -33,7 +33,7 @@ emoji-hub/
  🛠️ 3. 数据层设计 (JSON Schema)           
  ---      
 
-核心的 emoji-map.json 将采用极简的数组对象结构，方便任何语言（C#, JavaScript, Python）瞬间解析：         
+核心的 emoji-map.json 将采用极简的数组对象结构，方便任何语言（C#, JavaScript, Python）瞬间解析：              
 
 ``` 
 [
