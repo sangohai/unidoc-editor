@@ -127,11 +127,20 @@
                 </div>
             </div>
 
-            <!-- Monaco 与 左侧滑动滑轨 -->
+            <!-- Monaco 与 左侧虚拟摇杆滑轨 -->
             <div class="position-relative flex-grow-1 w-100 d-flex">
                 <div id="editor-container" class="flex-grow-1 w-100"></div>
+                
+                <!-- 左侧边缘专属安全摇杆区 -->
                 <div id="left-scroll-zone" class="position-absolute top-0 start-0 h-100" style="width: 45px; z-index: 5; touch-action: none; border-right: 1px dashed rgba(128,128,128,0.2);">
-                    <div id="left-scroll-thumb" class="position-absolute bg-primary rounded-circle opacity-50 shadow-sm" style="width: 20px; height: 20px; right: 12px; top: 0; transition: transform 0.05s linear, opacity 0.2s;"></div>
+                    <!-- 极细进度条 -->
+                    <div id="left-progress-bar" class="position-absolute bg-secondary opacity-25" style="width: 2px; right: 21px; top: 0; transition: transform 0.05s linear;"></div>
+                    
+                    <!-- 🌟 升级版大号摇杆把手 -->
+                    <div id="left-joystick-thumb" class="position-absolute bg-primary rounded-pill opacity-50 shadow-sm d-flex justify-content-center align-items-center" style="width: 32px; height: 52px; right: 6px; top: 50%; transform: translateY(-50%); transition: opacity 0.2s;">
+                        <!-- 箭头垂直拉伸 1.5 倍，更具推杆感 -->
+                        <i class="fa-solid fa-arrows-up-down text-white" style="font-size: 16px; transform: scaleY(1.5);"></i>
+                    </div>
                 </div>
             </div>
             

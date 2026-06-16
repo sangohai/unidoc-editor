@@ -1,12 +1,16 @@
-// editor.js - 纯净的 Monaco Editor 引擎与 Marked.js 渲染器
+// editor.js - 纯净的 Monaco Editor 引擎、摇杆滚动代理与渲染器
 const EditorManager = {
     instance: null,
     currentLanguage: 'markdown',
     onChangeCallback: null,
+    imageCache: {}, 
+
+    isJoystickDragging: false,
+    joystickOffset: 0,
+    joystickAnimationFrame: null,
 
     init() {
         return new Promise((resolve) => {
-            // 🌟 修复点：安全地读取外部 ClipboardManager 缓存
             marked.use({
                 renderer: {
                     image: (token_or_href, title, text) => {
@@ -15,7 +19,6 @@ const EditorManager = {
                         let imgTitle = typeof token_or_href === 'object' ? token_or_href.title : title;
                         
                         if (href && href.startsWith('images/')) {
-                            // 💥 将 window.ClipboardManager 改为 typeof 判断，完美穿透作用域读取缓存！
                             if (typeof ClipboardManager !== 'undefined' && ClipboardManager.imageCache[href]) {
                                 href = ClipboardManager.imageCache[href];
                             } else {
@@ -50,14 +53,13 @@ const EditorManager = {
                     if (this.onChangeCallback) {
                         this.onChangeCallback(this.instance.getValue());
                     }
-                    this.updateLeftScrollThumb();
+                    this.updateProgressBar();
                 });
 
                 this.instance.onDidScrollChange(() => {
-                    this.updateLeftScrollThumb();
+                    this.updateProgressBar();
                 });
 
-                // ================= 预览模式切换 =================
                 document.getElementById('btn-toggle-preview').addEventListener('click', () => {
                     const preview = document.getElementById('preview-container');
                     const btnIcon = document.querySelector('#btn-toggle-preview i');
@@ -80,9 +82,8 @@ const EditorManager = {
                 });
 
                 this.initToolbarEvents();
-                this.initLeftScrollZone();
+                this.initJoystickScrollZone();
 
-                // 对接外部独立模块
                 if (typeof CharPicker !== 'undefined') {
                     CharPicker.init((char) => this.insertTextAtCursor(char));
                 }
@@ -92,51 +93,84 @@ const EditorManager = {
         });
     },
 
-    // ================= 物理滑轨引擎 =================
-    initLeftScrollZone() {
+    // ================= 🌟 修复版：永不停转的虚拟摇杆引擎 =================
+    initJoystickScrollZone() {
         const zone = document.getElementById('left-scroll-zone');
-        const thumb = document.getElementById('left-scroll-thumb');
-        if (!zone) return;
+        const joystick = document.getElementById('left-joystick-thumb');
+        if (!zone || !joystick) return;
 
-        let lastY = 0;
-        const thumbHeight = 20; 
+        let startY = 0;
+        const maxOffset = 60; 
 
-        zone.addEventListener('touchstart', (e) => {
-            lastY = e.touches[0].clientY;
-            if (thumb) thumb.classList.replace('opacity-50', 'opacity-100');
-        }, { passive: true });
+        const scrollLoop = () => {
+            // 💥 修复 1：只要没松手，哪怕回到中心点，引擎也绝不熄火！
+            if (!this.isJoystickDragging) return;
 
-        zone.addEventListener('touchmove', (e) => {
-            if (!this.instance) return;
+            if (this.joystickOffset !== 0 && this.instance) {
+                const speed = this.joystickOffset * 0.8; // 微微调高灵敏度，更顺滑
+                const currentScrollTop = this.instance.getScrollTop();
+                this.instance.setScrollTop(currentScrollTop + speed);
+            }
+            
+            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
+        };
+
+        zone.addEventListener('pointerdown', (e) => {
+            // 安全捕获光标
+            try { zone.setPointerCapture(e.pointerId); } catch(err){} 
+            
+            startY = e.clientY;
+            this.isJoystickDragging = true;
+            this.joystickOffset = 0;
+
+            joystick.style.transition = 'opacity 0.2s'; 
+            joystick.classList.replace('opacity-50', 'opacity-100');
+
+            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
+            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
+        });
+
+        zone.addEventListener('pointermove', (e) => {
+            if (!this.isJoystickDragging || !this.instance) return;
             e.preventDefault(); 
             
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - lastY; 
-            lastY = currentY;
+            const currentY = e.clientY;
+            let deltaY = currentY - startY;
             
-            const contentHeight = this.instance.getContentHeight();
-            const layoutInfo = this.instance.getLayoutInfo();
-            if (!layoutInfo || contentHeight <= layoutInfo.height) return;
+            if (deltaY > maxOffset) deltaY = maxOffset;
+            if (deltaY < -maxOffset) deltaY = -maxOffset;
             
-            const viewHeight = layoutInfo.height;
-            const ratio = (contentHeight - viewHeight) / (viewHeight - thumbHeight);
-            
-            const currentScrollTop = this.instance.getScrollTop();
-            this.instance.setScrollTop(currentScrollTop + (deltaY * ratio));
-        }, { passive: false });
+            this.joystickOffset = deltaY;
+            joystick.style.transform = `translateY(calc(-50% + ${deltaY}px))`;
+        });
 
-        zone.addEventListener('touchend', () => {
-            if (thumb) thumb.classList.replace('opacity-100', 'opacity-50');
-        }, { passive: true });
+        const resetJoystick = (e) => {
+            if (!this.isJoystickDragging) return;
+            
+            // 安全释放光标
+            try { if (zone.hasPointerCapture(e.pointerId)) zone.releasePointerCapture(e.pointerId); } catch(err){}
+            
+            this.isJoystickDragging = false;
+            this.joystickOffset = 0;
+            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
+            
+            joystick.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s';
+            joystick.style.transform = 'translateY(-50%)';
+            joystick.classList.replace('opacity-100', 'opacity-50');
+        };
+
+        zone.addEventListener('pointerup', resetJoystick);
+        zone.addEventListener('pointercancel', resetJoystick);
         
         window.addEventListener('resize', () => {
-            setTimeout(() => this.updateLeftScrollThumb(), 100);
+            setTimeout(() => this.updateProgressBar(), 100);
         });
     },
 
-    updateLeftScrollThumb() {
-        const thumb = document.getElementById('left-scroll-thumb');
-        if (!thumb || !this.instance) return;
+    updateProgressBar() {
+        const bar = document.getElementById('left-progress-bar');
+        const thumb = document.getElementById('left-joystick-thumb'); // 获取摇杆元素
+        if (!bar || !this.instance) return;
 
         const contentHeight = this.instance.getContentHeight();
         const layoutInfo = this.instance.getLayoutInfo();
@@ -145,24 +179,29 @@ const EditorManager = {
         const viewHeight = layoutInfo.height;
         const scrollTop = this.instance.getScrollTop();
 
+        // 💥 修复 2：如果文档很短不满一屏，连同摇杆一起彻底隐藏！
         if (contentHeight <= viewHeight) {
-            thumb.style.display = 'none';
+            bar.style.display = 'none';
+            if (thumb) thumb.style.setProperty('display', 'none', 'important');
             return;
         }
 
-        thumb.style.display = 'block';
+        // 恢复显示
+        bar.style.display = 'block';
+        if (thumb) thumb.style.setProperty('display', 'flex', 'important');
         
-        const thumbHeight = 20; 
+        const heightPct = viewHeight / contentHeight;
+        const barHeight = Math.max(10, heightPct * viewHeight); 
+        
         const scrollAvailable = contentHeight - viewHeight;
         const scrollPct = scrollAvailable > 0 ? scrollTop / scrollAvailable : 0;
-        const topPos = scrollPct * (viewHeight - thumbHeight);
+        const topPos = scrollPct * (viewHeight - barHeight);
 
-        thumb.style.height = '20px';
-        thumb.style.width = '20px';
-        thumb.style.transform = `translateY(${topPos}px)`;
+        bar.style.height = `${barHeight}px`;
+        bar.style.transform = `translateY(${topPos}px)`;
     },
 
-    // ================= 工具栏快捷指令 =================
+    // ======== 下方是工具栏渲染逻辑 ========
     insertTextAtCursor(text) {
         if (!this.instance) return;
         const selection = this.instance.getSelection();
@@ -234,7 +273,7 @@ const EditorManager = {
         this.instance.setValue(content || '');
 
         this.handlePreviewLayout(lang);
-        setTimeout(() => this.updateLeftScrollThumb(), 100);
+        setTimeout(() => this.updateProgressBar(), 100);
     },
 
     getContent() {
