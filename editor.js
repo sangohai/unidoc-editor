@@ -11,6 +11,12 @@ const EditorManager = {
 
     init() {
         return new Promise((resolve) => {
+            // 🌟 开启 GitHub 标准的直觉换行模式，再也不用敲空格了！
+            marked.setOptions({
+                breaks: true, // 将原生的单次回车 \n 直接解析为 <br> 换行
+                gfm: true     // 开启 GitHub 风格 Markdown
+            });
+            
             marked.use({
                 renderer: {
                     image: (token_or_href, title, text) => {
