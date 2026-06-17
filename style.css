@@ -1,5 +1,7 @@
+/* 基础容器防滚动与动态视口适配 */
 html, body {
-    height: 100%;
+    height: 100%;       /* 兼容老版本浏览器的后备方案 */
+    height: 100dvh;     /* 💥 核心修复：采用动态视口高度，精准贴合键盘弹起时的真实可见区域 */
     margin: 0;
     padding: 0;
     overflow: hidden;

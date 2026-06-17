@@ -284,21 +284,35 @@ function setupRenameLogic() {
 async function initApp() {
     ThemeManager.init();
 
-    // 【关键修复】：必须先把新建和重命名的逻辑加载进内存
     setupNewFileLogic();
     setupRenameLogic();
 
     TokenModal.init(() => FileTree.load());
-    // 此时 window.handleRenameFile 已经有值了，安全传入！
     FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
     
     await EditorManager.init();
-
-        // 🌟 初始化独立的剪贴板安全与图床引擎
-    if (typeof ClipboardManager !== 'undefined') {
-        ClipboardManager.init(EditorManager);
-    }
     
+    if (typeof ClipboardManager !== 'undefined') ClipboardManager.init(EditorManager);
+    
+    // 🌟 初始化导出模块
+    if (typeof ExportManager !== 'undefined') ExportManager.init();
+    
+    // 🌟 核心防线：修复手机虚拟键盘弹出时，网页被强行上推遮挡顶部的 Bug
+    if (window.visualViewport) {
+        const resizeBodyToVisualViewport = () => {
+            // 强行把 body 高度压缩到键盘上方的真实可用区域内，阻止系统粗暴推移
+            document.body.style.height = window.visualViewport.height + 'px';
+            // 唤醒 Monaco 重新计算内部布局
+            if (EditorManager.instance) {
+                setTimeout(() => EditorManager.instance.layout(), 50);
+            }
+        };
+        // 监听虚拟键盘的弹出与收起
+        window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
+        // 初始化执行一次
+        resizeBodyToVisualViewport();
+    }
+
     const currentMode = document.documentElement.getAttribute('data-bs-theme');
     monaco.editor.setTheme(currentMode === 'dark' ? 'vs-dark' : 'vs-light');
 
@@ -309,6 +323,7 @@ async function initApp() {
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
     document.getElementById('btn-settings').addEventListener('click', () => TokenModal.show());
 
+    // 绑定快捷键保存 (Ctrl+S / Cmd+S)
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
             e.preventDefault(); 
@@ -316,6 +331,7 @@ async function initApp() {
         }
     });
 
+    // 拦截页面关闭
     window.addEventListener('beforeunload', (e) => {
         if (AppState.isDirty) {
             e.preventDefault();

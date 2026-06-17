@@ -41,6 +41,18 @@
                 </button>
 
                 <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" title="导出文件">
+                        <i class="fa-solid fa-file-export"></i><span class="d-none d-md-inline ms-1">导出</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 160px; font-size: 14px;">
+                        <li><a class="dropdown-item" href="#" id="btn-export-md"><i class="fa-solid fa-file-code me-2 text-primary"></i>存为 本地文档</a></li>
+                        <li><a class="dropdown-item" href="#" id="btn-export-html"><i class="fa-brands fa-html5 me-2 text-warning"></i>存为 HTML 网页</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="btn-export-pdf"><i class="fa-solid fa-file-pdf me-2 text-danger"></i>打印 / 存为 PDF</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown me-2">
                     <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="fa-solid fa-palette"></i>
                     </button>
@@ -283,6 +295,7 @@
     <script src="api.js"></script>
     <script src="charPicker.js"></script>
     <script src="clipboardManager.js"></script> <!-- 新增：剪贴板与图床管家 --> 
+    <script src="exportManager.js"></script> <!-- 新增：导出中心 -->
     <script src="editor.js"></script>
     <script src="fileTree.js"></script>
     <script src="main.js"></script>
