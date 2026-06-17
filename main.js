@@ -330,4 +330,14 @@ async function initApp() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', initApp);
+document.addEventListener('DOMContentLoaded', () => {
+    // 启动主程序
+    initApp();
+
+    // 🌟 注册 PWA Service Worker
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('✅ PWA Service Worker 注册成功!', reg.scope))
+            .catch(err => console.error('❌ PWA 注册失败:', err));
+    }
+});
