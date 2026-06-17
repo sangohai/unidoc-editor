@@ -71,7 +71,8 @@ Web/Markdown 项目调用方式：
 ⚖️ 6. 版权与素材来源策略         
 ---        
 绝对不自己画图。直接搬运世界顶级开源表情库（无版权风险，可商用）：        
-Twemoji (Twitter 开源): 画风扁平可爱，极度适合 Web 和独立游戏（遵循 CC-BY 4.0 协议）。           
+Twemoji (Twitter 开源): 画风扁平可爱，极度适合 Web 和独立游戏（遵循 CC-BY 4.0 协议）。   
+        
 Google Noto Emoji: 谷歌原生风格，全面且规范（遵循 Apache 2.0 协议）。          
 (开发第一步：写个 Node.js/Python 爬虫小脚本，将开源库里的几千张 SVG 批量重命名并自动生成 emoji-map.json。)           
 
