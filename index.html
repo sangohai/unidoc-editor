@@ -78,18 +78,24 @@
     <!-- 主体工作区 -->
     <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
         
+        <!-- 左侧文件树 -->
         <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px;">
+            
+            <!-- 手机端 Header -->
             <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
+                    <button id="btn-gc-mobile" class="btn btn-sm btn-link text-danger p-0 me-3" title="扫描清理无用图片"><i class="fa-solid fa-recycle fs-5"></i></button>
                     <button id="btn-new-file-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3"><i class="fa-solid fa-plus fs-5"></i></button>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas"></button>
                 </div>
             </div>
             
+            <!-- PC端 Header -->
             <div class="sidebar-header p-2 border-bottom bg-body-tertiary fw-bold text-body-secondary d-none d-md-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-folder-tree me-1"></i> /notes 目录</span>
                 <div>
+                    <button id="btn-gc-pc" class="btn btn-sm btn-link text-danger p-0 me-2" title="扫描清理无用图片"><i class="fa-solid fa-recycle"></i></button>
                     <button id="btn-new-file-pc" class="btn btn-sm btn-link text-body-secondary p-0 me-2" title="新建文件"><i class="fa-solid fa-plus"></i></button>
                     <button id="btn-refresh-tree-pc" class="btn btn-sm btn-link text-body-secondary p-0" title="刷新"><i class="fa-solid fa-rotate-right"></i></button>
                 </div>
@@ -274,6 +280,28 @@
         </div>
     </div>
 
+    <!-- 垃圾回收结果 Modal -->
+    <div class="modal fade" id="gcModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white border-0">
+                    <h5 class="modal-title fs-6"><i class="fa-solid fa-recycle me-2"></i>图床瘦身扫描报告</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-body p-3">
+                    <p id="gc-summary" class="small text-body-secondary mb-2">正在分析...</p>
+                    <ul id="gc-orphan-list" class="list-group list-group-flush border rounded" style="max-height: 200px; overflow-y: auto;">
+                        <!-- JS 动态填充孤儿图片列表 -->
+                    </ul>
+                </div>
+                <div class="modal-footer p-2 bg-body">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">暂不处理</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="btn-confirm-gc"><i class="fa-solid fa-fire me-1"></i>彻底销毁</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 全局 Loading -->
     <div id="global-loader" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none justify-content-center align-items-center" style="z-index: 1055;">
         <div class="text-center text-white">
@@ -296,6 +324,7 @@
     <script src="charPicker.js"></script>
     <script src="clipboardManager.js"></script> <!-- 新增：剪贴板与图床管家 --> 
     <script src="exportManager.js"></script> <!-- 新增：导出中心 -->
+    <script src="garbageCollector.js"></script> <!-- 新增：图床垃圾回收器 -->
     <script src="editor.js"></script>
     <script src="fileTree.js"></script>
     <script src="main.js"></script>

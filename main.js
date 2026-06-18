@@ -296,6 +296,12 @@ async function initApp() {
     
     // 🌟 初始化导出模块
     if (typeof ExportManager !== 'undefined') ExportManager.init();
+
+     // 🌟 初始化导出模块
+    if (typeof ExportManager !== 'undefined') ExportManager.init();
+    
+    // 🌟 初始化图床垃圾回收模块
+    if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
     
     // 🌟 核心防线：修复手机虚拟键盘弹出时，网页被强行上推遮挡顶部的 Bug
     if (window.visualViewport) {
