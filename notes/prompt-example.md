@@ -24,9 +24,10 @@
 
 动画与视觉效果：移动平滑，炸弹爆炸动画清晰道具掉落动画可见2D 像素风格，颜色鲜明，游戏风格可爱          
 
-技术实现：使用纯 JavaScript 实现游戏逻辑渲染使用 HTML `<canvas>` 或 div+CSS grid游戏循环使用 requestAnimationFrame所有资源内嵌，                 
-不依赖外部库代码结构清晰，便于阅读和修改               
+技术实现：使用纯 JavaScript 实现游戏逻辑渲染使用     
 
+ HTML `<canvas>` 或 div+CSS grid游戏循环使用 requestAnimationFrame所有资源内嵌，                 
+不依赖外部库代码结构清晰，便于阅读和修改               
 
 
 输出要求：           
