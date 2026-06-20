@@ -26,9 +26,15 @@ geany| 文字編輯器 | mousepad, leafpad
 
 ***       
 
-nitrogen               | 桌面壁紙管理               | feh, variety                
-volumeicon             | 音量控制                   | pamixer, pulsemixer            
-network-manager-applet | 網絡管理                   | connman, wicd            
- 
----     
+nitrogen | 桌面壁紙管理 | feh, variety          
+
+***
+
+volumeicon  | 音量控制 | pamixer, pulsemixer         
+
+***       
+
+network-manager-applet | 網絡管理 | connman , wicd   
+
+***     
 
