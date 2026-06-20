@@ -18,3 +18,10 @@ network-manager-applet | 網絡管理 | connman, wicd
 
 ---     
 
+ArchLabs Linux is a discontinued lightweight rolling release Linux distribution based on a minimal Arch Linux operating system with the Openbox window manager. ArchLabs is inspired by BunsenLabs. ArchLabs Linux. ArchLabs 2022.01.18 with Openbox.
+
+---      
+
+
+
+
