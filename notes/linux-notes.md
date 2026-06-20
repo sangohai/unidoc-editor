@@ -17,8 +17,10 @@ volumeicon | 音量控制 |    pamixer, pulsemixer
 network-manager-applet | 網絡管理 | connman, wicd         
 
 ---     
+#### ArchBANG  linux     
+ArchBANG is a simple live Archlinux based distribution using Labwc window manager running under Wayland. Light fast and very easy to install.
 
-ArchLabs Linux is a discontinued lightweight rolling release Linux distribution based on a minimal Arch Linux operating system with the Openbox window manager. ArchLabs is inspired by BunsenLabs. ArchLabs Linux. ArchLabs 2022.01.18 with Openbox.
+If you find ArchBang useful, please consider supporting development through donations. See the External Links section
 
 ---      
 
