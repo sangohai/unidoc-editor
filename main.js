@@ -306,17 +306,18 @@ async function initApp() {
     // 🌟 终极防线：彻底对抗 iOS/Android 键盘弹起时的系统强制上推
     if (window.visualViewport) {
         const resizeBodyToVisualViewport = () => {
-            // 1. 精准控制真实高度
+            // 精准控制真实高度，强制缩减到键盘上方的空间
             document.body.style.height = window.visualViewport.height + 'px';
-            // 2. 强行把被操作系统推上去的网页拽回顶点 (解决顶部 1-4 行被吃掉的问题)
-            window.scrollTo(0, 0); 
+            document.body.style.width = window.visualViewport.width + 'px';
+            
+            // 因为 body 已经被 position: fixed 钉死，不需要再强制 scrollTo
             
             if (EditorManager.instance) {
-                // 3. 给 Monaco 充足的重排时间
+                // 让 Monaco 在被挤压后的新空间里重新排版
                 setTimeout(() => EditorManager.instance.layout(), 100);
             }
         };
-        // 同时监听 resize 和 scroll，防止苹果系统耍滑头
+        // 监听虚拟键盘的弹出与收起，实时动态挤压编辑器
         window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
         window.visualViewport.addEventListener('scroll', resizeBodyToVisualViewport);
         resizeBodyToVisualViewport();
