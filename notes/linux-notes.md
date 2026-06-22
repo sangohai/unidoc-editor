@@ -23,6 +23,9 @@ ArchBANG is a simple live Archlinux based distribution using Labwc window manage
 
 If you find ArchBang useful, please consider supporting development through donations. See the External Links section        
 
+https://archbang.org/
+
+
 ***      
 
 
