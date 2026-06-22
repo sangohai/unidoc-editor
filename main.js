@@ -199,7 +199,7 @@ function setupNewFileLogic() {
                 await FileTree.load();
                 handleFileSelected({ path: path, name: fileName, sha: newSha });
                 UI.hideGlobalLoader();
-            }, 500);
+            }, 1500);
         } catch (error) {
             Toast.show(`创建失败: ${error.message}`, 'error');
             UI.statusEl.innerHTML = '';
@@ -303,19 +303,22 @@ async function initApp() {
     // 🌟 初始化图床垃圾回收模块
     if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
     
-    // 🌟 核心防线：修复手机虚拟键盘弹出时，网页被强行上推遮挡顶部的 Bug
+    // 🌟 终极防线：彻底对抗 iOS/Android 键盘弹起时的系统强制上推
     if (window.visualViewport) {
         const resizeBodyToVisualViewport = () => {
-            // 强行把 body 高度压缩到键盘上方的真实可用区域内，阻止系统粗暴推移
+            // 1. 精准控制真实高度
             document.body.style.height = window.visualViewport.height + 'px';
-            // 唤醒 Monaco 重新计算内部布局
+            // 2. 强行把被操作系统推上去的网页拽回顶点 (解决顶部 1-4 行被吃掉的问题)
+            window.scrollTo(0, 0); 
+            
             if (EditorManager.instance) {
-                setTimeout(() => EditorManager.instance.layout(), 50);
+                // 3. 给 Monaco 充足的重排时间
+                setTimeout(() => EditorManager.instance.layout(), 100);
             }
         };
-        // 监听虚拟键盘的弹出与收起
+        // 同时监听 resize 和 scroll，防止苹果系统耍滑头
         window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
-        // 初始化执行一次
+        window.visualViewport.addEventListener('scroll', resizeBodyToVisualViewport);
         resizeBodyToVisualViewport();
     }
 

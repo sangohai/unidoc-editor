@@ -49,7 +49,7 @@ const EditorManager = {
                     fontSize: 15,
                     lineHeight: 26,             
                     scrollBeyondLastLine: false,
-                    padding: { top: 16 },       
+                    padding: { top: 16, bottom: 80 },        
                     cursorBlinking: 'smooth',   
                     formatOnPaste: true,        
                     renderWhitespace: 'selection'

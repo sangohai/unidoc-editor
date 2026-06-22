@@ -10,6 +10,7 @@ const FileTree = {
         this.onDeleteClick = onDeleteClickCallback; 
         this.onRenameClick = onRenameClickCallback;
         document.getElementById('btn-refresh-tree-pc')?.addEventListener('click', () => this.load());
+        document.getElementById('btn-refresh-tree-mobile')?.addEventListener('click', () => this.load());
     },
 
     async load() {

@@ -85,6 +85,8 @@
             <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
+                    <!-- 新增：移动端刷新按钮 -->
+                    <button id="btn-refresh-tree-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3" title="刷新"><i class="fa-solid fa-rotate-right fs-5"></i></button>
                     <button id="btn-gc-mobile" class="btn btn-sm btn-link text-danger p-0 me-3" title="扫描清理无用图片"><i class="fa-solid fa-recycle fs-5"></i></button>
                     <button id="btn-new-file-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3"><i class="fa-solid fa-plus fs-5"></i></button>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas"></button>
@@ -108,8 +110,8 @@
 
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
             
-            <!-- 编辑器工具栏 (升级了 Flex 布局，隔离了左右区域) -->
-            <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center justify-content-between" style="display: none !important;">
+            <!-- 编辑器工具栏 (加入了 flex-shrink-0 防止被键盘弹起挤压消失) -->
+            <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center justify-content-between flex-shrink-0" style="display: none !important;">
                 
                 <!-- 左侧：根据不同语言动态切换的工具 -->
                 <div class="d-flex align-items-center">
