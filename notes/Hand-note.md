@@ -46,7 +46,8 @@ https://github.com/jasonkneen/tiny-world-builder/
 
 ***        
 
-#### - Gonzo TUI 
+#### - Gonzo TUI       
+
 Gonzo 切中的正是这个空档。它是一个 Go 编写的实时日志分析 TUI，灵感来自 k9s，把日志流、图表、过滤、严重级别分布、AI 辅助分析都压进终端；支持文件、stdin、Kubernetes、OTLP、CloudWatch、Loki、Vercel 等工作流。       
 
 ***    
