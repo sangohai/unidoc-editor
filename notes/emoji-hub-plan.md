@@ -19,6 +19,7 @@
 解决方案: 建立一个单一事实来源 (SSOT) 的云端资产仓库。利用 GitHub 存储 + 免费全球 CDN（如 jsDelivr），为所有项目提供标准化的“高可用图片集 + JSON 映射索引”。         
 
 #### 📁 2. 仓库目录结构规划          
+
 ***         
 
 emoji-hub/             
@@ -37,6 +38,7 @@ emoji-hub/
  └─ README.md             ← 接入文档与 CDN 使用说明           
 
  #### 🛠️ 3. 数据层设计 (JSON Schema)           
+
  ***      
 
  核心的 emoji-map.json 将采用极简的数组对象结构，方便任何语言（C#, JavaScript, Python）瞬间解析：              
@@ -56,6 +58,7 @@ emoji-hub/
 ```
 
 #### 🚀 4. 分发与调用架构 (CDN)         
+
 ***        
 
 不使用任何自建后端，纯粹依赖 jsDelivr 提供的开源白嫖 CDN 分发。          
@@ -66,6 +69,7 @@ Web/Markdown 项目调用方式：
 引擎启动时 fetch 拉取 emoji-map.json，根据文本解析到的 char，动态加载并渲染对应的 svg/png 纹理贴图。保证了无论是 iOS 还是 Android 玩家，看到的表情画风 100% 绝对一致！              
 
 #### 🖥️ 5. 可视化工作台 (Developer Portal)           
+
 ***        
 利用 GitHub Pages 免费托管 docs/index.html，实现一个“表情挑选超市”：            
 即时搜索：输入 "smile" 或 "笑"，实时过滤显示表情图片。           
