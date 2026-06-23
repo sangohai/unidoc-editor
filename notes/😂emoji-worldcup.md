@@ -4,7 +4,7 @@
 
 預測遊戲         
 
-predict gamble      
+predict gamble       
 
 
 ***      
