@@ -60,4 +60,10 @@ predict gamble
 - **Day 6**: 编写后台定时聚合 SQL/Trigger，前台展示共识比分。
 - **Day 7**: 绑定域名，部署上线，全网宣发！
 
+***         
 
+UI  design 
+
+title： Thoughts? 
+[国旗flag]  U.S.A   VS   [国旗flag]  England          
+[比分]  ⚽ ⚽ ⚽     ：     ⚽ ⚽                 ##### 用球图标数量 代替 比分        
