@@ -51,10 +51,18 @@ Gonzo 切中的正是这个空档。它是一个 Go 编写的实时日志分析 
 
 ***    
 
+#### The Spriters Resource      
+
+这是一个专门收录游戏素材的网站。它主要整理的是已经发售游戏中的 Sprite、角色动画、UI、地图块等资源，并且会按游戏和平台分类。网站里的内容覆盖范围很广，从 FC、GBA、NDS 到街机、PC、Switch，都能找到对应作品。     
+
+The Spriters Resource (https://www.spriters-resource.com/)      
+
+
+#### 开源AI流水线Godogen，独立游戏开发者神器；         
+
 开源AI流水线Godogen，独立游戏开发者神器；      
         
 想做游戏，但不会写代码、不会画美术、不懂引擎架构？2026年爆火开源项目Godogen彻底打破门槛：只用一段文字描述游戏创意，AI全自动走完策划→美术→编码→测试修复全流程，直接交付规范、可编译、能发布的Godot4完整工程，2D/3D游戏全覆盖，普通PC就能跑，独立游戏开发者狂喜！在AI的加持下，只有有想法、有创意，就能开发出属于自己的游戏。例如《孤独的公路》这类小游戏，只需要一段文字描述就能生成。       
-
 
 一、Godogen 到底是什么？GitHub开源地址：https://github.com/htdt/godogen
 
