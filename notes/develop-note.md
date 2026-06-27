@@ -1,6 +1,6 @@
 #### develop-note        
 
-游戏组件命名标准 (Naming Protocol)
+游戏组件命名标准 (Naming Protocol)        
 
 以后我们沟通时，请直接使用以下术语：       
 
