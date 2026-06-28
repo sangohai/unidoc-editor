@@ -27,15 +27,15 @@ https://youtu.be/vMBJ6C8VpjY?si=W2aQ8fVUz4_eTjI6
 ***      
 
 #### Pixelorama 像素风游戏素材工具           
+
 Pixelorama - pixelate your dreams!           
-Unleash your creativity with Pixelorama, a powerful and accessible open-source pixel art multitool. Whether you want to create sprites, tiles,       animations, or just express yourself in the language of pixel art, this software will realize your pixel-perfect dreams with a vast toolbox of features.     
+Unleash your creativity with Pixelorama, a powerful and accessible open-source pixel art multitool. Whether you want to create sprites, tiles,  animations, or just express yourself in the language of pixel art, this software will realize your pixel-perfect dreams with a vast toolbox of features.     
 
 https://github.com/Orama-Interactive/Pixelorama
 
 ***       
 
 #### tiny-world -builder           
-
 
 纯前端单文件：核心是 tiny-world-builder.html，使用 vanilla JS + Three.js（r128，自托管在 vendor/three 目录，无需外部 CDN）。性能优化：8×8 网格保持 60fps，适合浏览器直接运行。部署简单：静态站点，可直接部署到 Vercel/Netlify，或本地打开 HTML 文件运行。开源协议：AGPL-3.0。    
 开源地址开源地址:      
