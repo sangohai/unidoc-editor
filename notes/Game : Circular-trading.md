@@ -6,10 +6,9 @@
 ## A World Where Everything Can Be Traded
 
 Version: 0.1 MVP Blueprint
+***
 
----
-
-# 專案定位（Vision）
+#### 專案定位（Vision）
 
 World Market 不是股票模擬器。
 
@@ -31,9 +30,9 @@ World Market 不是股票模擬器。
 
 而是在遊戲中慢慢理解金融。
 
----
+***      
 
-# 核心理念
+#### 核心理念
 
 > A World Where Everything Can Be Traded.
 
@@ -73,9 +72,9 @@ World Market 不是股票模擬器。
 
 未來都可以加入。
 
----
+***       
 
-# MVP 目標
+#### MVP 目標
 
 玩家可以：
 
