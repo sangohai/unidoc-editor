@@ -2,8 +2,8 @@
 
 ***      
 
-# 🌍 World Market
-## A World Where Everything Can Be Traded
+### 🌍 World Market
+#### A World Where Everything Can Be Traded
 
 Version: 0.1 MVP Blueprint
 ***
