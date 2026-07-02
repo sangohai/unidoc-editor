@@ -3,9 +3,10 @@
 ***      
 
 ### 🌍 World Market
-#### A World Where Everything Can Be Traded
+##### A World Where Everything Can Be Traded
 
-Version: 0.1 MVP Blueprint
+Version: 0.1 MVP Blueprint        
+
 ***
 
 #### 專案定位（Vision）
