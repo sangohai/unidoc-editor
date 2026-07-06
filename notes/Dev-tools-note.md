@@ -78,11 +78,11 @@ Godogen 到底是什么？GitHub开源地址：https://github.com/htdt/godogen
 
 Takumi[1] 是一个 Rust 写的图片渲染引擎。它把 JSX 直接转成 PNG 或动画 WebP——不经过浏览器，不需要 Chromium ，一个函数调用就出图。
 
-官网：takumi.kane.tw[3]   
+官网：https://takumi.kane.tw[3]   
 
-•GitHub ：kane50613/takumi[4]
+•GitHub ：https://kane50613/takumi[4]
 
-•Playground ：takumi.kane.tw/playground[5]      
+•Playground ：https://takumi.kane.tw/playground[5]      
 
 
 ***        
