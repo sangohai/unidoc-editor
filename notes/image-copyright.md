@@ -35,6 +35,7 @@
    Public Verification Page (GitLab Pages)
 
 
+
 在这个架构里，GitLab 不只是保存文件，它负责：
 
 不可篡改的版本历史（Git Commit）
