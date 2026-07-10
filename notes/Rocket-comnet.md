@@ -11,10 +11,10 @@
 第一部分：整体架构
 手机浏览器
       │
-            │ Signaling
-                  │
-                        ▼
-                           Go Signaling Server
+      │ Signaling
+      │
+      ▼
+Go Signaling Server
                                  ▲
                                        │
                                              │
