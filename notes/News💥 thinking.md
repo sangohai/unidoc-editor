@@ -14,7 +14,7 @@
 
 ***       
 
-####  衝塔games  Impact Tower      
+####  衝塔 games  Impact Tower      
 
 顯示模式 ：［豎屏］+ ［無限地圖］
 
