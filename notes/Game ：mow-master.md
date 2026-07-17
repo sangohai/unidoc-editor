@@ -85,3 +85,23 @@ SummaryModal：结算弹窗。关卡完成后展示通关时间、时间加权�
 背景 BGM（治愈、循环的轻快背景乐）
 准备对接 Supabase 云端数据库：
 在 GateScreen 实现唯一的“玩家昵称输入与验证”，并在通关后将最终成绩刷新上传至全球实时排行榜。
+
+
+
+📁 建议提供的代码文件清单 (Checklist)
+index.html
+作用：我们需要查看 GateScreen、昵称输入框、启动按钮、SummaryModal 以及现有 CDN 脚本的具体 DOM 结构和 ID 命名，确保初始化事件和排行榜渲染位置无误。
+主入口文件（通常为 main.js）
+作用：查看游戏启动、初始化以及各个 Manager（Model-View-Controller）之间是如何实例化并串联的，以便在此处安全地实例化 AudioManager 和 SupabaseManager。
+js/managers/GameManager.js (对应 Segment 1: Core_Loop & Segment 2: Interaction_Logic)
+作用：
+寻找割草动作判定点，在此处插入 audioManager.playSFX('swish')。
+寻找触雷/惩罚触发点（通常在 applyShake 强震动附近），插入 audioManager.playSFX('explosion') 或 alarm。
+寻找游戏结束（Game Over）逻辑，在此处暂停 BGM 并调用 Supabase 上传接口。
+js/managers/CanvasManager.js (对应 Segment 3: Render_Pipeline & Segment 4: VFX_System)
+作用：寻找 VFX_Flyer（二阶贝塞尔曲线飞入 TaskDock）的更新和终点判定逻辑，在飞入抵达的一瞬间插入 audioManager.playSFX('ding')。
+js/managers/UIManager.js (或相关的 UI 逻辑部分)
+作用：查看 SummaryModal 的展现逻辑，以便在结算时将 Supabase 返回的全球排行榜数据动态生成列表并呈现在界面上。
+js/bridges/AssetBridge.js (对应 Segment 5: Asset_Bridge - 可选)
+作用：了解实体属性字典的结构。如果需要将特定“隐藏宝物”（如 💎、🪓）绑定特定音效，可在该字典中扩展配置。
+
