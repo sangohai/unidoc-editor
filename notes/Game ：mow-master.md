@@ -91,6 +91,7 @@ SummaryModal：结算弹窗。关卡完成后展示通关时间、时间加权�
 📁 建议提供的代码文件清单 (Checklist)
 index.html
 作用：我们需要查看 GateScreen、昵称输入框、启动按钮、SummaryModal 以及现有 CDN 脚本的具体 DOM 结构和 ID 命名，确保初始化事件和排行榜渲染位置无误。
+
 主入口文件（通常为 main.js）
 作用：查看游戏启动、初始化以及各个 Manager（Model-View-Controller）之间是如何实例化并串联的，以便在此处安全地实例化 AudioManager 和 SupabaseManager。
 js/managers/GameManager.js (对应 Segment 1: Core_Loop & Segment 2: Interaction_Logic)
