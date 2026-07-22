@@ -78,14 +78,13 @@
     <!-- 主体工作区 -->
     <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
         
-        <!-- 左侧文件树 -->
+        <!-- ================== 左侧文件树开始 ================== -->
         <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px;">
             
             <!-- 手机端 Header -->
             <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
-                    <!-- 顺序调整：清理 -> 新建 -> 刷新 -> 关闭 -->
                     <button id="btn-gc-mobile" class="btn btn-sm btn-link text-danger p-0 me-3" title="扫描清理无用图片"><i class="fa-solid fa-recycle fs-5"></i></button>
                     <button id="btn-new-file-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3"><i class="fa-solid fa-plus fs-5"></i></button>
                     <button id="btn-refresh-tree-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3" title="刷新"><i class="fa-solid fa-rotate-right fs-5"></i></button>
@@ -102,19 +101,31 @@
                     <button id="btn-refresh-tree-pc" class="btn btn-sm btn-link text-body-secondary p-0" title="刷新"><i class="fa-solid fa-rotate-right"></i></button>
                 </div>
             </div>
+
+            <!-- 🌟 极速本地搜索框 -->
+            <div class="p-2 border-bottom bg-body-tertiary flex-shrink-0">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-body text-body-secondary border-end-0"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" id="input-search-files" class="form-control border-start-0 shadow-none bg-body text-body" placeholder="搜索文档名称...">
+                </div>
+            </div>
             
+            <!-- 列表容器 -->
             <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2">
                 <div class="text-muted small p-2">正在加载文件...</div>
             </div>
+
         </div>
 
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
             
-            <!-- 编辑器工具栏 (加入了 flex-shrink-0 防止被键盘弹起挤压消失) -->
+            <!-- 🌟 升级版：编辑器工具栏 (加入全选、水洗机、命令中心) -->
             <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center justify-content-between flex-shrink-0" style="display: none !important;">
                 
-                <!-- 左侧：根据不同语言动态切换的工具 -->
-                <div class="d-flex align-items-center">
+                <!-- 左侧工具组 (使用 overflow-x-auto 保证手机端太窄时可以横向滑动) -->
+                <div class="d-flex align-items-center flex-grow-1 overflow-x-auto text-nowrap" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    
+                    <!-- 1. Markdown 专属工具 -->
                     <div id="toolbar-md" class="d-none align-items-center">
                         <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
                         <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
@@ -124,34 +135,62 @@
                         
                         <span class="border-end mx-1" style="height: 18px;"></span>
                         
-                        <div class="dropdown">
+                        <!-- Emoji 与 符号 -->
+                        <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
                                 <i class="fa-regular fa-face-smile"></i>
                             </button>
-                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel"></div>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel" style="z-index: 1060;"></div>
                         </div>
 
-                        <div class="dropdown">
+                        <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
                                 Ω
                             </button>
-                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel"></div>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel" style="z-index: 1060;"></div>
                         </div>
                     </div>
                     
+                    <!-- 2. 代码专属工具 -->
                     <div id="toolbar-code" class="d-none align-items-center">
-                        <button class="btn btn-sm btn-outline-primary py-0 px-2" data-action="format" style="font-size: 13px;">
-                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>自动排版
+                        <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="format" style="font-size: 13px;">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>原生排版
                         </button>
                     </div>
+
+                    <span class="border-end mx-1" style="height: 18px;"></span>
+
+                    <!-- 3. 全局通用硬核工具 -->
+                    <!-- 全选 -->
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="selectAll" title="全选">
+                        <i class="fa-solid fa-object-group"></i>
+                    </button>
+                    <!-- 物理锚点：设为起点 -->
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2 fw-bold" data-action="setAnchor" title="设为起点">
+                        |&larr;
+                    </button>
+                    <!-- 物理锚点：选中至此 -->
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2 fw-bold" data-action="selectToHere" title="选中至此">
+                        &rarr;|
+                    </button>
+
+                    <!-- 格式水洗机 -->
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="sanitize" title="清洗冗余格式">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+
+                    <!-- 命令面板 F1 -->
+                    <button class="btn btn-sm btn-outline-warning border-0 py-0 px-2" data-action="commandPalette" title="唤醒命令控制台">
+                        <i class="fa-solid fa-bolt"></i>
+                    </button>
                 </div>
 
                 <!-- 🌟 右侧：全局数据安全中心 -->
-                <div class="d-flex align-items-center border-start ps-2">
-                    <button class="btn btn-sm btn-outline-info border-0 py-0 px-2 me-1" id="btn-view-clipboard" title="查看当前剪贴板内容">
+                <div class="d-flex align-items-center border-start ps-1 flex-shrink-0">
+                    <button class="btn btn-sm btn-outline-info border-0 py-0 px-2 me-1" id="btn-view-clipboard" title="查看剪贴板">
                         <i class="fa-solid fa-clipboard-check"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-danger border-0 py-0 px-2" id="btn-shred-clipboard" title="粉碎系统剪贴板 (防止隐私窃取)">
+                    <button class="btn btn-sm btn-outline-danger border-0 py-0 px-2" id="btn-shred-clipboard" title="粉碎剪贴板">
                         <i class="fa-solid fa-broom"></i>
                     </button>
                 </div>
