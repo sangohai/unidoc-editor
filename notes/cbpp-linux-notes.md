@@ -1,4 +1,6 @@
-####  #!CBPP-linux-notes        
+####   
+
+#!CBPP-linux-notes        
 
 ***       
 
@@ -38,4 +40,12 @@ volumeicon  | 音量控制 | pamixer, pulsemixer
 network-manager-applet | 網絡管理 | connman , wicd   
 
 ***     
+***
+
+LLM  to  --->>>  CBPP linux  connection  :    
+
+
+
+
+
 
