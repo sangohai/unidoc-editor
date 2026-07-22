@@ -46,6 +46,7 @@ Behavior = Motivation × Ability × Prompt
 我覺得很多設計師會犯一個錯。
 就是：
 「因為 Emoji 很多，所以全部都想用。」
+
 結果：
 玩家看到：
 200 個圖示。
