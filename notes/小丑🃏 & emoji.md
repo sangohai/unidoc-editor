@@ -22,8 +22,11 @@
 
 這其實符合福格（BJ Fogg）行為模型
 福格模型：
-Behavior = Motivation × Ability × Prompt
+
+Behavior = Motivation × Ability × Prompt       
+
 也就是：
+
 行為 = 動機 × 能力 × 提示
 其中 Ability（容易做到）往往比 Motivation 更重要。
 因為：
