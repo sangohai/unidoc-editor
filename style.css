@@ -222,3 +222,60 @@ html, body {
         opacity: 1;
     }
 }
+
+/* ================= 侧边栏拖拽缩放 (PC端专属) ================= */
+#sidebar-resizer {
+    position: absolute;
+    top: 0;
+    right: -3px; /* 跨越边框 */
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 1050;
+    background-color: transparent;
+    transition: background-color 0.2s;
+}
+#sidebar-resizer:hover, #sidebar-resizer.is-resizing {
+    background-color: var(--bs-primary);
+    opacity: 0.5;
+}
+
+/* ================= 词库面板样式优化 ================= */
+.snippet-list-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.snippet-list-item:hover {
+    background-color: var(--bs-secondary-bg);
+}
+.snippet-content-preview {
+    max-width: 150px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    color: var(--bs-secondary-color);
+}
+
+/* 🌟 修复点：仅在 PC 端赋予侧边栏相对定位，供拖拽滑轨使用，坚决不干扰手机端！ */
+@media (min-width: 768px) {
+    #sidebarOffcanvas { position: relative !important; }
+}
+
+/* ================= 突破工具栏限制：词库菜单强制居中悬浮 ================= */
+#snippets-menu.show {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: 90vw !important;
+    max-width: 350px !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+    z-index: 1060 !important;
+    /* 超大半透明阴影，伪造全屏变暗的沉浸感 */
+    box-shadow: 0 0 0 100vw rgba(0,0,0,0.5), 0 0.5rem 1rem rgba(0,0,0,0.15) !important;
+    border-radius: 8px;
+}

@@ -1,19 +1,17 @@
-// editor.js - Monaco 核心引擎与高级外挂
+// editor.js - 纯净编辑引擎、高级命令工具栏与非线性摇杆代理
 const EditorManager = {
     instance: null,
     currentLanguage: 'markdown',
     onChangeCallback: null,
-    imageCache: {}, 
-
-    // 🌟 新增：物理锚点选取的坐标记忆
     selectionAnchor: null,
+
+    isJoystickDragging: false,
+    joystickOffset: 0,
+    joystickAnimationFrame: null,
 
     init() {
         return new Promise((resolve) => {
-            marked.setOptions({
-                breaks: true, // 保持我们之前的 GFM 换行标准
-                gfm: true
-            });
+            marked.setOptions({ breaks: true, gfm: true });
 
             marked.use({
                 renderer: {
@@ -54,14 +52,12 @@ const EditorManager = {
                 });
 
                 this.instance.onDidChangeModelContent(() => {
-                    if (this.onChangeCallback) {
-                        this.onChangeCallback(this.instance.getValue());
-                    }
-                    this.updateLeftScrollThumb();
+                    if (this.onChangeCallback) this.onChangeCallback(this.instance.getValue());
+                    this.updateProgressBar();
                 });
 
                 this.instance.onDidScrollChange(() => {
-                    this.updateLeftScrollThumb();
+                    this.updateProgressBar();
                 });
 
                 document.getElementById('btn-toggle-preview').addEventListener('click', () => {
@@ -86,7 +82,7 @@ const EditorManager = {
                 });
 
                 this.initToolbarEvents();
-                this.initLeftScrollZone();
+                this.initJoystickScrollZone();
 
                 if (typeof CharPicker !== 'undefined') {
                     CharPicker.init((char) => this.insertTextAtCursor(char));
@@ -97,51 +93,81 @@ const EditorManager = {
         });
     },
 
-    // ================= 物理滑轨引擎 =================
-    initLeftScrollZone() {
+    // ================= 🌟 满血复活：二次方非线性加速摇杆 =================
+    initJoystickScrollZone() {
         const zone = document.getElementById('left-scroll-zone');
-        const thumb = document.getElementById('left-scroll-thumb');
-        if (!zone) return;
+        const joystick = document.getElementById('left-joystick-thumb');
+        if (!zone || !joystick) return;
 
-        let lastY = 0;
-        const thumbHeight = 20; 
+        let startY = 0;
+        const maxOffset = 60; 
 
-        zone.addEventListener('touchstart', (e) => {
-            lastY = e.touches[0].clientY;
-            if (thumb) thumb.classList.replace('opacity-50', 'opacity-100');
-        }, { passive: true });
+        const scrollLoop = () => {
+            if (!this.isJoystickDragging) return;
 
-        zone.addEventListener('touchmove', (e) => {
-            if (!this.instance) return;
+            if (this.joystickOffset !== 0 && this.instance) {
+                // 非线性加速算法：微推慢走，重推狂飙
+                const pushRatio = Math.abs(this.joystickOffset) / maxOffset;
+                const speed = Math.sign(this.joystickOffset) * (pushRatio * pushRatio) * 15; 
+                
+                const currentScrollTop = this.instance.getScrollTop();
+                this.instance.setScrollTop(currentScrollTop + speed);
+            }
+            
+            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
+        };
+
+        zone.addEventListener('pointerdown', (e) => {
+            try { zone.setPointerCapture(e.pointerId); } catch(err){} 
+            
+            startY = e.clientY;
+            this.isJoystickDragging = true;
+            this.joystickOffset = 0;
+
+            joystick.style.transition = 'opacity 0.2s'; 
+            joystick.classList.replace('opacity-50', 'opacity-100');
+
+            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
+            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
+        });
+
+        zone.addEventListener('pointermove', (e) => {
+            if (!this.isJoystickDragging || !this.instance) return;
             e.preventDefault(); 
             
-            const currentY = e.touches[0].clientY;
-            const deltaY = currentY - lastY; 
-            lastY = currentY;
+            const currentY = e.clientY;
+            let deltaY = currentY - startY;
             
-            const contentHeight = this.instance.getContentHeight();
-            const layoutInfo = this.instance.getLayoutInfo();
-            if (!layoutInfo || contentHeight <= layoutInfo.height) return;
+            if (deltaY > maxOffset) deltaY = maxOffset;
+            if (deltaY < -maxOffset) deltaY = -maxOffset;
             
-            const viewHeight = layoutInfo.height;
-            const ratio = (contentHeight - viewHeight) / (viewHeight - thumbHeight);
-            
-            const currentScrollTop = this.instance.getScrollTop();
-            this.instance.setScrollTop(currentScrollTop + (deltaY * ratio));
-        }, { passive: false });
-
-        zone.addEventListener('touchend', () => {
-            if (thumb) thumb.classList.replace('opacity-100', 'opacity-50');
-        }, { passive: true });
-        
-        window.addEventListener('resize', () => {
-            setTimeout(() => this.updateLeftScrollThumb(), 100);
+            this.joystickOffset = deltaY;
+            joystick.style.transform = `translateY(calc(-50% + ${deltaY}px))`;
         });
+
+        const resetJoystick = (e) => {
+            if (!this.isJoystickDragging) return;
+            
+            try { if (zone.hasPointerCapture(e.pointerId)) zone.releasePointerCapture(e.pointerId); } catch(err){}
+            
+            this.isJoystickDragging = false;
+            this.joystickOffset = 0;
+            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
+            
+            // 弹簧物理回弹效果
+            joystick.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s';
+            joystick.style.transform = 'translateY(-50%)';
+            joystick.classList.replace('opacity-100', 'opacity-50');
+        };
+
+        zone.addEventListener('pointerup', resetJoystick);
+        zone.addEventListener('pointercancel', resetJoystick);
     },
 
-    updateLeftScrollThumb() {
-        const thumb = document.getElementById('left-scroll-thumb');
-        if (!thumb || !this.instance) return;
+    updateProgressBar() {
+        const bar = document.getElementById('left-progress-bar');
+        const thumb = document.getElementById('left-joystick-thumb'); 
+        if (!bar || !this.instance) return;
 
         const contentHeight = this.instance.getContentHeight();
         const layoutInfo = this.instance.getLayoutInfo();
@@ -151,23 +177,26 @@ const EditorManager = {
         const scrollTop = this.instance.getScrollTop();
 
         if (contentHeight <= viewHeight) {
-            thumb.style.display = 'none';
+            bar.style.display = 'none';
+            if (thumb) thumb.style.setProperty('display', 'none', 'important');
             return;
         }
 
-        thumb.style.display = 'block';
+        bar.style.display = 'block';
+        if (thumb) thumb.style.setProperty('display', 'flex', 'important');
         
-        const thumbHeight = 20; 
+        const heightPct = viewHeight / contentHeight;
+        const barHeight = Math.max(10, heightPct * viewHeight); 
+        
         const scrollAvailable = contentHeight - viewHeight;
         const scrollPct = scrollAvailable > 0 ? scrollTop / scrollAvailable : 0;
-        const topPos = scrollPct * (viewHeight - thumbHeight);
+        const topPos = scrollPct * (viewHeight - barHeight);
 
-        thumb.style.height = '20px';
-        thumb.style.width = '20px';
-        thumb.style.transform = `translateY(${topPos}px)`;
+        bar.style.height = `${barHeight}px`;
+        bar.style.transform = `translateY(${topPos}px)`;
     },
 
-    // ================= 工具栏引擎 =================
+    // ================= 高级工具栏逻辑 =================
     insertTextAtCursor(text) {
         if (!this.instance) return;
         const selection = this.instance.getSelection();
@@ -197,7 +226,6 @@ const EditorManager = {
     executeToolbarAction(action) {
         if (!this.instance) return;
 
-        // 💥 终极修复：无论点什么按钮，第一件事就是强行把焦点塞回编辑器！
         this.instance.focus();
 
         const model = this.instance.getModel();
@@ -211,34 +239,30 @@ const EditorManager = {
                 return;
             
             case 'commandPalette':
-                // 💥 修复报错核心：给 Monaco 50毫秒的喘息时间，确认焦点后再呼出菜单！
                 setTimeout(() => {
                     this.instance.trigger('any', 'editor.action.quickCommand');
                 }, 50);
                 return;
 
             case 'selectAll':
-                // 全选当前文档
                 this.instance.setSelection(model.getFullModelRange());
                 Toast.show('已全选文档', 'success');
                 return;
 
             case 'setAnchor':
-                // 记录当前光标位置为起点
                 this.selectionAnchor = this.instance.getPosition();
+                document.getElementById('menu-select-here').classList.remove('disabled');
                 Toast.show('⚑ 已标记起点！请滑动找到终点，点击「 →| 」', 'info');
                 return;
 
             case 'selectToHere':
                 if (this.selectionAnchor) {
                     const currentPos = this.instance.getPosition();
-                    // 智能生成选取范围（自动判断起点终点先后顺序）
                     const range = monaco.Range.fromPositions(this.selectionAnchor, currentPos);
-                    // 必须聚焦后立刻设置选中
                     this.instance.setSelection(range);
                     
-                    // 用完即焚，清空锚点
                     this.selectionAnchor = null; 
+                    document.getElementById('menu-select-here').classList.add('disabled');
                     Toast.show('🎯 区域已精准选中！', 'success');
                 } else {
                     Toast.show('请先点击「 |← 」设置起点', 'warning');
@@ -269,7 +293,6 @@ const EditorManager = {
                 Toast.show(selection.isEmpty() ? '🧼 全文格式水洗完成！' : '🧼 局部格式水洗完成！', 'success');
                 return;
 
-            // ======== Markdown 原生插入逻辑 ========
             case 'bold': insertText = `**${selectedText || '加粗文字'}**`; break;
             case 'italic': insertText = `*${selectedText || '斜体文字'}*`; break;
             case 'link': insertText = `[${selectedText || '链接'}](http://)`; break;
@@ -302,7 +325,7 @@ const EditorManager = {
         this.instance.setValue(content || '');
 
         this.handlePreviewLayout(lang);
-        setTimeout(() => this.updateLeftScrollThumb(), 100);
+        setTimeout(() => this.updateProgressBar(), 100);
     },
 
     getContent() {

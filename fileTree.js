@@ -1,4 +1,4 @@
-// fileTree.js - 渲染侧边栏、极速本地检索与星标置顶排位
+// fileTree.js - 侧边栏、极速本地检索与【云端】星标排位
 const FileTree = {
     container: document.getElementById('file-tree'),
     searchInput: document.getElementById('input-search-files'),
@@ -6,8 +6,7 @@ const FileTree = {
     onDeleteClick: null,
     onRenameClick: null,
     
-    currentFilesCache: [], // 缓存当前所有的文件数据，避免频繁拉取 API
-    pinnedFiles: JSON.parse(localStorage.getItem('unidoc_pinned_files') || '[]'), // 从本地读取置顶名单
+    currentFilesCache: [], 
 
     init(onFileClickCallback, onDeleteClickCallback, onRenameClickCallback) {
         this.onFileClick = onFileClickCallback;
@@ -17,11 +16,9 @@ const FileTree = {
         document.getElementById('btn-refresh-tree-pc')?.addEventListener('click', () => this.load());
         document.getElementById('btn-refresh-tree-mobile')?.addEventListener('click', () => this.load());
 
-        // 🌟 初始化毫秒级本地搜索过滤引擎
         this.initSearchEngine();
     },
 
-    // 0延迟前端过滤器
     initSearchEngine() {
         if (!this.searchInput) return;
         this.searchInput.addEventListener('input', (e) => {
@@ -39,21 +36,14 @@ const FileTree = {
         });
     },
 
-    // 切换置顶状态
-    togglePin(path) {
-        const index = this.pinnedFiles.indexOf(path);
-        if (index > -1) {
-            this.pinnedFiles.splice(index, 1); // 移除置顶
-        } else {
-            this.pinnedFiles.push(path); // 加入置顶
-        }
-        // 永久化保存到浏览器本地
-        localStorage.setItem('unidoc_pinned_files', JSON.stringify(this.pinnedFiles));
+    // 🌟 星标状态改走 SettingsManager 云端同步
+    async togglePin(path) {
+        // 调用 SettingsManager 静默修改并同步云端
+        await SettingsManager.togglePin(path);
         
-        // 使用缓存数据直接重新渲染并排序，无需发网络请求！
+        // 瞬间重新渲染本地列表
         this.render(this.currentFilesCache);
         
-        // 如果当前编辑器有打开的文件，恢复它的高亮状态
         if (AppState.currentFilePath) {
             this.setActive(AppState.currentFilePath);
         }
@@ -63,10 +53,9 @@ const FileTree = {
         this.container.innerHTML = '<div class="text-muted small p-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>正在拉取数据...</div>';
         try {
             const files = await GitHubAPI.getFiles('notes');
-            this.currentFilesCache = files; // 更新本地缓存
+            this.currentFilesCache = files; 
             this.render(files);
             
-            // 数据拉取回来后，如果搜索框里还有字，自动触发一次过滤
             this.searchInput.dispatchEvent(new Event('input'));
         } catch (error) {
             if (error.message === 'NOT_CONFIGURED') {
@@ -83,15 +72,17 @@ const FileTree = {
             return;
         }
 
-        // 🌟 核心排序引擎：置顶的文件永远在前，其余按名称字母顺序排列
+        // 获取云端星标名单
+        const pinned = SettingsManager.getPinned();
+
         let sortedFiles = [...files];
         sortedFiles.sort((a, b) => {
-            const aPinned = this.pinnedFiles.includes(a.path);
-            const bPinned = this.pinnedFiles.includes(b.path);
+            const aPinned = pinned.includes(a.path);
+            const bPinned = pinned.includes(b.path);
             
             if (aPinned && !bPinned) return -1;
             if (!aPinned && bPinned) return 1;
-            return a.name.localeCompare(b.name, 'zh-CN'); // 加入中文拼音排序支持
+            return a.name.localeCompare(b.name, 'zh-CN'); 
         });
 
         this.container.innerHTML = ''; 
@@ -99,7 +90,6 @@ const FileTree = {
         sortedFiles.forEach(file => {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'file-row d-flex justify-content-between align-items-center mb-1 pe-1';
-            // 将文件名挂载在属性上，供搜索引起毫秒级检索
             rowDiv.dataset.name = file.name; 
             
             const itemDiv = document.createElement('div');
@@ -112,23 +102,18 @@ const FileTree = {
 
             itemDiv.innerHTML = `<i class="${iconClass} text-secondary me-2 icon-indicator"></i>${file.name}`;
             
-            // 操作按钮组
             const actionDiv = document.createElement('div');
             actionDiv.className = 'file-actions d-flex align-items-center ms-1';
 
-            // 🌟 1. 置顶星标按钮
-            const isPinned = this.pinnedFiles.includes(file.path);
+            const isPinned = pinned.includes(file.path);
             const pinBtn = document.createElement('i');
-            // 根据状态切换图标：置顶是实心金星，未置顶是空心灰星
             pinBtn.className = isPinned ? 'fa-solid fa-star star-pinned p-1 me-1 action-btn' : 'fa-regular fa-star text-secondary p-1 me-1 action-btn';
             pinBtn.title = isPinned ? "取消置顶" : "设为置顶";
 
-            // 2. 重命名按钮
             const renameBtn = document.createElement('i');
             renameBtn.className = 'fa-solid fa-pen-to-square text-secondary p-1 me-1 action-btn';
             renameBtn.title = "重命名";
 
-            // 3. 删除按钮
             const delBtn = document.createElement('i');
             delBtn.className = 'fa-solid fa-trash-can text-secondary p-1 action-btn';
             delBtn.title = "删除文件";
@@ -140,7 +125,6 @@ const FileTree = {
             rowDiv.appendChild(itemDiv);
             rowDiv.appendChild(actionDiv);
             
-            // ======== 事件绑定 ========
             itemDiv.addEventListener('click', () => {
                 this.setActive(file.path);
                 const offcanvasInstance = bootstrap.Offcanvas.getInstance(document.getElementById('sidebarOffcanvas'));

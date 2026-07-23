@@ -1,8 +1,4 @@
 // main.js - 核心总控制器
-
-// ==========================================
-// 1. 主题与色彩管理 (ThemeManager)
-// ==========================================
 const ThemeManager = {
     init() {
         const savedMode = localStorage.getItem('unidoc_theme_mode') || 'light';
@@ -11,7 +7,6 @@ const ThemeManager = {
         this.applyMode(savedMode);
         this.applyNavColor(savedColor);
 
-        // 绑定菜单点击事件
         document.querySelectorAll('.theme-mode-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -28,15 +23,11 @@ const ThemeManager = {
     },
 
     applyMode(mode) {
-        // 设置 Bootstrap 主题
         document.documentElement.setAttribute('data-bs-theme', mode);
         localStorage.setItem('unidoc_theme_mode', mode);
-        
-        // 设置 Monaco 编辑器主题
         if (typeof monaco !== 'undefined' && EditorManager.instance) {
             monaco.editor.setTheme(mode === 'dark' ? 'vs-dark' : 'vs-light');
         }
-
         document.querySelectorAll('.theme-mode-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.theme-mode-btn[data-mode="${mode}"]`)?.classList.add('active');
     },
@@ -46,15 +37,11 @@ const ThemeManager = {
         nav.classList.remove('bg-dark', 'bg-primary', 'bg-success');
         nav.classList.add(colorClass);
         localStorage.setItem('unidoc_nav_color', colorClass);
-
         document.querySelectorAll('.theme-nav-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.theme-nav-btn[data-color="${colorClass}"]`)?.classList.add('active');
     }
 };
 
-// ==========================================
-// 2. 全局状态与 UI 工具
-// ==========================================
 const AppState = {
     currentFilePath: null, 
     currentFileSha: null,  
@@ -89,13 +76,9 @@ const UI = {
     }
 };
 
-// ==========================================
-// 3. 核心业务流程
-// ==========================================
 async function handleFileSelected(file) {
     if (AppState.isDirty) {
-        const confirmLeave = confirm("当前文件有未保存的修改，强制切换将丢失修改。确定要切换吗？");
-        if (!confirmLeave) return;
+        if (!confirm("当前文件有未保存的修改，强制切换将丢失修改。确定要切换吗？")) return;
     }
     UI.setLoading();
     EditorManager.setContent('加载中，请稍候...', file.name); 
@@ -152,45 +135,38 @@ async function handleDeleteFile(file) {
     }
 }
 
-// 4. 处理新建文件逻辑
 function setupNewFileLogic() {
     const newFileModal = new bootstrap.Modal(document.getElementById('newFileModal'));
-    
-    // 唤起弹窗
     document.getElementById('btn-new-file-pc')?.addEventListener('click', () => newFileModal.show());
     document.getElementById('btn-new-file-mobile')?.addEventListener('click', () => newFileModal.show());
 
-    // 监听后缀名下拉菜单的选择事件
+    // 绑定下拉选择
     document.querySelectorAll('.ext-select-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            // 将选中的后缀名更新到按钮的文字上
             document.getElementById('btn-new-ext-display').innerText = e.currentTarget.dataset.ext;
         });
     });
 
-    // 确认创建提交
     document.getElementById('btn-confirm-new').addEventListener('click', async () => {
-        // 提取纯文件名
         let baseName = document.getElementById('input-new-filename').value.trim();
         if (!baseName) return Toast.show('文件名不能为空', 'error');
+
+        // 文件名特殊字符防呆过滤 (防止 Windows 报错)
+        baseName = baseName.replace(/[\/\\:*?"<>|]/g, '-');
         
-        // 提取当前选中的后缀名，并组合成完整文件名
         const ext = document.getElementById('btn-new-ext-display').innerText.trim();
         const fileName = baseName + ext;
         const path = `notes/${fileName}`;
         
         newFileModal.hide();
         document.getElementById('input-new-filename').value = ''; 
-        
         UI.showGlobalLoader('正在创建并同步至 GitHub...');
 
         try {
-            // 根据选中的后缀名，生成不同的初始模板内容
             let initContent = '';
             if (ext === '.md') initContent = '# ' + baseName;
             else if (ext === '.json') initContent = '{\n\n}';
-            else if (ext === '.yaml' || ext === '.txt') initContent = ''; 
 
             const newSha = await GitHubAPI.saveFile(path, initContent, null, 'Create new file via UniDoc');
             Toast.show('创建成功！', 'success');
@@ -208,18 +184,13 @@ function setupNewFileLogic() {
     });
 }
 
-// 5. 重命名文件逻辑
 function setupRenameLogic() {
     const renameModal = new bootstrap.Modal(document.getElementById('renameFileModal'));
 
-    // 暴露给 fileTree 调用的弹窗唤醒函数
     window.handleRenameFile = (file) => {
-        // 防止重命名带有未保存修改的文件
         if (AppState.currentFilePath === file.path && AppState.isDirty) {
-            Toast.show('请先保存当前文件的修改，再进行重命名', 'info');
-            return;
+            return Toast.show('请先保存当前文件的修改，再进行重命名', 'info');
         }
-
         const oldName = file.name;
         const extIndex = oldName.lastIndexOf('.');
         const nameWithoutExt = extIndex > 0 ? oldName.substring(0, extIndex) : oldName;
@@ -229,46 +200,37 @@ function setupRenameLogic() {
         document.getElementById('input-rename-ext').innerText = ext;
         document.getElementById('input-rename-oldpath').value = file.path;
         document.getElementById('input-rename-sha').value = file.sha;
-
         renameModal.show();
     };
 
-    // 确认重命名提交
     document.getElementById('btn-confirm-rename').addEventListener('click', async () => {
-        const newBaseName = document.getElementById('input-rename-filename').value.trim();
+        let newBaseName = document.getElementById('input-rename-filename').value.trim();
         if (!newBaseName) return Toast.show('文件名不能为空', 'error');
+
+        // 文件名特殊字符防呆过滤
+        newBaseName = newBaseName.replace(/[\/\\:*?"<>|]/g, '-');
 
         const oldPath = document.getElementById('input-rename-oldpath').value;
         const oldSha = document.getElementById('input-rename-sha').value;
         const ext = document.getElementById('input-rename-ext').innerText;
-        
         const newName = newBaseName + ext;
         const newPath = `notes/${newName}`;
 
-        if (oldPath === newPath) {
-            renameModal.hide();
-            return;
-        }
+        if (oldPath === newPath) return renameModal.hide();
 
         renameModal.hide();
         UI.showGlobalLoader('正在重命名并同步至 GitHub...');
 
         try {
-            // 步骤1：获取原文件内容
             const fileData = await GitHubAPI.getFile(oldPath);
-            // 步骤2：以新名称保存文件
             const newSha = await GitHubAPI.saveFile(newPath, fileData.content, null, `Rename ${oldPath} to ${newPath}`);
-            // 步骤3：删除原文件
             await GitHubAPI.deleteFile(oldPath, oldSha);
 
             Toast.show('重命名成功！', 'success');
-
-            // 如果重命名的正是当前打开的文件，默默更新它的后台指向，不打断用户编辑
             if (AppState.currentFilePath === oldPath) {
                 AppState.currentFilePath = newPath;
                 AppState.currentFileSha = newSha;
             }
-
             await FileTree.load();
         } catch (error) {
             Toast.show(`重命名失败: ${error.message}`, 'error');
@@ -278,46 +240,76 @@ function setupRenameLogic() {
     });
 }
 
+// 🌟 侧边栏拖拽缩放引擎
+function setupSidebarResizer() {
+    const resizer = document.getElementById('sidebar-resizer');
+    const sidebar = document.getElementById('sidebarOffcanvas');
+    if (!resizer || !sidebar) return;
+
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        startX = e.clientX;
+        startWidth = sidebar.offsetWidth;
+        resizer.classList.add('is-resizing');
+        document.body.style.cursor = 'col-resize';
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+        const newWidth = startWidth + (e.clientX - startX);
+        // 限制宽度在 150px ~ 600px 之间
+        if (newWidth > 150 && newWidth < 600) {
+            sidebar.style.width = newWidth + 'px';
+            // 实时挤压 Monaco 重新排版
+            if (EditorManager.instance) {
+                EditorManager.instance.layout();
+            }
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('is-resizing');
+            document.body.style.cursor = '';
+        }
+    });
+}
+
 // ==========================================
-// 6. 初始化与事件绑定
+// 初始化与事件绑定
 // ==========================================
 async function initApp() {
     ThemeManager.init();
-
     setupNewFileLogic();
     setupRenameLogic();
+    setupSidebarResizer();
 
-    TokenModal.init(() => FileTree.load());
-    FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
+    TokenModal.init(async () => {
+        // 先拉取设置，再拉取文件树，确保星标存在
+        if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
+        FileTree.load();
+    });
     
+    FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
     await EditorManager.init();
     
     if (typeof ClipboardManager !== 'undefined') ClipboardManager.init(EditorManager);
-    
-    // 🌟 初始化导出模块
-    if (typeof ExportManager !== 'undefined') ExportManager.init();
-
-     // 🌟 初始化导出模块
     if (typeof ExportManager !== 'undefined') ExportManager.init();
     
-    // 🌟 初始化图床垃圾回收模块
-    if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
-    
-    // 🌟 终极防线：彻底对抗 iOS/Android 键盘弹起时的系统强制上推
     if (window.visualViewport) {
         const resizeBodyToVisualViewport = () => {
-            // 精准控制真实高度，强制缩减到键盘上方的空间
             document.body.style.height = window.visualViewport.height + 'px';
             document.body.style.width = window.visualViewport.width + 'px';
-            
-            // 因为 body 已经被 position: fixed 钉死，不需要再强制 scrollTo
-            
             if (EditorManager.instance) {
-                // 让 Monaco 在被挤压后的新空间里重新排版
                 setTimeout(() => EditorManager.instance.layout(), 100);
             }
         };
-        // 监听虚拟键盘的弹出与收起，实时动态挤压编辑器
         window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
         window.visualViewport.addEventListener('scroll', resizeBodyToVisualViewport);
         resizeBodyToVisualViewport();
@@ -333,7 +325,6 @@ async function initApp() {
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
     document.getElementById('btn-settings').addEventListener('click', () => TokenModal.show());
 
-    // 绑定快捷键保存 (Ctrl+S / Cmd+S)
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
             e.preventDefault(); 
@@ -341,7 +332,6 @@ async function initApp() {
         }
     });
 
-    // 拦截页面关闭
     window.addEventListener('beforeunload', (e) => {
         if (AppState.isDirty) {
             e.preventDefault();
@@ -352,15 +342,13 @@ async function initApp() {
     if (!TokenManager.isConfigured()) {
         TokenModal.show();
     } else {
+        if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
         FileTree.load();
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 启动主程序
     initApp();
-
-    // 🌟 注册 PWA Service Worker
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js')
             .then(reg => console.log('✅ PWA Service Worker 注册成功!', reg.scope))
