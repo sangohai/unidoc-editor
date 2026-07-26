@@ -50,6 +50,7 @@ TileEntity 变成黄色墙壁（🧱）形成狭窄走廊，限制 🏃 的移�
 为了适应全向移动和迷雾渲染，系统采用升级版的 MVC-Camera 架构。无需任何构建工具（No-Build），仅用原生 ES Modules 运行。
 code
 Code
+
 ```
 [ 交互手势 Input (Swipe/WASD) ]
                                  │
