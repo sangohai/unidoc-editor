@@ -26,11 +26,15 @@ TileEntity 变成黄色墙壁（🧱）形成狭窄走廊，限制 🏃 的移�
 
 ***        
 
-📋 项目开发文档：《Backrooms: Infinite Grid》系统蓝皮书
+📋 项目开发文档：《Backrooms: Infinite Grid》系统蓝皮书      
+
 一、 项目愿景 (Project Vision)
+
 《Backrooms: Infinite Grid》是一款基于“后室（Backrooms）”都市传说设计的移动端极简、悬疑氛围的无限网格逃生游戏。
 玩家通过手势控制角色在无限延伸的旧黄色地毯迷宫中探索，寻找水源、避开墙壁与实体、在手电筒电量耗尽前寻找通往更深楼层的入口，并与全球玩家同步生存记录。
+
 二、 核心机制设计 (Core Mechanics)
+
 步进式移动（Discrete Movement）：
 摒弃传统的动作平滑移动。采用 1:1 坐标网格步进，玩家向上/下/左/右滑动一次屏幕，角色 🏃 就在逻辑网格移动一格。
 每当玩家移动一步，地图中的实体或怪物 👾 也会相应移动一步（半回合制 Roguelike 逻辑，增加策略和悬疑感）。
@@ -40,7 +44,9 @@ TileEntity 变成黄色墙壁（🧱）形成狭窄走廊，限制 🏃 的移�
 拾取 🔋 电池可补充电量。
 无限随机迷宫（Infinite Chunk Generation）：
 地图不一次性加载。当玩家接近视口边缘时，系统在后台采用概率噪声算法，动态生成由旧墙壁（🧱）、旧地毯、门（🚪）组成的全新迷宫区块（Chunk）。
+
 三、 技术架构：MVC-Camera 2.0 (Architectural Blueprint)
+
 为了适应全向移动和迷雾渲染，系统采用升级版的 MVC-Camera 架构。无需任何构建工具（No-Build），仅用原生 ES Modules 运行。
 code
 Code
@@ -60,6 +66,7 @@ Code
                      ┌───────────────────────┐
                      │     View 表现层       │ (CameraView.js / UIManager.js)
                      └───────────────────────┘
+
 1. Model（数据层）- GridModel.js
 职责：
 维护玩家的逻辑网格坐标：playerX, playerY。
