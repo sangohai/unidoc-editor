@@ -181,13 +181,13 @@ List possible future work.
 
 List all technologies, frameworks, libraries and tools mentioned.
 
----
+***       
 
 ## Keywords
 
 Generate searchable keywords.
 
----
+***       
 
 ## Tags
 
@@ -205,7 +205,7 @@ Example
 
 #Golang
 
-----------------------------------------
+***       
 
 # Writing Rules
 
@@ -239,7 +239,7 @@ Technical details
 
 Important examples
 
-----------------------------------------
+***       
 
 # Quality Target
 
