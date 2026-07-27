@@ -14,7 +14,7 @@ The output should preserve all important ideas, decisions, reasoning, architectu
 
 The final document should be written completely in Markdown.
 
-----------------------------------------
+***       
 
 # Output Requirements
 
@@ -30,19 +30,19 @@ Do NOT mention the original conversation.
 
 The document should be directly usable inside Obsidian or any Markdown knowledge base.
 
-----------------------------------------
+***       
 
 # Document Structure
 
 Use the following structure exactly.
 
----
+***     
 
 # Title
 
 Generate an appropriate title.
 
----
+***     
 
 ## Overview
 
@@ -50,7 +50,7 @@ Explain what this discussion is about.
 
 Explain the overall objective.
 
----
+***       
 
 ## Background
 
@@ -58,7 +58,7 @@ Describe why this discussion happened.
 
 Describe the problems to solve.
 
----
+***       
 
 ## Key Ideas
 
@@ -68,7 +68,7 @@ Merge duplicated ideas.
 
 Organize them logically.
 
----
+***       
 
 ## Technical Analysis
 
@@ -80,7 +80,7 @@ Include advantages and disadvantages.
 
 Include design considerations.
 
----
+***      
 
 ## Decisions
 
@@ -88,13 +88,13 @@ List every important decision reached.
 
 Explain why.
 
----
+***       
 
 ## Best Practices
 
 Convert the discussion into reusable best practices.
 
----
+***      
 
 ## Workflow
 
@@ -102,7 +102,7 @@ If a workflow exists,
 
 rewrite it into step-by-step instructions.
 
----
+***      
 
 ## Architecture
 
@@ -114,7 +114,9 @@ Use Mermaid diagrams whenever suitable.
 
 Example:
 
-```mermaid
+```
+mermaid
+
 graph TD
 
 A[Idea]
@@ -127,8 +129,7 @@ A --> B
 
 B --> C
 ```
-
----
+***      
 
 ## Folder Structure
 
@@ -138,7 +139,8 @@ generate recommended folder structures.
 
 Example:
 
-```text
+```
+text
 Project/
 
 README.md
@@ -151,8 +153,7 @@ Prompt/
 
 src/
 ```
-
----
+***      
 
 ## Code
 
@@ -162,19 +163,19 @@ Rewrite it cleanly.
 
 Remove duplicated versions.
 
----
+***       
 
 ## Important Conclusions
 
 List all major conclusions.
 
----
+***      
 
 ## Future Improvements
 
 List possible future work.
 
----
+***       
 
 ## References
 
