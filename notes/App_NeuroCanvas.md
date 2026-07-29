@@ -45,3 +45,23 @@ exportCore.js: [多模态输出管家] 负责将内部 State 转化为 LLM 友�
 [Phase 4] LLM 桥接与平台化 (商业验证)：
 开发 exportCore.js，实现一键复制 YAML 参数与下载 PNG。
 部署至 GitHub Pages，导入“人类手臂 17 关节模板”，进行实际的 LLM (如 GPT-4o) 提示词引导测试。
+
+
+neuro-canvas/
+│
+├── index.html                 # 核心骨架界面
+├── css/
+│   └── style.css              # 极简 UI 样式控制
+├── doc/
+│   └── blue-print.md          # 存放我们上一对话生成的“开发蓝图”
+├── assets/                    # 预留存放可能的本地图标或占位图
+│
+└── js/                        # 核心逻辑区 (ES Modules)
+    ├── app.js                 # 🚀 总启动器：负责把下面的模块拼装并启动应用
+    ├── stateManager.js        # 🧠 状态中枢：Proxy 双向绑定核心
+    ├── konvaEngine.js         # 👁️ 视觉引擎：封装所有 Konva.js 的绘画逻辑
+    ├── interactionMachine.js  # 🕹️ 状态机：处理鼠标是“画图”还是“拖拽”
+    ├── treeController.js      # 🌳 目录控制：左侧树形拖拽与父子关系计算
+    ├── schemaDefaults.js      # 📐 数据防弹衣：手臂模型等默认 JSON 模板
+    └── exportCore.js          # 📤 导出管家：将数据转为 YAML/JSON/PNG 给 LLM
+
