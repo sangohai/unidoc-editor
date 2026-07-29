@@ -1,0 +1,34 @@
+
+app: # 应用基本信息
+  name: 蓝牙PWA通信应用
+  features: [零安装, 零注册, 蓝牙通信, 端到端加密, 临时会话]
+
+architecture: # 分层架构
+  layers:
+    ui: [设备列表, 聊天界面, 设置, 状态栏]
+    business: [设备管理器, 消息管理器, 连接管理器]
+    communication: [BLE连接管理, 消息序列化, 加密引擎]
+    platform: [Web Bluetooth API, Web Crypto API, Storage APIs]
+
+technologies: # 技术栈
+  frontend: [HTML5, CSS3, JavaScript, PWA, Service Worker]
+  communication: [Web Bluetooth API, BLE]
+  encryption: [ECDH, AES-GCM, SHA-256, HKDF]
+
+encryption: # 加密方案
+  key_exchange: {algorithm: ECDH, curve: P-256, key_length: 256}
+  message_encryption: {algorithm: AES-GCM, key_length: 256, iv_length: 96}
+
+message_format: # 消息格式
+  encoding: JSON
+  types: [key_exchange, encrypted_message, ping, pong, device_info, disconnect]
+
+compatibility: # 平台兼容性
+  supported: [Android 8.0+, Windows 10+, macOS 10.13+, Linux]
+  unsupported: [iOS]
+
+deployment: # 部署要求
+  server: {https: true, ssl: true, static_hosting: true}
+  client: {browser: [Chrome 56+, Edge 79+], bluetooth: BLE 4.0+}
+
+  
