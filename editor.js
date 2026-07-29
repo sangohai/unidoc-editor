@@ -1,217 +1,150 @@
-// editor.js - 纯净编辑引擎、高级命令工具栏与非线性摇杆代理
+// editor.js - 纯净的 CodeMirror 6 核心引擎 (极致解耦版)
 const EditorManager = {
-    instance: null,
+    view: null,
     currentLanguage: 'markdown',
     onChangeCallback: null,
-    selectionAnchor: null,
+    imageCache: {}, 
 
-    isJoystickDragging: false,
-    joystickOffset: 0,
-    joystickAnimationFrame: null,
+    languageConf: null,
+    readOnlyConf: null,
+    CM: {}, 
 
-    init() {
-        return new Promise((resolve) => {
-            marked.setOptions({ breaks: true, gfm: true });
-
-            marked.use({
-                renderer: {
-                    image: (token_or_href, title, text) => {
-                        let href = typeof token_or_href === 'object' ? token_or_href.href : token_or_href;
-                        let alt = typeof token_or_href === 'object' ? token_or_href.text : text;
-                        let imgTitle = typeof token_or_href === 'object' ? token_or_href.title : title;
-                        
-                        if (href && href.startsWith('images/')) {
-                            if (typeof ClipboardManager !== 'undefined' && ClipboardManager.imageCache[href]) {
-                                href = ClipboardManager.imageCache[href];
-                            } else {
-                                href = 'notes/' + href;
-                            }
+    async init() {
+        marked.setOptions({ breaks: true, gfm: true });
+        marked.use({
+            renderer: {
+                image: (token_or_href, title, text) => {
+                    let href = typeof token_or_href === 'object' ? token_or_href.href : token_or_href;
+                    let alt = typeof token_or_href === 'object' ? token_or_href.text : text;
+                    let imgTitle = typeof token_or_href === 'object' ? token_or_href.title : title;
+                    if (href && href.startsWith('images/')) {
+                        if (typeof ClipboardManager !== 'undefined' && ClipboardManager.imageCache[href]) {
+                            href = ClipboardManager.imageCache[href];
+                        } else {
+                            href = 'notes/' + href;
                         }
-                        return `<img src="${href}" alt="${alt || ''}" title="${imgTitle || ''}" class="img-fluid rounded shadow-sm" style="max-width: 100%; margin: 10px 0;">`;
                     }
+                    return `<img src="${href}" alt="${alt || ''}" title="${imgTitle || ''}" class="img-fluid rounded shadow-sm" style="max-width: 100%; margin: 10px 0;">`;
                 }
-            });
-
-            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.40.0/min/vs' } });
-            
-            require(['vs/editor/editor.main'], () => {
-                this.instance = monaco.editor.create(document.getElementById('editor-container'), {
-                    value: '',
-                    language: 'markdown',
-                    theme: 'vs-light',
-                    automaticLayout: true, 
-                    wordWrap: 'on',
-                    minimap: { enabled: false }, 
-                    fontSize: 15,
-                    lineHeight: 26,             
-                    scrollBeyondLastLine: false,
-                    padding: { top: 16, bottom: 80 },       
-                    cursorBlinking: 'smooth',   
-                    formatOnPaste: true,        
-                    renderWhitespace: 'selection'
-                });
-
-                this.instance.onDidChangeModelContent(() => {
-                    if (this.onChangeCallback) this.onChangeCallback(this.instance.getValue());
-                    this.updateProgressBar();
-                });
-
-                this.instance.onDidScrollChange(() => {
-                    this.updateProgressBar();
-                });
-
-                document.getElementById('btn-toggle-preview').addEventListener('click', () => {
-                    const preview = document.getElementById('preview-container');
-                    const btnIcon = document.querySelector('#btn-toggle-preview i');
-                    const btnText = document.querySelector('#btn-toggle-preview .btn-text');
-                    const toolbar = document.getElementById('editor-toolbar');
-                    
-                    if (preview.classList.contains('d-none')) {
-                        this.updatePreview(this.getContent());
-                        preview.classList.remove('d-none');
-                        btnIcon.classList.replace('fa-eye', 'fa-pen');
-                        if(btnText) btnText.innerText = '编辑';
-                        toolbar.style.setProperty('display', 'none', 'important');
-                    } else {
-                        preview.classList.add('d-none');
-                        btnIcon.classList.replace('fa-pen', 'fa-eye');
-                        if(btnText) btnText.innerText = '预览';
-                        this.instance.focus();
-                        toolbar.style.setProperty('display', 'flex', 'important');
-                    }
-                });
-
-                this.initToolbarEvents();
-                this.initJoystickScrollZone();
-
-                if (typeof CharPicker !== 'undefined') {
-                    CharPicker.init((char) => this.insertTextAtCursor(char));
-                }
-
-                resolve();
-            });
-        });
-    },
-
-    // ================= 🌟 满血复活：二次方非线性加速摇杆 =================
-    initJoystickScrollZone() {
-        const zone = document.getElementById('left-scroll-zone');
-        const joystick = document.getElementById('left-joystick-thumb');
-        if (!zone || !joystick) return;
-
-        let startY = 0;
-        const maxOffset = 60; 
-
-        const scrollLoop = () => {
-            if (!this.isJoystickDragging) return;
-
-            if (this.joystickOffset !== 0 && this.instance) {
-                // 非线性加速算法：微推慢走，重推狂飙
-                const pushRatio = Math.abs(this.joystickOffset) / maxOffset;
-                const speed = Math.sign(this.joystickOffset) * (pushRatio * pushRatio) * 15; 
-                
-                const currentScrollTop = this.instance.getScrollTop();
-                this.instance.setScrollTop(currentScrollTop + speed);
             }
-            
-            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
-        };
-
-        zone.addEventListener('pointerdown', (e) => {
-            try { zone.setPointerCapture(e.pointerId); } catch(err){} 
-            
-            startY = e.clientY;
-            this.isJoystickDragging = true;
-            this.joystickOffset = 0;
-
-            joystick.style.transition = 'opacity 0.2s'; 
-            joystick.classList.replace('opacity-50', 'opacity-100');
-
-            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
-            this.joystickAnimationFrame = requestAnimationFrame(scrollLoop);
         });
 
-        zone.addEventListener('pointermove', (e) => {
-            if (!this.isJoystickDragging || !this.instance) return;
-            e.preventDefault(); 
-            
-            const currentY = e.clientY;
-            let deltaY = currentY - startY;
-            
-            if (deltaY > maxOffset) deltaY = maxOffset;
-            if (deltaY < -maxOffset) deltaY = -maxOffset;
-            
-            this.joystickOffset = deltaY;
-            joystick.style.transform = `translateY(calc(-50% + ${deltaY}px))`;
-        });
+        try {
+            const state = await import('https://esm.sh/@codemirror/state@6.4.0');
+            const view = await import('https://esm.sh/@codemirror/view@6.34.1?deps=@codemirror/state@6.4.0');
+            const language = await import('https://esm.sh/@codemirror/language@6.10.1?deps=@codemirror/state@6.4.0,@codemirror/view@6.34.1');
+            const commands = await import('https://esm.sh/@codemirror/commands@6.7.0?deps=@codemirror/state@6.4.0,@codemirror/view@6.34.1');
+            const mdLang = await import('https://esm.sh/@codemirror/lang-markdown@6.3.0?deps=@codemirror/state@6.4.0,@codemirror/view@6.34.1,@codemirror/language@6.10.1');
+            const jsonLang = await import('https://esm.sh/@codemirror/lang-json@6.0.1?deps=@codemirror/state@6.4.0,@codemirror/view@6.34.1,@codemirror/language@6.10.1');
+            const yamlLang = await import('https://esm.sh/@codemirror/lang-yaml@6.1.1?deps=@codemirror/state@6.4.0,@codemirror/view@6.34.1,@codemirror/language@6.10.1');
 
-        const resetJoystick = (e) => {
-            if (!this.isJoystickDragging) return;
-            
-            try { if (zone.hasPointerCapture(e.pointerId)) zone.releasePointerCapture(e.pointerId); } catch(err){}
-            
-            this.isJoystickDragging = false;
-            this.joystickOffset = 0;
-            if (this.joystickAnimationFrame) cancelAnimationFrame(this.joystickAnimationFrame);
-            
-            // 弹簧物理回弹效果
-            joystick.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s';
-            joystick.style.transform = 'translateY(-50%)';
-            joystick.classList.replace('opacity-100', 'opacity-50');
-        };
+            this.CM = { state, view, language, commands, mdLang, jsonLang, yamlLang };
+            this.languageConf = new state.Compartment();
+            this.readOnlyConf = new state.Compartment();
 
-        zone.addEventListener('pointerup', resetJoystick);
-        zone.addEventListener('pointercancel', resetJoystick);
-    },
+            const editorState = state.EditorState.create({
+                doc: "",
+                extensions: [
+                    view.lineNumbers(),
+                    view.highlightActiveLineGutter(),
+                    language.foldGutter(),
+                    view.drawSelection(),
+                    view.dropCursor(),
+                    state.EditorState.allowMultipleSelections.of(true),
+                    language.syntaxHighlighting(language.defaultHighlightStyle, {fallback: true}),
+                    language.bracketMatching(),
+                    view.rectangularSelection(),
+                    view.crosshairCursor(),
+                    view.highlightActiveLine(),
+                    commands.history(),
+                    view.keymap.of([
+                        ...commands.defaultKeymap,
+                        ...commands.historyKeymap,
+                    ]),
+                    this.languageConf.of(mdLang.markdown()),
+                    this.readOnlyConf.of(state.EditorState.readOnly.of(true)),
+                    view.EditorView.lineWrapping,
+                    view.EditorView.theme({
+                        ".cm-content": { paddingBottom: "100px" }
+                    }),
+                    view.EditorView.updateListener.of((update) => {
+                        if (update.docChanged && this.onChangeCallback) {
+                            this.onChangeCallback(update.state.doc.toString());
+                        }
+                    })
+                ]
+            });
 
-    updateProgressBar() {
-        const bar = document.getElementById('left-progress-bar');
-        const thumb = document.getElementById('left-joystick-thumb'); 
-        if (!bar || !this.instance) return;
+            this.view = new view.EditorView({
+                state: editorState,
+                parent: document.getElementById('editor-container')
+            });
 
-        const contentHeight = this.instance.getContentHeight();
-        const layoutInfo = this.instance.getLayoutInfo();
-        if (!layoutInfo) return;
-        
-        const viewHeight = layoutInfo.height;
-        const scrollTop = this.instance.getScrollTop();
-
-        if (contentHeight <= viewHeight) {
-            bar.style.display = 'none';
-            if (thumb) thumb.style.setProperty('display', 'none', 'important');
-            return;
+        } catch (e) {
+            console.error("CodeMirror 6 加载失败:", e);
+            Toast.show("编辑器内核加载失败，请检查网络", "error");
+            return; 
         }
 
-        bar.style.display = 'block';
-        if (thumb) thumb.style.setProperty('display', 'flex', 'important');
-        
-        const heightPct = viewHeight / contentHeight;
-        const barHeight = Math.max(10, heightPct * viewHeight); 
-        
-        const scrollAvailable = contentHeight - viewHeight;
-        const scrollPct = scrollAvailable > 0 ? scrollTop / scrollAvailable : 0;
-        const topPos = scrollPct * (viewHeight - barHeight);
+        document.getElementById('btn-toggle-preview').addEventListener('click', () => {
+            const preview = document.getElementById('preview-container');
+            const btnIcon = document.querySelector('#btn-toggle-preview i');
+            const btnText = document.querySelector('#btn-toggle-preview .btn-text');
+            const toolbar = document.getElementById('editor-toolbar');
+            
+            if (preview.classList.contains('d-none')) {
+                this.updatePreview(this.getContent());
+                preview.classList.remove('d-none');
+                btnIcon.classList.replace('fa-eye', 'fa-pen');
+                if(btnText) btnText.innerText = '编辑';
+                toolbar.style.setProperty('display', 'none', 'important');
+            } else {
+                preview.classList.add('d-none');
+                btnIcon.classList.replace('fa-pen', 'fa-eye');
+                if(btnText) btnText.innerText = '预览';
+                this.view.focus();
+                toolbar.style.setProperty('display', 'flex', 'important');
+            }
+        });
 
-        bar.style.height = `${barHeight}px`;
-        bar.style.transform = `translateY(${topPos}px)`;
+        this.initToolbarEvents();
+        
+        if (typeof CharPicker !== 'undefined') {
+            CharPicker.init((char) => this.insertTextAtCursor(char));
+        }
+
+        window.EditorManager = this;
     },
 
-    // ================= 高级工具栏逻辑 =================
+    // ================= CM6 专属操作接口 =================
     insertTextAtCursor(text) {
-        if (!this.instance) return;
-        const selection = this.instance.getSelection();
-        
-        this.instance.executeEdits("toolbar", [{
-            range: selection,
-            text: text,
-            forceMoveMarkers: true
-        }]);
-
+        if (!this.view) return;
+        this.replaceSelection(text);
         if (text.length === 2 && ['【】','「」','《》','（）','［］','｛｝','『』','〖〗','〔〕'].includes(text)) {
-            const position = this.instance.getPosition();
-            this.instance.setPosition({ lineNumber: position.lineNumber, column: position.column - 1 });
+            const selection = this.view.state.selection.main;
+            this.view.dispatch({ selection: { anchor: selection.anchor - 1 } });
         }
-        this.instance.focus();
+        this.view.focus();
+    },
+
+    replaceSelection(text) {
+        if (!this.view) return;
+        const selection = this.view.state.selection.main;
+        this.view.dispatch({
+            changes: { from: selection.from, to: selection.to, insert: text },
+            selection: { anchor: selection.from + text.length }
+        });
+    },
+
+    findAndReplace(targetStr, replaceStr) {
+        if (!this.view) return;
+        const docStr = this.view.state.doc.toString();
+        const index = docStr.indexOf(targetStr);
+        if (index !== -1) {
+            this.view.dispatch({
+                changes: { from: index, to: index + targetStr.length, insert: replaceStr }
+            });
+        }
     },
 
     initToolbarEvents() {
@@ -224,59 +157,39 @@ const EditorManager = {
     },
 
     executeToolbarAction(action) {
-        if (!this.instance) return;
+        if (!this.view) return;
+        this.view.focus();
 
-        this.instance.focus();
-
-        const model = this.instance.getModel();
-        const selection = this.instance.getSelection();
-        const selectedText = model.getValueInRange(selection);
+        const selection = this.view.state.selection.main;
+        const selectedText = this.view.state.sliceDoc(selection.from, selection.to);
         let insertText = '';
 
         switch (action) {
             case 'format':
-                this.instance.getAction('editor.action.formatDocument').run();
-                return;
-            
-            case 'commandPalette':
-                setTimeout(() => {
-                    this.instance.trigger('any', 'editor.action.quickCommand');
-                }, 50);
+                if (this.currentLanguage === 'json') {
+                    try {
+                        const formatted = JSON.stringify(JSON.parse(this.view.state.doc.toString()), null, 4);
+                        this.view.dispatch({
+                            changes: { from: 0, to: this.view.state.doc.length, insert: formatted }
+                        });
+                        Toast.show('JSON 排版完成', 'success');
+                    } catch (e) {
+                        Toast.show('JSON 格式错误，无法排版', 'error');
+                    }
+                } else {
+                    Toast.show('原生排版目前仅支持 JSON 格式', 'info');
+                }
                 return;
 
             case 'selectAll':
-                this.instance.setSelection(model.getFullModelRange());
+                this.view.dispatch({ selection: { anchor: 0, head: this.view.state.doc.length } });
                 Toast.show('已全选文档', 'success');
                 return;
 
-            case 'setAnchor':
-                this.selectionAnchor = this.instance.getPosition();
-                document.getElementById('menu-select-here').classList.remove('disabled');
-                Toast.show('⚑ 已标记起点！请滑动找到终点，点击「 →| 」', 'info');
-                return;
-
-            case 'selectToHere':
-                if (this.selectionAnchor) {
-                    const currentPos = this.instance.getPosition();
-                    const range = monaco.Range.fromPositions(this.selectionAnchor, currentPos);
-                    this.instance.setSelection(range);
-                    
-                    this.selectionAnchor = null; 
-                    document.getElementById('menu-select-here').classList.add('disabled');
-                    Toast.show('🎯 区域已精准选中！', 'success');
-                } else {
-                    Toast.show('请先点击「 |← 」设置起点', 'warning');
-                }
-                return;
-
             case 'sanitize':
-                let targetRange = selection;
-                let targetText = selectedText;
-                
-                if (selection.isEmpty()) {
-                    targetRange = model.getFullModelRange();
-                    targetText = model.getValue();
-                }
+                let targetFrom = selection.empty ? 0 : selection.from;
+                let targetTo = selection.empty ? this.view.state.doc.length : selection.to;
+                let targetText = this.view.state.sliceDoc(targetFrom, targetTo);
 
                 let cleanText = targetText
                     .replace(/\t/g, '    ')
@@ -284,13 +197,10 @@ const EditorManager = {
                     .replace(/[ \t]+$/gm, '')
                     .replace(/\n{3,}/g, '\n\n');
 
-                this.instance.executeEdits("sanitize", [{
-                    range: targetRange,
-                    text: cleanText,
-                    forceMoveMarkers: true
-                }]);
-                
-                Toast.show(selection.isEmpty() ? '🧼 全文格式水洗完成！' : '🧼 局部格式水洗完成！', 'success');
+                this.view.dispatch({
+                    changes: { from: targetFrom, to: targetTo, insert: cleanText }
+                });
+                Toast.show(selection.empty ? '🧼 全文格式水洗完成！' : '🧼 局部格式水洗完成！', 'success');
                 return;
 
             case 'bold': insertText = `**${selectedText || '加粗文字'}**`; break;
@@ -303,33 +213,44 @@ const EditorManager = {
         }
 
         if (insertText !== '') {
-            this.instance.executeEdits("toolbar", [{
-                range: selection,
-                text: insertText,
-                forceMoveMarkers: true
-            }]);
+            this.replaceSelection(insertText);
         }
     },
 
     setContent(content, fileName) {
         const ext = fileName.split('.').pop().toLowerCase();
         let lang = 'plaintext';
+        let langExtension = []; 
         
-        if (ext === 'md') lang = 'markdown';
-        else if (ext === 'json') lang = 'json';
-        else if (ext === 'yaml' || ext === 'yml') lang = 'yaml';
-        else if (ext === 'txt') lang = 'plaintext';
+        if (ext === 'md') {
+            lang = 'markdown';
+            if(this.CM.mdLang) langExtension = this.CM.mdLang.markdown();
+        } else if (ext === 'json') {
+            lang = 'json';
+            if(this.CM.jsonLang) langExtension = this.CM.jsonLang.json();
+        } else if (ext === 'yaml' || ext === 'yml') {
+            lang = 'yaml';
+            if(this.CM.yamlLang) langExtension = this.CM.yamlLang.yaml();
+        } else if (ext === 'txt') {
+            lang = 'plaintext';
+        }
 
         this.currentLanguage = lang;
-        monaco.editor.setModelLanguage(this.instance.getModel(), lang);
-        this.instance.setValue(content || '');
+        
+        if (this.view) {
+            this.view.dispatch({
+                changes: { from: 0, to: this.view.state.doc.length, insert: content || '' }
+            });
+            this.view.dispatch({
+                effects: this.languageConf.reconfigure(langExtension)
+            });
+        }
 
         this.handlePreviewLayout(lang);
-        setTimeout(() => this.updateProgressBar(), 100);
     },
 
     getContent() {
-        return this.instance ? this.instance.getValue() : '';
+        return this.view ? this.view.state.doc.toString() : '';
     },
 
     onChange(callback) {
@@ -354,7 +275,11 @@ const EditorManager = {
         if(btnText) btnText.innerText = '预览';
         toolbar.style.setProperty('display', 'flex', 'important');
         
-        this.instance.updateOptions({ readOnly: false });
+        if (this.view) {
+            this.view.dispatch({
+                effects: this.readOnlyConf.reconfigure(this.CM.state.EditorState.readOnly.of(false))
+            });
+        }
 
         if (lang === 'markdown') {
             toggleBtn.classList.remove('d-none');

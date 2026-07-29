@@ -25,9 +25,6 @@ const ThemeManager = {
     applyMode(mode) {
         document.documentElement.setAttribute('data-bs-theme', mode);
         localStorage.setItem('unidoc_theme_mode', mode);
-        if (typeof monaco !== 'undefined' && EditorManager.instance) {
-            monaco.editor.setTheme(mode === 'dark' ? 'vs-dark' : 'vs-light');
-        }
         document.querySelectorAll('.theme-mode-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`.theme-mode-btn[data-mode="${mode}"]`)?.classList.add('active');
     },
@@ -80,8 +77,10 @@ async function handleFileSelected(file) {
     if (AppState.isDirty) {
         if (!confirm("当前文件有未保存的修改，强制切换将丢失修改。确定要切换吗？")) return;
     }
+
     UI.setLoading();
     EditorManager.setContent('加载中，请稍候...', file.name); 
+    
     try {
         const fileData = await GitHubAPI.getFile(file.path);
         AppState.currentFilePath = file.path;
@@ -100,14 +99,23 @@ async function saveCurrentFile() {
 
     AppState.isSaving = true;
     UI.setSaving();
+    
     try {
-        const newSha = await GitHubAPI.saveFile(AppState.currentFilePath, EditorManager.getContent(), AppState.currentFileSha);
+        const newSha = await GitHubAPI.saveFile(
+            AppState.currentFilePath, 
+            EditorManager.getContent(), 
+            AppState.currentFileSha
+        );
         AppState.currentFileSha = newSha;
         UI.setSaved();
         Toast.show('保存成功！', 'success');
     } catch (error) {
         UI.setUnsaved();
-        Toast.show(error.status === 409 ? '冲突！其他人可能修改了此文件。' : `保存失败: ${error.message}`, 'error');
+        if (error.status === 409) {
+            Toast.show('保存失败：文件冲突！其他人可能修改了此文件。', 'error');
+        } else {
+            Toast.show(`保存失败: ${error.message}`, 'error');
+        }
     } finally {
         AppState.isSaving = false;
     }
@@ -115,6 +123,7 @@ async function saveCurrentFile() {
 
 async function handleDeleteFile(file) {
     if (!confirm(`确定要永久删除 [ ${file.name} ] 吗？\n删除后不可恢复！`)) return;
+
     UI.showGlobalLoader('正在删除文件...');
     try {
         await GitHubAPI.deleteFile(file.path, file.sha);
@@ -140,7 +149,6 @@ function setupNewFileLogic() {
     document.getElementById('btn-new-file-pc')?.addEventListener('click', () => newFileModal.show());
     document.getElementById('btn-new-file-mobile')?.addEventListener('click', () => newFileModal.show());
 
-    // 绑定下拉选择
     document.querySelectorAll('.ext-select-item').forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
@@ -151,10 +159,8 @@ function setupNewFileLogic() {
     document.getElementById('btn-confirm-new').addEventListener('click', async () => {
         let baseName = document.getElementById('input-new-filename').value.trim();
         if (!baseName) return Toast.show('文件名不能为空', 'error');
-
-        // 文件名特殊字符防呆过滤 (防止 Windows 报错)
-        baseName = baseName.replace(/[\/\\:*?"<>|]/g, '-');
         
+        baseName = baseName.replace(/[\/\\:*?"<>|]/g, '-');
         const ext = document.getElementById('btn-new-ext-display').innerText.trim();
         const fileName = baseName + ext;
         const path = `notes/${fileName}`;
@@ -170,7 +176,6 @@ function setupNewFileLogic() {
 
             const newSha = await GitHubAPI.saveFile(path, initContent, null, 'Create new file via UniDoc');
             Toast.show('创建成功！', 'success');
-            
             setTimeout(async () => {
                 await FileTree.load();
                 handleFileSelected({ path: path, name: fileName, sha: newSha });
@@ -186,10 +191,10 @@ function setupNewFileLogic() {
 
 function setupRenameLogic() {
     const renameModal = new bootstrap.Modal(document.getElementById('renameFileModal'));
-
     window.handleRenameFile = (file) => {
         if (AppState.currentFilePath === file.path && AppState.isDirty) {
-            return Toast.show('请先保存当前文件的修改，再进行重命名', 'info');
+            Toast.show('请先保存当前文件的修改，再进行重命名', 'info');
+            return;
         }
         const oldName = file.name;
         const extIndex = oldName.lastIndexOf('.');
@@ -206,8 +211,6 @@ function setupRenameLogic() {
     document.getElementById('btn-confirm-rename').addEventListener('click', async () => {
         let newBaseName = document.getElementById('input-rename-filename').value.trim();
         if (!newBaseName) return Toast.show('文件名不能为空', 'error');
-
-        // 文件名特殊字符防呆过滤
         newBaseName = newBaseName.replace(/[\/\\:*?"<>|]/g, '-');
 
         const oldPath = document.getElementById('input-rename-oldpath').value;
@@ -240,7 +243,6 @@ function setupRenameLogic() {
     });
 }
 
-// 🌟 侧边栏拖拽缩放引擎
 function setupSidebarResizer() {
     const resizer = document.getElementById('sidebar-resizer');
     const sidebar = document.getElementById('sidebarOffcanvas');
@@ -262,13 +264,8 @@ function setupSidebarResizer() {
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         const newWidth = startWidth + (e.clientX - startX);
-        // 限制宽度在 150px ~ 600px 之间
         if (newWidth > 150 && newWidth < 600) {
             sidebar.style.width = newWidth + 'px';
-            // 实时挤压 Monaco 重新排版
-            if (EditorManager.instance) {
-                EditorManager.instance.layout();
-            }
         }
     });
 
@@ -281,6 +278,40 @@ function setupSidebarResizer() {
     });
 }
 
+// 🌟 升级：独立的动态字体与样式缩放引擎
+function setupFontResizer() {
+    const fontSlider = document.getElementById('input-font-size');
+    const fontDisplay = document.getElementById('font-size-display');
+    const fontFamilySelect = document.getElementById('input-font-family');
+    if (!fontSlider || !fontDisplay || !fontFamilySelect) return;
+
+    // 1. 读取本地偏好
+    const savedFontSize = localStorage.getItem('unidoc_font_size') || '15';
+    const savedFontFamily = localStorage.getItem('unidoc_font_family') || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    
+    // 初始化 UI 与 CSS 变量
+    fontSlider.value = savedFontSize;
+    fontDisplay.innerText = savedFontSize + 'px';
+    fontFamilySelect.value = savedFontFamily;
+    document.documentElement.style.setProperty('--editor-font-size', savedFontSize + 'px');
+    document.documentElement.style.setProperty('--editor-font-family', savedFontFamily);
+
+    // 2. 监听大小拖拽实时变更
+    fontSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        fontDisplay.innerText = val + 'px';
+        document.documentElement.style.setProperty('--editor-font-size', val + 'px');
+        localStorage.setItem('unidoc_font_size', val);
+    });
+
+    // 3. 监听字体样式切换
+    fontFamilySelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        document.documentElement.style.setProperty('--editor-font-family', val);
+        localStorage.setItem('unidoc_font_family', val);
+    });
+}
+
 // ==========================================
 // 初始化与事件绑定
 // ==========================================
@@ -289,9 +320,9 @@ async function initApp() {
     setupNewFileLogic();
     setupRenameLogic();
     setupSidebarResizer();
+    setupFontResizer(); // 🌟 激活字体控制条
 
     TokenModal.init(async () => {
-        // 先拉取设置，再拉取文件树，确保星标存在
         if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
         FileTree.load();
     });
@@ -301,29 +332,28 @@ async function initApp() {
     
     if (typeof ClipboardManager !== 'undefined') ClipboardManager.init(EditorManager);
     if (typeof ExportManager !== 'undefined') ExportManager.init();
+    if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
     
     if (window.visualViewport) {
         const resizeBodyToVisualViewport = () => {
             document.body.style.height = window.visualViewport.height + 'px';
             document.body.style.width = window.visualViewport.width + 'px';
-            if (EditorManager.instance) {
-                setTimeout(() => EditorManager.instance.layout(), 100);
-            }
         };
         window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
         window.visualViewport.addEventListener('scroll', resizeBodyToVisualViewport);
         resizeBodyToVisualViewport();
     }
 
-    const currentMode = document.documentElement.getAttribute('data-bs-theme');
-    monaco.editor.setTheme(currentMode === 'dark' ? 'vs-dark' : 'vs-light');
-
     EditorManager.onChange(() => {
         if (!AppState.isDirty && AppState.currentFilePath) UI.setUnsaved();
     });
 
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
-    document.getElementById('btn-settings').addEventListener('click', () => TokenModal.show());
+    
+    // 打开设置弹窗前可以移除默认逻辑，改为直接唤起 modal
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        new bootstrap.Modal(document.getElementById('tokenModal')).show();
+    });
 
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -340,7 +370,7 @@ async function initApp() {
     });
 
     if (!TokenManager.isConfigured()) {
-        TokenModal.show();
+        new bootstrap.Modal(document.getElementById('tokenModal')).show();
     } else {
         if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
         FileTree.load();
