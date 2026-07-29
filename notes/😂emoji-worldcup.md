@@ -6,20 +6,18 @@
 
 predict gamble       
 
-
 ***      
 
 共識機制
 
  consensus mechanism        
 
-
 ***        
-
 
 # Blueprint: World Cup Oracle (世界杯共识预测平台)
 
 ## 🎯 1. 项目定位与核心玩法
+
 - **项目名称**: World Cup Oracle
 - **核心定位**: 面向 C 端大众的高并发、强互动的世界杯赛事预测 Web App。
 - **核心玩法**: 
