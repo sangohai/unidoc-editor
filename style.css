@@ -48,7 +48,7 @@ html, body {
     #sidebarOffcanvas { position: relative !important; }
 }
 
-/* ================= 表情与词库面板 ================= */
+/* ================= 突破工具栏限制：手机端专属居中弹窗 ================= */
 .dropdown-menu.char-picker-panel {
     width: 260px; max-height: 200px; overflow-y: auto; background-color: var(--bs-body-bg);
     z-index: 1055 !important; margin-top: 5px;
@@ -56,10 +56,17 @@ html, body {
 .dropdown-menu.char-picker-panel.show { display: flex !important; flex-wrap: wrap; gap: 4px; }
 
 @media (max-width: 767.98px) {
-    .dropdown-menu.char-picker-panel.show, #snippets-menu.show {
+    /* 🌟 修复点：将所有需要居中的下拉菜单挂载统一装甲 */
+    .mobile-modal-dropdown.show {
         position: fixed !important; top: 50% !important; left: 50% !important;
-        transform: translate(-50%, -50%) !important; margin: 0 !important; width: 90vw !important; max-height: 60vh !important;
+        transform: translate(-50%, -50%) !important; margin: 0 !important; width: 90vw !important; 
+        max-width: 350px !important; max-height: 60vh !important; overflow-y: auto !important;
         box-shadow: 0 0 0 100vw rgba(0,0,0,0.5), 0 0.5rem 1rem rgba(0,0,0,0.15) !important; border-radius: 8px;
+        z-index: 1060 !important;
+    }
+    /* 保证表情面板在居中时依然是 flex 网格 */
+    .char-picker-panel.mobile-modal-dropdown.show {
+        display: flex !important; align-content: flex-start;
     }
 }
 

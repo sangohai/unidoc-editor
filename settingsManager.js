@@ -71,9 +71,9 @@ const SettingsManager = {
             
             li.addEventListener('click', (e) => {
                 e.preventDefault();
-                // 💥 终极修复：使用 typeof 判断，完美越过 window 对象陷阱
-                if (typeof EditorManager !== 'undefined') {
-                    EditorManager.insertTextAtCursor(snip.content);
+                // 💥 修复点：抛弃底层的 EditorManager，直接走高贵的 Connector 中间件！
+                if (typeof Connector !== 'undefined') {
+                    Connector.execute('INSERT_TEXT', snip.content);
                 }
             });
             menu.appendChild(li);

@@ -1,4 +1,4 @@
-// main.js - 核心总控制器
+// main.js - 核心调度指挥中心 (完全接管 UI 并通过 Connector 下发指令)
 const ThemeManager = {
     init() {
         const savedMode = localStorage.getItem('unidoc_theme_mode') || 'light';
@@ -73,23 +73,71 @@ const UI = {
     }
 };
 
+// 辅助方法：解析格式
+function getLanguageFromFileName(fileName) {
+    const ext = fileName.split('.').pop().toLowerCase();
+    if (ext === 'md') return 'markdown';
+    if (ext === 'json') return 'json';
+    if (ext === 'yaml' || ext === 'yml') return 'yaml';
+    return 'plaintext';
+}
+
+// 控制 UI 工具栏显示差异
+function updateUIToolbarForLanguage(lang) {
+    const toggleBtn = document.getElementById('btn-toggle-preview');
+    const tbMd = document.getElementById('toolbar-md');
+    const tbCode = document.getElementById('toolbar-code');
+
+    if (lang === 'markdown') {
+        toggleBtn.classList.remove('d-none');
+        tbMd.classList.replace('d-none', 'd-flex');
+        tbCode.classList.replace('d-flex', 'd-none');
+    } else {
+        toggleBtn.classList.add('d-none');
+        tbMd.classList.replace('d-flex', 'd-none');
+        tbCode.classList.replace('d-none', 'd-flex');
+    }
+}
+
+// 强制复位到编辑模式
+function resetPreviewToggle() {
+    const preview = document.getElementById('preview-container');
+    const btnIcon = document.querySelector('#btn-toggle-preview i');
+    const btnText = document.querySelector('#btn-toggle-preview .btn-text');
+    const toolbar = document.getElementById('editor-toolbar');
+    
+    preview.classList.add('d-none');
+    if(btnIcon) btnIcon.classList.replace('fa-pen', 'fa-eye');
+    if(btnText) btnText.innerText = '预览';
+    toolbar.style.setProperty('display', 'flex', 'important');
+    Connector.execute('TOGGLE_PREVIEW', false); // 强制引擎也复位
+}
+
 async function handleFileSelected(file) {
     if (AppState.isDirty) {
         if (!confirm("当前文件有未保存的修改，强制切换将丢失修改。确定要切换吗？")) return;
     }
 
     UI.setLoading();
-    EditorManager.setContent('加载中，请稍候...', file.name); 
+    
+    // UI 控制：获取格式并下发指令
+    const lang = getLanguageFromFileName(file.name);
+    EditorManager.setContent('加载中，请稍候...', lang); 
     
     try {
         const fileData = await GitHubAPI.getFile(file.path);
         AppState.currentFilePath = file.path;
         AppState.currentFileSha = fileData.sha;
-        EditorManager.setContent(fileData.content, file.name);
+        
+        EditorManager.setContent(fileData.content, lang);
+        
+        updateUIToolbarForLanguage(lang);
+        resetPreviewToggle();
         UI.setSaved();
+        
     } catch (error) {
         Toast.show(`读取失败: ${error.message}`, 'error');
-        EditorManager.setContent(`读取失败: ${error.message}`, 'error.txt');
+        EditorManager.setContent(`读取失败: ${error.message}`, 'plaintext');
     }
 }
 
@@ -132,7 +180,7 @@ async function handleDeleteFile(file) {
             AppState.currentFilePath = null;
             AppState.currentFileSha = null;
             AppState.isDirty = false;
-            EditorManager.setContent('文件已删除', 'deleted.txt');
+            EditorManager.setContent('文件已删除', 'plaintext');
             UI.statusEl.innerHTML = '';
         }
         await FileTree.load();
@@ -278,49 +326,80 @@ function setupSidebarResizer() {
     });
 }
 
-// 🌟 升级：独立的动态字体与样式缩放引擎
-function setupFontResizer() {
+// 🌟 统一事件分发中心 (向 Connector 下发指令)
+function bindToolbarCommands() {
+    // 绑定所有带 data-action 的按钮
+    document.querySelectorAll('#editor-toolbar button[data-action]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Connector.execute(btn.dataset.action);
+        });
+    });
+
+    // 绑定字体调节，走指令总线
     const fontSlider = document.getElementById('input-font-size');
     const fontDisplay = document.getElementById('font-size-display');
     const fontFamilySelect = document.getElementById('input-font-family');
-    if (!fontSlider || !fontDisplay || !fontFamilySelect) return;
 
-    // 1. 读取本地偏好
-    const savedFontSize = localStorage.getItem('unidoc_font_size') || '15';
-    const savedFontFamily = localStorage.getItem('unidoc_font_family') || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-    
-    // 初始化 UI 与 CSS 变量
-    fontSlider.value = savedFontSize;
-    fontDisplay.innerText = savedFontSize + 'px';
-    fontFamilySelect.value = savedFontFamily;
-    document.documentElement.style.setProperty('--editor-font-size', savedFontSize + 'px');
-    document.documentElement.style.setProperty('--editor-font-family', savedFontFamily);
+    if (fontSlider && fontDisplay && fontFamilySelect) {
+        const savedFontSize = localStorage.getItem('unidoc_font_size') || '15';
+        const savedFontFamily = localStorage.getItem('unidoc_font_family') || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        
+        fontSlider.value = savedFontSize;
+        fontDisplay.innerText = savedFontSize + 'px';
+        fontFamilySelect.value = savedFontFamily;
+        Connector.execute('CHANGE_FONT_SIZE', savedFontSize);
+        Connector.execute('CHANGE_FONT_FAMILY', savedFontFamily);
 
-    // 2. 监听大小拖拽实时变更
-    fontSlider.addEventListener('input', (e) => {
-        const val = e.target.value;
-        fontDisplay.innerText = val + 'px';
-        document.documentElement.style.setProperty('--editor-font-size', val + 'px');
-        localStorage.setItem('unidoc_font_size', val);
-    });
+        fontSlider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            fontDisplay.innerText = val + 'px';
+            localStorage.setItem('unidoc_font_size', val);
+            Connector.execute('CHANGE_FONT_SIZE', val);
+        });
 
-    // 3. 监听字体样式切换
-    fontFamilySelect.addEventListener('change', (e) => {
-        const val = e.target.value;
-        document.documentElement.style.setProperty('--editor-font-family', val);
-        localStorage.setItem('unidoc_font_family', val);
+        fontFamilySelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('unidoc_font_family', val);
+            Connector.execute('CHANGE_FONT_FAMILY', val);
+        });
+    }
+
+    // 绑定预览切换，通过 Connector 获取结果渲染
+    document.getElementById('btn-toggle-preview').addEventListener('click', () => {
+        const preview = document.getElementById('preview-container');
+        const btnIcon = document.querySelector('#btn-toggle-preview i');
+        const btnText = document.querySelector('#btn-toggle-preview .btn-text');
+        const toolbar = document.getElementById('editor-toolbar');
+        
+        if (preview.classList.contains('d-none')) {
+            // 请求转为预览，接收生成的 HTML
+            const html = Connector.execute('TOGGLE_PREVIEW', true);
+            if(html !== undefined) document.getElementById('markdown-preview').innerHTML = html;
+            
+            preview.classList.remove('d-none');
+            btnIcon.classList.replace('fa-eye', 'fa-pen');
+            if(btnText) btnText.innerText = '编辑';
+            toolbar.style.setProperty('display', 'none', 'important');
+        } else {
+            // 退回编辑
+            Connector.execute('TOGGLE_PREVIEW', false);
+            preview.classList.add('d-none');
+            btnIcon.classList.replace('fa-pen', 'fa-eye');
+            if(btnText) btnText.innerText = '预览';
+            toolbar.style.setProperty('display', 'flex', 'important');
+        }
     });
 }
 
 // ==========================================
-// 初始化与事件绑定
+// 初始化生命周期串联
 // ==========================================
 async function initApp() {
     ThemeManager.init();
     setupNewFileLogic();
     setupRenameLogic();
     setupSidebarResizer();
-    setupFontResizer(); // 🌟 激活字体控制条
 
     TokenModal.init(async () => {
         if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
@@ -328,8 +407,22 @@ async function initApp() {
     });
     
     FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
+    
+    // 初始化底层引擎
     await EditorManager.init();
     
+    // 💥 架构核心：初始化中间件，并将引擎控制权移交给中间件
+    if (typeof Connector !== 'undefined') {
+        Connector.init(EditorManager);
+        bindToolbarCommands();
+    }
+    
+    // 🌟 修复点：唤醒表情模块，并将插入指令交由 Connector 统一派发！
+    if (typeof CharPicker !== 'undefined') {
+        CharPicker.init((char) => Connector.execute('INSERT_TEXT', char));
+    }
+    
+    // 初始化其他独立管家
     if (typeof ClipboardManager !== 'undefined') ClipboardManager.init(EditorManager);
     if (typeof ExportManager !== 'undefined') ExportManager.init();
     if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
@@ -349,11 +442,7 @@ async function initApp() {
     });
 
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
-    
-    // 打开设置弹窗前可以移除默认逻辑，改为直接唤起 modal
-    document.getElementById('btn-settings').addEventListener('click', () => {
-        new bootstrap.Modal(document.getElementById('tokenModal')).show();
-    });
+    document.getElementById('btn-settings').addEventListener('click', () => TokenModal.show());
 
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -377,11 +466,38 @@ async function initApp() {
     }
 }
 
+// ==========================================
+// 启动程序与 PWA 开机自检热重载引擎
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
+
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('✅ PWA Service Worker 注册成功!', reg.scope))
-            .catch(err => console.error('❌ PWA 注册失败:', err));
+        navigator.serviceWorker.register('sw.js').then(reg => {
+            console.log('✅ PWA Service Worker 注册成功!', reg.scope);
+
+            // 1. 每次开机，主动向云端嗅探是否有新版本
+            reg.update();
+
+            // 2. 监听后台管家的更新事件
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                
+                newWorker.addEventListener('statechange', () => {
+                    // 当新版本下载完毕，且旧版本正在运行时触发热重载
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        
+                        // 💥 弹出全局黑色护盾，拦截用户操作
+                        UI.showGlobalLoader('🚀 探测到云端新引擎，正在执行热重载...');
+                        
+                        // 延时 1.5 秒保证新缓存写入完成，随后执行硬刷新
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    }
+                });
+            });
+
+        }).catch(err => console.error('❌ PWA 注册失败:', err));
     }
 });

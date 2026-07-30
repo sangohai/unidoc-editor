@@ -1,4 +1,4 @@
-// editor.js - 纯净的 CodeMirror 6 核心引擎 (极致解耦版)
+// editor.js - 纯粹的 CodeMirror 6 核心引擎 (彻底剥离 UI 层)
 const EditorManager = {
     view: null,
     currentLanguage: 'markdown',
@@ -62,7 +62,7 @@ const EditorManager = {
                         ...commands.historyKeymap,
                     ]),
                     this.languageConf.of(mdLang.markdown()),
-                    this.readOnlyConf.of(state.EditorState.readOnly.of(true)),
+                    this.readOnlyConf.of(state.EditorState.readOnly.of(false)), // 默认可读写
                     view.EditorView.lineWrapping,
                     view.EditorView.theme({
                         ".cm-content": { paddingBottom: "100px" }
@@ -82,127 +82,74 @@ const EditorManager = {
 
         } catch (e) {
             console.error("CodeMirror 6 加载失败:", e);
-            Toast.show("编辑器内核加载失败，请检查网络", "error");
-            return; 
+            throw new Error("编辑器内核加载失败"); 
         }
-
-        document.getElementById('btn-toggle-preview').addEventListener('click', () => {
-            const preview = document.getElementById('preview-container');
-            const btnIcon = document.querySelector('#btn-toggle-preview i');
-            const btnText = document.querySelector('#btn-toggle-preview .btn-text');
-            const toolbar = document.getElementById('editor-toolbar');
-            
-            if (preview.classList.contains('d-none')) {
-                this.updatePreview(this.getContent());
-                preview.classList.remove('d-none');
-                btnIcon.classList.replace('fa-eye', 'fa-pen');
-                if(btnText) btnText.innerText = '编辑';
-                toolbar.style.setProperty('display', 'none', 'important');
-            } else {
-                preview.classList.add('d-none');
-                btnIcon.classList.replace('fa-pen', 'fa-eye');
-                if(btnText) btnText.innerText = '预览';
-                this.view.focus();
-                toolbar.style.setProperty('display', 'flex', 'important');
-            }
-        });
-
-        this.initToolbarEvents();
         
-        if (typeof CharPicker !== 'undefined') {
-            CharPicker.init((char) => this.insertTextAtCursor(char));
-        }
-
         window.EditorManager = this;
     },
 
-    // ================= CM6 专属操作接口 =================
-    insertTextAtCursor(text) {
-        if (!this.view) return;
-        this.replaceSelection(text);
-        if (text.length === 2 && ['【】','「」','《》','（）','［］','｛｝','『』','〖〗','〔〕'].includes(text)) {
-            const selection = this.view.state.selection.main;
-            this.view.dispatch({ selection: { anchor: selection.anchor - 1 } });
-        }
-        this.view.focus();
+    // ================= 核心接口暴露 (仅供 Connector 调用) =================
+
+    getContent() {
+        return this.view ? this.view.state.doc.toString() : '';
     },
 
-    replaceSelection(text) {
+    onChange(callback) {
+        this.onChangeCallback = callback;
+    },
+
+    setLanguage(lang) {
         if (!this.view) return;
+        this.currentLanguage = lang;
+        let langExtension = []; 
+        if (lang === 'markdown' && this.CM.mdLang) langExtension = this.CM.mdLang.markdown();
+        else if (lang === 'json' && this.CM.jsonLang) langExtension = this.CM.jsonLang.json();
+        else if (lang === 'yaml' && this.CM.yamlLang) langExtension = this.CM.yamlLang.yaml();
+
+        this.view.dispatch({
+            effects: this.languageConf.reconfigure(langExtension)
+        });
+    },
+
+    setContent(content, lang) {
+        if (!this.view) return;
+        this.setLanguage(lang);
+        this.view.dispatch({
+            changes: { from: 0, to: this.view.state.doc.length, insert: content || '' }
+        });
+    },
+
+    selectAll() {
+        if (!this.view) return;
+        this.view.focus();
+        this.view.dispatch({ selection: { anchor: 0, head: this.view.state.doc.length } });
+    },
+
+    insertTextAtCursor(text) {
+        if (!this.view) return;
+        this.view.focus();
         const selection = this.view.state.selection.main;
+        
         this.view.dispatch({
             changes: { from: selection.from, to: selection.to, insert: text },
             selection: { anchor: selection.from + text.length }
         });
-    },
 
-    findAndReplace(targetStr, replaceStr) {
-        if (!this.view) return;
-        const docStr = this.view.state.doc.toString();
-        const index = docStr.indexOf(targetStr);
-        if (index !== -1) {
-            this.view.dispatch({
-                changes: { from: index, to: index + targetStr.length, insert: replaceStr }
-            });
+        // 括号居中黑科技
+        if (text.length === 2 && ['【】','「」','《》','（）','［］','｛｝','『』','〖〗','〔〕'].includes(text)) {
+            const currentSel = this.view.state.selection.main;
+            this.view.dispatch({ selection: { anchor: currentSel.anchor - 1 } });
         }
     },
 
-    initToolbarEvents() {
-        document.querySelectorAll('#editor-toolbar a[data-action], #editor-toolbar button[data-action]').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.executeToolbarAction(btn.dataset.action);
-            });
-        });
-    },
-
-    executeToolbarAction(action) {
+    applyMarkdownFormat(formatType) {
         if (!this.view) return;
         this.view.focus();
-
         const selection = this.view.state.selection.main;
         const selectedText = this.view.state.sliceDoc(selection.from, selection.to);
         let insertText = '';
 
-        switch (action) {
-            case 'format':
-                if (this.currentLanguage === 'json') {
-                    try {
-                        const formatted = JSON.stringify(JSON.parse(this.view.state.doc.toString()), null, 4);
-                        this.view.dispatch({
-                            changes: { from: 0, to: this.view.state.doc.length, insert: formatted }
-                        });
-                        Toast.show('JSON 排版完成', 'success');
-                    } catch (e) {
-                        Toast.show('JSON 格式错误，无法排版', 'error');
-                    }
-                } else {
-                    Toast.show('原生排版目前仅支持 JSON 格式', 'info');
-                }
-                return;
-
-            case 'selectAll':
-                this.view.dispatch({ selection: { anchor: 0, head: this.view.state.doc.length } });
-                Toast.show('已全选文档', 'success');
-                return;
-
-            case 'sanitize':
-                let targetFrom = selection.empty ? 0 : selection.from;
-                let targetTo = selection.empty ? this.view.state.doc.length : selection.to;
-                let targetText = this.view.state.sliceDoc(targetFrom, targetTo);
-
-                let cleanText = targetText
-                    .replace(/\t/g, '    ')
-                    .replace(/[\u200B-\u200D\uFEFF\u202A-\u202E]/g, '')
-                    .replace(/[ \t]+$/gm, '')
-                    .replace(/\n{3,}/g, '\n\n');
-
-                this.view.dispatch({
-                    changes: { from: targetFrom, to: targetTo, insert: cleanText }
-                });
-                Toast.show(selection.empty ? '🧼 全文格式水洗完成！' : '🧼 局部格式水洗完成！', 'success');
-                return;
-
+        switch (formatType) {
             case 'bold': insertText = `**${selectedText || '加粗文字'}**`; break;
             case 'italic': insertText = `*${selectedText || '斜体文字'}*`; break;
             case 'link': insertText = `[${selectedText || '链接'}](http://)`; break;
@@ -213,82 +160,75 @@ const EditorManager = {
         }
 
         if (insertText !== '') {
-            this.replaceSelection(insertText);
-        }
-    },
-
-    setContent(content, fileName) {
-        const ext = fileName.split('.').pop().toLowerCase();
-        let lang = 'plaintext';
-        let langExtension = []; 
-        
-        if (ext === 'md') {
-            lang = 'markdown';
-            if(this.CM.mdLang) langExtension = this.CM.mdLang.markdown();
-        } else if (ext === 'json') {
-            lang = 'json';
-            if(this.CM.jsonLang) langExtension = this.CM.jsonLang.json();
-        } else if (ext === 'yaml' || ext === 'yml') {
-            lang = 'yaml';
-            if(this.CM.yamlLang) langExtension = this.CM.yamlLang.yaml();
-        } else if (ext === 'txt') {
-            lang = 'plaintext';
-        }
-
-        this.currentLanguage = lang;
-        
-        if (this.view) {
             this.view.dispatch({
-                changes: { from: 0, to: this.view.state.doc.length, insert: content || '' }
-            });
-            this.view.dispatch({
-                effects: this.languageConf.reconfigure(langExtension)
+                changes: { from: selection.from, to: selection.to, insert: insertText },
+                selection: { anchor: selection.from + insertText.length }
             });
         }
-
-        this.handlePreviewLayout(lang);
     },
 
-    getContent() {
-        return this.view ? this.view.state.doc.toString() : '';
-    },
-
-    onChange(callback) {
-        this.onChangeCallback = callback;
-    },
-
-    updatePreview(text) {
-        document.getElementById('markdown-preview').innerHTML = marked.parse(text);
-    },
-
-    handlePreviewLayout(lang) {
-        const previewContainer = document.getElementById('preview-container');
-        const toggleBtn = document.getElementById('btn-toggle-preview');
-        const btnIcon = document.querySelector('#btn-toggle-preview i');
-        const btnText = document.querySelector('#btn-toggle-preview .btn-text');
-        const toolbar = document.getElementById('editor-toolbar');
-        const tbMd = document.getElementById('toolbar-md');
-        const tbCode = document.getElementById('toolbar-code');
-
-        previewContainer.classList.add('d-none');
-        if(btnIcon) btnIcon.classList.replace('fa-pen', 'fa-eye');
-        if(btnText) btnText.innerText = '预览';
-        toolbar.style.setProperty('display', 'flex', 'important');
+    sanitizeFormat() {
+        if (!this.view) return;
+        this.view.focus();
+        const selection = this.view.state.selection.main;
         
-        if (this.view) {
-            this.view.dispatch({
-                effects: this.readOnlyConf.reconfigure(this.CM.state.EditorState.readOnly.of(false))
-            });
-        }
+        let targetFrom = selection.empty ? 0 : selection.from;
+        let targetTo = selection.empty ? this.view.state.doc.length : selection.to;
+        let targetText = this.view.state.sliceDoc(targetFrom, targetTo);
 
-        if (lang === 'markdown') {
-            toggleBtn.classList.remove('d-none');
-            tbMd.classList.replace('d-none', 'd-flex');
-            tbCode.classList.replace('d-flex', 'd-none');
+        let cleanText = targetText
+            .replace(/\t/g, '    ')
+            .replace(/[\u200B-\u200D\uFEFF\u202A-\u202E]/g, '')
+            .replace(/[ \t]+$/gm, '')
+            .replace(/\n{3,}/g, '\n\n');
+
+        this.view.dispatch({
+            changes: { from: targetFrom, to: targetTo, insert: cleanText }
+        });
+        Toast.show(selection.empty ? '🧼 全文格式水洗完成！' : '🧼 局部格式水洗完成！', 'success');
+    },
+
+    formatCodeDocument() {
+        if (!this.view) return;
+        this.view.focus();
+        if (this.currentLanguage === 'json') {
+            try {
+                const formatted = JSON.stringify(JSON.parse(this.view.state.doc.toString()), null, 4);
+                this.view.dispatch({
+                    changes: { from: 0, to: this.view.state.doc.length, insert: formatted }
+                });
+                Toast.show('JSON 排版完成', 'success');
+            } catch (e) {
+                Toast.show('JSON 格式错误，无法排版', 'error');
+            }
         } else {
-            toggleBtn.classList.add('d-none');
-            tbMd.classList.replace('d-flex', 'd-none');
-            tbCode.classList.replace('d-none', 'd-flex');
+            Toast.show('原生排版目前仅支持 JSON 格式', 'info');
+        }
+    },
+
+    // 🌟 解析 Markdown 为 HTML
+    togglePreview(isPreviewMode) {
+        if (!this.view) return "";
+        // 动态设置底层引擎是否只读
+        this.view.dispatch({
+            effects: this.readOnlyConf.reconfigure(this.CM.state.EditorState.readOnly.of(isPreviewMode))
+        });
+        
+        if (isPreviewMode && this.currentLanguage === 'markdown') {
+            return marked.parse(this.view.state.doc.toString());
+        }
+        return "";
+    },
+
+    // 为图床异步上传提供的文本替换接口
+    findAndReplace(targetStr, replaceStr) {
+        if (!this.view) return;
+        const docStr = this.view.state.doc.toString();
+        const index = docStr.indexOf(targetStr);
+        if (index !== -1) {
+            this.view.dispatch({
+                changes: { from: index, to: index + targetStr.length, insert: replaceStr }
+            });
         }
     }
 };

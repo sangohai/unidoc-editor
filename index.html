@@ -99,49 +99,39 @@
                 </div>
             </div>
             
-            <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2">
-                <div class="text-muted small p-2">正在加载文件...</div>
-            </div>
-
+            <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2"><div class="text-muted small p-2">正在加载文件...</div></div>
             <div id="sidebar-resizer" class="d-none d-md-block" title="拖拽调整宽度"></div>
         </div>
 
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
             
-            <!-- 💥 修复点：移除 overflow-x-auto，改为 flex-wrap。释放下拉菜单的空间！ -->
+            <!-- 🌟 升级：工具栏按钮注入标准化指令宏 -->
             <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center justify-content-between flex-shrink-0" style="display: none !important;">
-                
                 <div class="d-flex align-items-center flex-grow-1 flex-wrap gap-1">
-                    
                     <div id="toolbar-md" class="d-none align-items-center flex-wrap gap-1">
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="bold"><i class="fa-solid fa-bold"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="italic"><i class="fa-solid fa-italic"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="link"><i class="fa-solid fa-link"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="image"><i class="fa-regular fa-image"></i></button>
-                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="code"><i class="fa-solid fa-code"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="FORMAT_BOLD"><i class="fa-solid fa-bold"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="FORMAT_ITALIC"><i class="fa-solid fa-italic"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="FORMAT_LINK"><i class="fa-solid fa-link"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="FORMAT_IMAGE"><i class="fa-regular fa-image"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" data-action="FORMAT_CODE"><i class="fa-solid fa-code"></i></button>
                         
                         <span class="border-end mx-1" style="height: 18px;"></span>
                         
                         <div class="dropdown d-inline-block">
-                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
-                                <i class="fa-regular fa-face-smile"></i>
-                            </button>
-                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="emoji-panel" style="z-index: 1060;"></div>
+                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside"><i class="fa-regular fa-face-smile"></i></button>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel mobile-modal-dropdown" id="emoji-panel" style="z-index: 1060;"></div>
                         </div>
 
                         <div class="dropdown d-inline-block">
-                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">
-                                Ω
-                            </button>
-                            <div class="dropdown-menu p-2 shadow char-picker-panel" id="symbol-panel" style="z-index: 1060;"></div>
+                            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">Ω</button>
+                            <div class="dropdown-menu p-2 shadow char-picker-panel mobile-modal-dropdown" id="symbol-panel" style="z-index: 1060;"></div>
                         </div>
 
-                        <!-- 🌟 恢复：被漏掉的 Aa 排版菜单，完美回归！ -->
                         <div class="dropdown d-inline-block">
                             <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" title="排版设置">
                                 <i class="fa-solid fa-text-height"></i>
                             </button>
-                            <div class="dropdown-menu p-3 shadow" style="width: 260px; z-index: 1060;">
+                            <div class="dropdown-menu p-3 shadow mobile-modal-dropdown" style="width: 260px; z-index: 1060;">
                                 <h6 class="dropdown-header px-0 text-primary fw-bold"><i class="fa-solid fa-font me-2"></i>阅读与编辑偏好</h6>
                                 <label class="form-label small text-body-secondary d-flex justify-content-between mt-2">
                                     <span>字体大小</span><span id="font-size-display" class="fw-bold text-primary">15px</span>
@@ -159,76 +149,43 @@
                     </div>
                     
                     <div id="toolbar-code" class="d-none align-items-center">
-                        <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="format" style="font-size: 13px;">
-                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>原生排版
-                        </button>
+                        <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="FORMAT_DOCUMENT" style="font-size: 13px;"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>原生排版</button>
                     </div>
 
                     <span class="border-end mx-1" style="height: 18px;"></span>
 
                     <div class="dropdown d-inline-block">
-                        <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" title="自定义快捷词库">
-                            <i class="fa-solid fa-book-bookmark"></i>
-                        </button>
-                        <ul class="dropdown-menu shadow-sm" id="snippets-menu" style="font-size: 13px; max-height: 300px; overflow-y: auto; z-index: 1060;"></ul>
+                        <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" title="自定义快捷词库"><i class="fa-solid fa-book-bookmark"></i></button>
+                        <ul class="dropdown-menu shadow-sm mobile-modal-dropdown" id="snippets-menu" style="font-size: 13px; max-height: 300px; overflow-y: auto; z-index: 1060;"></ul>
                     </div>
 
-                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="selectAll" title="全选">
-                        <i class="fa-solid fa-object-group"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="sanitize" title="清洗冗余格式">
-                        <i class="fa-solid fa-eraser"></i>
-                    </button>
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="SELECT_ALL" title="全选"><i class="fa-solid fa-object-group"></i></button>
+                    <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" data-action="SANITIZE_FORMAT" title="清洗冗余格式"><i class="fa-solid fa-eraser"></i></button>
                 </div>
 
                 <div class="d-flex align-items-center border-start ps-1 flex-shrink-0">
-                    <button class="btn btn-sm btn-outline-info border-0 py-0 px-2 me-1" id="btn-view-clipboard" title="查看剪贴板">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger border-0 py-0 px-2" id="btn-shred-clipboard" title="粉碎剪贴板">
-                        <i class="fa-solid fa-broom"></i>
-                    </button>
+                    <button class="btn btn-sm btn-outline-info border-0 py-0 px-2 me-1" id="btn-view-clipboard" title="查看剪贴板"><i class="fa-solid fa-clipboard-check"></i></button>
+                    <button class="btn btn-sm btn-outline-danger border-0 py-0 px-2" id="btn-shred-clipboard" title="粉碎剪贴板"><i class="fa-solid fa-broom"></i></button>
                 </div>
             </div>
 
             <div class="position-relative flex-grow-1 w-100 d-flex">
                 <div id="editor-container" class="flex-grow-1 w-100 overflow-hidden position-relative"></div>
-                
             </div>
-            
             <div id="preview-container" class="preview-panel bg-body d-none position-absolute top-0 start-0 w-100 h-100 overflow-auto p-3 p-md-5" style="z-index: 10;">
                 <div id="markdown-preview" class="markdown-body mx-auto" style="max-width: 800px;"></div>
             </div>
         </div>
     </div>
 
-    <!-- 弹窗组件集... (保持原样) -->
+    <!-- 各种弹窗组件 (保持不动) -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
-
-    <div class="modal fade" id="tokenModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header text-bg-dark border-0"><h5 class="modal-title fs-6"><i class="fa-brands fa-github me-2"></i>GitHub 授权</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-3"><label class="form-label small text-body-secondary">Repository (拥有者/仓库名)</label><input type="text" id="input-repo" class="form-control form-control-sm" placeholder="如: myname/myrepo"></div><div class="mb-3"><label class="form-label small text-body-secondary">Personal Access Token</label><input type="password" id="input-token" class="form-control form-control-sm" placeholder="ghp_xxxx"></div></div><div class="modal-footer p-1 border-top-0 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-save-token">保存配置并连接</button></div></div></div>
-    </div>
-
-    <div class="modal fade" id="newFileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">新建文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label><div class="input-group"><input type="text" id="input-new-filename" class="form-control" placeholder="例如: config"><button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md (Markdown)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json (JSON)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".yaml">.yaml (YAML)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".txt">.txt (纯文本)</a></li></ul></div></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-new">确认创建</button></div></div></div>
-    </div>
-
-    <div class="modal fade" id="renameFileModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">重命名文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">新文件名称 (不包含后缀)</label><div class="input-group"><input type="text" id="input-rename-filename" class="form-control"><span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span></div><input type="hidden" id="input-rename-oldpath"><input type="hidden" id="input-rename-sha"></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button></div></div></div>
-    </div>
-
-    <div class="modal fade" id="gcModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-danger text-white border-0"><h5 class="modal-title fs-6"><i class="fa-solid fa-recycle me-2"></i>图床瘦身扫描报告</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-3"><p id="gc-summary" class="small text-body-secondary mb-2">正在分析...</p><ul id="gc-orphan-list" class="list-group list-group-flush border rounded" style="max-height: 200px; overflow-y: auto;"></ul></div><div class="modal-footer p-2 bg-body"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">暂不处理</button><button type="button" class="btn btn-sm btn-danger" id="btn-confirm-gc"><i class="fa-solid fa-fire me-1"></i>彻底销毁</button></div></div></div>
-    </div>
-
-    <div class="modal fade" id="clipboardModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-user-secret me-2"></i>剪贴板快照</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-2"><textarea id="clipboard-content-view" class="form-control bg-dark text-success font-monospace" rows="5" readonly style="font-size: 13px;"></textarea></div><div class="modal-footer p-1 bg-body justify-content-between"><span class="small text-muted ps-2">如果包含敏感数据，请立即粉碎</span><div><button type="button" class="btn btn-sm btn-danger me-1" id="btn-modal-shred"><i class="fa-solid fa-broom me-1"></i>立刻粉碎</button><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">关闭</button></div></div></div></div>
-    </div>
-
-    <div class="modal fade" id="snippetsModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-book-bookmark me-2 text-primary"></i>云端快捷词库</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-0"><div id="snippets-manager-list" style="max-height: 250px; overflow-y: auto;"></div><div class="p-3 bg-body-tertiary border-top"><h6 class="fs-6 mb-2">添加新词库</h6><input type="text" id="input-snippet-title" class="form-control form-control-sm mb-2" placeholder="标题 (例如: 问候语)"><textarea id="input-snippet-content" class="form-control form-control-sm mb-2" rows="3" placeholder="插入的具体内容 (支持多行文本等)"></textarea><button type="button" class="btn btn-sm btn-primary w-100" id="btn-add-snippet"><i class="fa-solid fa-plus me-1"></i>保存并同步云端</button></div></div></div></div>
-    </div>
-
+    <div class="modal fade" id="tokenModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header text-bg-dark border-0"><h5 class="modal-title fs-6"><i class="fa-brands fa-github me-2"></i>GitHub 授权</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-3"><label class="form-label small text-body-secondary">Repository (拥有者/仓库名)</label><input type="text" id="input-repo" class="form-control form-control-sm" placeholder="如: myname/myrepo"></div><div class="mb-3"><label class="form-label small text-body-secondary">Personal Access Token</label><input type="password" id="input-token" class="form-control form-control-sm" placeholder="ghp_xxxx"></div></div><div class="modal-footer p-1 border-top-0 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-save-token">保存配置并连接</button></div></div></div></div>
+    <div class="modal fade" id="newFileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">新建文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label><div class="input-group"><input type="text" id="input-new-filename" class="form-control" placeholder="例如: config"><button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md (Markdown)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json (JSON)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".yaml">.yaml (YAML)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".txt">.txt (纯文本)</a></li></ul></div></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-new">确认创建</button></div></div></div></div>
+    <div class="modal fade" id="renameFileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">重命名文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">新文件名称 (不包含后缀)</label><div class="input-group"><input type="text" id="input-rename-filename" class="form-control"><span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span></div><input type="hidden" id="input-rename-oldpath"><input type="hidden" id="input-rename-sha"></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button></div></div></div></div>
+    <div class="modal fade" id="gcModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-danger text-white border-0"><h5 class="modal-title fs-6"><i class="fa-solid fa-recycle me-2"></i>图床瘦身扫描报告</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-3"><p id="gc-summary" class="small text-body-secondary mb-2">正在分析...</p><ul id="gc-orphan-list" class="list-group list-group-flush border rounded" style="max-height: 200px; overflow-y: auto;"></ul></div><div class="modal-footer p-2 bg-body"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">暂不处理</button><button type="button" class="btn btn-sm btn-danger" id="btn-confirm-gc"><i class="fa-solid fa-fire me-1"></i>彻底销毁</button></div></div></div></div>
+    <div class="modal fade" id="clipboardModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-user-secret me-2"></i>剪贴板快照</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-2"><textarea id="clipboard-content-view" class="form-control bg-dark text-success font-monospace" rows="5" readonly style="font-size: 13px;"></textarea></div><div class="modal-footer p-1 bg-body justify-content-between"><span class="small text-muted ps-2">如果包含敏感数据，请立即粉碎</span><div><button type="button" class="btn btn-sm btn-danger me-1" id="btn-modal-shred"><i class="fa-solid fa-broom me-1"></i>立刻粉碎</button><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">关闭</button></div></div></div></div></div>
+    <div class="modal fade" id="snippetsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-book-bookmark me-2 text-primary"></i>云端快捷词库</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-0"><div id="snippets-manager-list" style="max-height: 250px; overflow-y: auto;"></div><div class="p-3 bg-body-tertiary border-top"><h6 class="fs-6 mb-2">添加新词库</h6><input type="text" id="input-snippet-title" class="form-control form-control-sm mb-2" placeholder="标题 (例如: 问候语)"><textarea id="input-snippet-content" class="form-control form-control-sm mb-2" rows="3" placeholder="插入的具体内容 (支持多行文本等)"></textarea><button type="button" class="btn btn-sm btn-primary w-100" id="btn-add-snippet"><i class="fa-solid fa-plus me-1"></i>保存并同步云端</button></div></div></div></div></div>
     <div id="global-loader" class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-75 d-none justify-content-center align-items-center" style="z-index: 1055;"><div class="text-center text-white"><div class="spinner-border mb-2" role="status"></div><div id="global-loader-text" class="fs-6">处理中...</div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -244,6 +201,10 @@
     <script src="clipboardManager.js"></script>
     <script src="exportManager.js"></script>
     <script src="garbageCollector.js"></script>
+    
+    <!-- 🌟 新增：挂载连接器（海关总署） -->
+    <script src="connector.js"></script> 
+    
     <script src="editor.js"></script>
     <script src="fileTree.js"></script>
     <script src="main.js"></script>
