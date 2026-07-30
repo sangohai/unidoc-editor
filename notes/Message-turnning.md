@@ -8,4 +8,7 @@ https://github.com/permissionlesstech/bitchat
 
 geofs ： 飛行遊戲網站    
 
+chat mail 服務器 ， 可以使用 matrix 協議搭建隱私通信服務！
+
+
 
