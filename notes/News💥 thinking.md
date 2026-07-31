@@ -29,8 +29,8 @@
 
 ####     FIFA games      
 
-🇺🇸 United State    ⚽⚽⚽          
-🇦🇷 Aguting         ⚽⚽⚽⚽         
+🇺🇸 United State            ⚽⚽⚽          
+🇦🇷 Aguting                ⚽⚽⚽⚽         
 
 ***       
 
