@@ -86,6 +86,43 @@ Markdown
 
 ***        
 
+```      
+            User
+              │
+              ▼
+      ┌────────────────┐
+      │ Konva.js Canvas │
+      └────────────────┘
+              │
+     Visual Editing
+              │
+              ▼
+      Scene Graph Engine
+              │
+      ┌───────┴────────┐
+      ▼                ▼
+ Semantic Graph    Geometry Graph
+      │                │
+      └───────┬────────┘
+              ▼
+        World Graph
+              │
+      JSON / Graph Database
+              │
+     ┌────────┴────────┐
+     ▼                 ▼
+ Constraint Engine   LLM Agent
+     │                 │
+     └────────┬────────┘
+              ▼
+      Synchronization Engine
+              │
+              ▼
+        Canvas Update
+
+```    
+
+
  
 [     ]
 {     }
