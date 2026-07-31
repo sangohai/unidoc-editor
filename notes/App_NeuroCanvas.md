@@ -1,4 +1,4 @@
-# Blueprint: NeuroCanvas (LLM Topology & Spatial Editor)
+###       Blueprint: NeuroCanvas (LLM Topology & Spatial Editor)
 
 ### 🎯 1. 项目定位与当前状态
 *   **项目名称**: NeuroCanvas (面向 LLM 的物理拓扑与空间关系编辑器)
