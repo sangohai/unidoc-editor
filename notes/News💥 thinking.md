@@ -1,8 +1,8 @@
-### News💥 thinking       
+###    News💥 thinking       
 
 ***      
 
-####  lan_postal core :      
+####     lan_postal core :      
 1- 手機📱快速建立通信基站；     
 2- 對話 pin 加密，pin 錯誤對話自動銷毀；    
 3- 可选 断点模式记录 坐标 轨迹 
@@ -17,7 +17,7 @@
 
 ***       
 
-####  衝塔 games  Impact Tower      
+####    衝塔 games  Impact Tower      
 
 顯示模式 ：［豎屏］+ ［無限地圖］
 
@@ -27,14 +27,14 @@
 
 ***       
 
-####  FIFA games      
+####     FIFA games      
 
 🇺🇸 United State    ⚽⚽⚽          
 🇦🇷 Aguting         ⚽⚽⚽⚽         
 
 ***       
 
-#### emoji 資源倉庫 調度      
+####     emoji 資源倉庫 調度      
 
 1- 管理 3000+ emoji 表情 和 素材         
 2- 為不同項目和或遊戲，CDN 分發到不同項目！        
@@ -42,7 +42,7 @@
 
 ***        
 
-####  🥅  Goal Moving  🥅       
+####     🥅  Goal Moving  🥅       
   
 
               🥅
