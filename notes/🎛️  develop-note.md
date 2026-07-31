@@ -94,7 +94,7 @@ Markdown
               │
               ▼
       ┌────────────────┐
-      │ Konva.js Canvas │
+      │ Konva.js Canvas│
       └────────────────┘
               │
      Visual Editing
