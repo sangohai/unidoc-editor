@@ -4,7 +4,7 @@
 
 ***       
 
-#### crunchbang ++        
+####    crunchbang ++        
 
 crunchbangplusplus 极简Linux 发行版 基于 debian + openbox          
 Home page : https://www.crunchbangplusplus.org/           
@@ -43,9 +43,6 @@ network-manager-applet | 網絡管理 | connman , wicd
 ***
 
 LLM  to  --->>>  CBPP linux  connection  :        
-
-
-
 
 
 
