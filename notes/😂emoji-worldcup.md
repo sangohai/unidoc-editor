@@ -1,4 +1,4 @@
-###   😂  emoji-worldcup      
+####   😂  emoji-worldcup      
 
 ***
 
@@ -14,7 +14,7 @@ predict gamble
 
 ***        
 
-###       Blueprint: World Cup Oracle (世界杯共识预测平台)
+####       Blueprint: World Cup Oracle (世界杯共识预测平台)
 
 ####      🎯 1. 项目定位与核心玩法
 
