@@ -38,4 +38,16 @@ Skywave Linux 是一款专门为**软件定义无线电（SDR，Software Define
 
 ***     
    
+####    Origami Linux —— 像折纸一样轻盈灵活的极简 Linux 桌面系统
+
+Origami Linux 是一款以“折纸（Origami）”为设计理念打造的轻量级 Linux 发行版，强调简洁、高效、灵活与可定制。它通过精简的软件组合和轻量化桌面环境，为用户提供流畅、低资源占用的桌面体验。与追求功能齐全的发行版不同，Origami Linux 更注重"按需构建"，让用户能够像折纸一样，自由组合属于自己的 Linux 桌面。它的定位非常明确：Origami Linux = 极简设计 + 轻量性能 + 模块化配置 + 优雅桌面。
+
+📌 系统基础： Debian 技术栈
+📌 桌面环境： Openbox / Fluxbox / Xfce（不同版本略有区别）
+📌 核心特色： 极简设计、模块化组件、低资源占用、高度可定制
+📌 适用场景： 旧电脑复活、轻量办公、Linux 学习、极简桌面
+📌 官方网站：https://origami.wf/
+
+***       
+
 
