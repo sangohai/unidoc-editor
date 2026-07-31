@@ -58,6 +58,31 @@
 把繁琐的语法细节交给 LLM（我）来写，你来把控 Connector 怎么设计、数据怎么流转、应用怎么隔离。这才是你在 AI 时代最无可替代的绝对价值！
 
 ***        
+Markdown
+      │
+      ▼
+ Knowledge Graph
+      │
+      ▼
+   Konva.js
+      │
+      ▼
+ JSON Structure
+      │
+      ▼
+ AST / Dependency Graph
+      │
+      ▼
+     LLM
+      │
+      ▼
+ Suggestions
+      │
+      ▼
+ Human Review
 
+***        
+
+ 
 [     ]
 {     }
