@@ -78,7 +78,7 @@ Web/Markdown 项目调用方式：
 复制 CDN 链接 (https://...)           
 复制 Markdown 语法 (![smile](https://...))            
 
-#### ⚖️ 6. 版权与素材来源策略          
+####     ⚖️ 6. 版权与素材来源策略          
 
 ***        
 
@@ -88,7 +88,7 @@ Twemoji (Twitter 开源): 画风扁平可爱，极度适合 Web 和独立游戏�
 Google Noto Emoji: 谷歌原生风格，全面且规范（遵循 Apache 2.0 协议）。          
 (开发第一步：写个 Node.js/Python 爬虫小脚本，将开源库里的几千张 SVG 批量重命名并自动生成 emoji-map.json。)           
 
-#### 📝 归档完毕！         
+####      📝 归档完毕！         
 
 ***         
 
