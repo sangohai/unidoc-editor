@@ -18,5 +18,27 @@
       "title": "大括号",
       "content": "{     }"
     }
+  ],
+  "toolbarLayout": [
+    "FORMAT_BOLD",
+    "FORMAT_ITALIC",
+    "FORMAT_LINK",
+    "FORMAT_IMAGE",
+    "FORMAT_CODE",
+    "|",
+    "EMOJI",
+    "SYMBOL",
+    "TYPOGRAPHY",
+    "|",
+    "FORMAT_DOCUMENT",
+    "|",
+    "SNIPPETS",
+    "SELECT_ALL",
+    "SANITIZE_FORMAT",
+    "|",
+    "GARBAGE_COLLECT",
+    "VIEW_CLIPBOARD",
+    "COMMAND_PALETTE",
+    "tool-emoji"
   ]
 }
