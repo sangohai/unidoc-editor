@@ -34,10 +34,11 @@
     "GARBAGE_COLLECT",
     "VIEW_CLIPBOARD",
     "COMMAND_PALETTE",
-    "tool-emoji",
-    "tool-symbol",
-    "tool-typography",
     "tool-snippets",
-    "FORMAT_DOCUMENT"
+    "FORMAT_DOCUMENT",
+    "FORMAT_IMAGE",
+    "FORMAT_LINK",
+    "FORMAT_BOLD",
+    "FORMAT_ITALIC"
   ]
 }
