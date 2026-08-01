@@ -20,10 +20,6 @@
     }
   ],
   "toolbarLayout": [
-    "FORMAT_BOLD",
-    "FORMAT_ITALIC",
-    "FORMAT_LINK",
-    "FORMAT_IMAGE",
     "FORMAT_CODE",
     "|",
     "EMOJI",
