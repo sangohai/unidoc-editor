@@ -11,7 +11,9 @@ const ClipboardManager = {
     bindEvents() {
         document.addEventListener('paste', (e) => this.handlePaste(e), true);
         document.getElementById('btn-view-clipboard')?.addEventListener('click', () => this.viewClipboard());
-        document.getElementById('btn-shred-clipboard')?.addEventListener('click', () => this.shredClipboard());
+        
+        // 💥 这里删除了原本对 btn-shred-clipboard 的直接绑定，交给 AST 路由处理
+        
         document.getElementById('btn-modal-shred')?.addEventListener('click', () => {
             this.shredClipboard();
             bootstrap.Modal.getInstance(document.getElementById('clipboardModal')).hide();

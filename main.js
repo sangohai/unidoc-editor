@@ -82,7 +82,6 @@ function getLanguageFromFileName(fileName) {
     return 'plaintext';
 }
 
-// 控制 UI 工具栏显示差异
 function updateUIToolbarForLanguage(lang) {
     const toggleBtn = document.getElementById('btn-toggle-preview');
     const tbMd = document.getElementById('toolbar-md');
@@ -99,7 +98,6 @@ function updateUIToolbarForLanguage(lang) {
     }
 }
 
-// 强制复位到编辑模式
 function resetPreviewToggle() {
     const preview = document.getElementById('preview-container');
     const btnIcon = document.querySelector('#btn-toggle-preview i');
@@ -110,7 +108,7 @@ function resetPreviewToggle() {
     if(btnIcon) btnIcon.classList.replace('fa-pen', 'fa-eye');
     if(btnText) btnText.innerText = '预览';
     toolbar.style.setProperty('display', 'flex', 'important');
-    Connector.execute('TOGGLE_PREVIEW', false); // 强制引擎也复位
+    if (typeof Connector !== 'undefined') Connector.execute('TOGGLE_PREVIEW', false);
 }
 
 async function handleFileSelected(file) {
@@ -119,17 +117,20 @@ async function handleFileSelected(file) {
     }
 
     UI.setLoading();
-    
-    // UI 控制：获取格式并下发指令
     const lang = getLanguageFromFileName(file.name);
-    EditorManager.setContent('加载中，请稍候...', lang); 
+    
+    if (typeof EditorManager !== 'undefined') {
+        EditorManager.setContent('加载中，请稍候...', lang); 
+    }
     
     try {
         const fileData = await GitHubAPI.getFile(file.path);
         AppState.currentFilePath = file.path;
         AppState.currentFileSha = fileData.sha;
         
-        EditorManager.setContent(fileData.content, lang);
+        if (typeof EditorManager !== 'undefined') {
+            EditorManager.setContent(fileData.content, lang);
+        }
         
         updateUIToolbarForLanguage(lang);
         resetPreviewToggle();
@@ -137,7 +138,9 @@ async function handleFileSelected(file) {
         
     } catch (error) {
         Toast.show(`读取失败: ${error.message}`, 'error');
-        EditorManager.setContent(`读取失败: ${error.message}`, 'plaintext');
+        if (typeof EditorManager !== 'undefined') {
+            EditorManager.setContent(`读取失败: ${error.message}`, 'plaintext');
+        }
     }
 }
 
@@ -180,7 +183,7 @@ async function handleDeleteFile(file) {
             AppState.currentFilePath = null;
             AppState.currentFileSha = null;
             AppState.isDirty = false;
-            EditorManager.setContent('文件已删除', 'plaintext');
+            if (typeof EditorManager !== 'undefined') EditorManager.setContent('文件已删除', 'plaintext');
             UI.statusEl.innerHTML = '';
         }
         await FileTree.load();
@@ -326,9 +329,73 @@ function setupSidebarResizer() {
     });
 }
 
-// 🌟 统一事件分发中心 (向 Connector 下发指令)
+// 🌟 AST 哲学：数据驱动的命令控制台 (Command Palette)
+function setupCommandPalette() {
+    const cmdModal = new bootstrap.Modal(document.getElementById('commandPaletteModal'));
+    const searchInput = document.getElementById('input-command-search');
+    const listContainer = document.getElementById('command-list-container');
+    if (!searchInput || !listContainer) return;
+
+    // 💥 新增指令挂载：折叠引擎与 Prompt 提纯引擎
+    const commandTree = [
+        { name: "✨ Prompt 提纯 (剔除冗余助词)", action: "OPTIMIZE_PROMPT", icon: "fa-wand-magic-sparkles text-warning" },
+        { name: "折叠所有区块 (Fold All)", action: "FOLD_ALL", icon: "fa-compress text-primary" },
+        { name: "展开所有区块 (Unfold All)", action: "UNFOLD_ALL", icon: "fa-expand text-primary" },
+        { name: "加粗 (Bold)", action: "FORMAT_BOLD", icon: "fa-bold" },
+        { name: "斜体 (Italic)", action: "FORMAT_ITALIC", icon: "fa-italic" },
+        { name: "插入代码块 (Code Block)", action: "FORMAT_CODE", icon: "fa-code" },
+        { name: "原生自动排版 (Format JSON)", action: "FORMAT_DOCUMENT", icon: "fa-align-left" },
+        { name: "全选文档 (Select All)", action: "SELECT_ALL", icon: "fa-object-group" },
+        { name: "格式清洗机 (Sanitize)", action: "SANITIZE_FORMAT", icon: "fa-eraser" },
+        { name: "物理锚点：设为起点", action: "SET_ANCHOR", icon: "fa-flag" },
+        { name: "物理锚点：选中至此", action: "SELECT_TO_HERE", icon: "fa-bullseye" },
+        { name: "切换 预览/编辑 模式", action: "TOGGLE_PREVIEW", icon: "fa-eye" },
+        { name: "粉碎剪贴板 (Shred Clipboard)", action: "SHRED_CLIPBOARD", icon: "fa-broom text-danger" }
+    ];
+
+    const renderCommands = (filterText = '') => {
+        listContainer.innerHTML = '';
+        const lowerFilter = filterText.toLowerCase();
+        
+        commandTree.forEach(cmd => {
+            if (cmd.name.toLowerCase().includes(lowerFilter)) {
+                const btn = document.createElement('button');
+                btn.className = 'list-group-item list-group-item-action d-flex align-items-center py-3 border-0 border-bottom';
+                
+                // 支持给特殊指令加上独立颜色
+                const iconClass = cmd.icon.includes('text-') ? cmd.icon : `${cmd.icon} text-secondary`;
+                btn.innerHTML = `<i class="fa-solid ${iconClass} me-3 fs-5" style="width:24px;text-align:center;"></i><span class="fs-6">${cmd.name}</span>`;
+                
+                btn.addEventListener('click', () => {
+                    // 💥 修复点：关闭弹窗前，强制抽走焦点，彻底消除 aria-hidden 警告！
+                    searchInput.blur(); 
+                    
+                    cmdModal.hide();
+                    if (cmd.action === 'TOGGLE_PREVIEW') {
+                        document.getElementById('btn-toggle-preview').click();
+                    } else if (cmd.action === 'SHRED_CLIPBOARD') {
+                        if (typeof ClipboardManager !== 'undefined') ClipboardManager.shredClipboard();
+                    } else {
+                        if (typeof Connector !== 'undefined') Connector.execute(cmd.action);
+                    }
+                });
+                listContainer.appendChild(btn);
+            }
+        });
+    };
+
+    window.openCommandPalette = () => {
+        searchInput.value = '';
+        renderCommands();
+        cmdModal.show();
+        setTimeout(() => searchInput.focus(), 200); 
+    };
+
+    searchInput.addEventListener('input', (e) => renderCommands(e.target.value));
+}
+
+// 🌟 统一事件分发中心 (包含排版菜单与高亮颜色同步)
 function bindToolbarCommands() {
-    // 绑定所有带 data-action 的按钮
     document.querySelectorAll('#editor-toolbar button[data-action]').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.preventDefault();
@@ -336,20 +403,26 @@ function bindToolbarCommands() {
         });
     });
 
-    // 绑定字体调节，走指令总线
     const fontSlider = document.getElementById('input-font-size');
     const fontDisplay = document.getElementById('font-size-display');
     const fontFamilySelect = document.getElementById('input-font-family');
+    const syntaxThemeSelect = document.getElementById('input-syntax-theme');
 
-    if (fontSlider && fontDisplay && fontFamilySelect) {
+    if (fontSlider && fontDisplay && fontFamilySelect && syntaxThemeSelect) {
         const savedFontSize = localStorage.getItem('unidoc_font_size') || '15';
         const savedFontFamily = localStorage.getItem('unidoc_font_family') || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+        const savedSyntaxTheme = localStorage.getItem('unidoc_syntax_theme') || 'default';
         
         fontSlider.value = savedFontSize;
         fontDisplay.innerText = savedFontSize + 'px';
         fontFamilySelect.value = savedFontFamily;
+        syntaxThemeSelect.value = savedSyntaxTheme;
+
         Connector.execute('CHANGE_FONT_SIZE', savedFontSize);
         Connector.execute('CHANGE_FONT_FAMILY', savedFontFamily);
+        
+        // 延迟一点发给主题舱室，确保 CM6 已经挂载完毕
+        setTimeout(() => Connector.execute('CHANGE_SYNTAX_THEME', savedSyntaxTheme), 200);
 
         fontSlider.addEventListener('input', (e) => {
             const val = e.target.value;
@@ -363,9 +436,14 @@ function bindToolbarCommands() {
             localStorage.setItem('unidoc_font_family', val);
             Connector.execute('CHANGE_FONT_FAMILY', val);
         });
+
+        syntaxThemeSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            localStorage.setItem('unidoc_syntax_theme', val);
+            Connector.execute('CHANGE_SYNTAX_THEME', val);
+        });
     }
 
-    // 绑定预览切换，通过 Connector 获取结果渲染
     document.getElementById('btn-toggle-preview').addEventListener('click', () => {
         const preview = document.getElementById('preview-container');
         const btnIcon = document.querySelector('#btn-toggle-preview i');
@@ -373,7 +451,6 @@ function bindToolbarCommands() {
         const toolbar = document.getElementById('editor-toolbar');
         
         if (preview.classList.contains('d-none')) {
-            // 请求转为预览，接收生成的 HTML
             const html = Connector.execute('TOGGLE_PREVIEW', true);
             if(html !== undefined) document.getElementById('markdown-preview').innerHTML = html;
             
@@ -382,7 +459,6 @@ function bindToolbarCommands() {
             if(btnText) btnText.innerText = '编辑';
             toolbar.style.setProperty('display', 'none', 'important');
         } else {
-            // 退回编辑
             Connector.execute('TOGGLE_PREVIEW', false);
             preview.classList.add('d-none');
             btnIcon.classList.replace('fa-pen', 'fa-eye');
@@ -393,13 +469,14 @@ function bindToolbarCommands() {
 }
 
 // ==========================================
-// 初始化生命周期串联
+// 启动程序与 PWA 开机自检热重载引擎
 // ==========================================
 async function initApp() {
     ThemeManager.init();
     setupNewFileLogic();
     setupRenameLogic();
     setupSidebarResizer();
+    setupCommandPalette(); // 初始化命令控制台
 
     TokenModal.init(async () => {
         if (typeof SettingsManager !== 'undefined') await SettingsManager.init();
@@ -409,20 +486,20 @@ async function initApp() {
     FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
     
     // 初始化底层引擎
-    await EditorManager.init();
+    if (typeof EditorManager !== 'undefined') await EditorManager.init();
     
     // 💥 架构核心：初始化中间件，并将引擎控制权移交给中间件
     if (typeof Connector !== 'undefined') {
         Connector.init(EditorManager);
-        bindToolbarCommands();
-    }
-    
-    // 🌟 修复点：唤醒表情模块，并将插入指令交由 Connector 统一派发！
-    if (typeof CharPicker !== 'undefined') {
-        CharPicker.init((char) => Connector.execute('INSERT_TEXT', char));
+        bindToolbarCommands(); // 绑定指令收发
     }
     
     // 初始化其他独立管家
+    if (typeof CharPicker !== 'undefined') {
+        CharPicker.init((char) => {
+            if (typeof Connector !== 'undefined') Connector.execute('INSERT_TEXT', char);
+        });
+    }
     if (typeof ClipboardManager !== 'undefined') ClipboardManager.init(EditorManager);
     if (typeof ExportManager !== 'undefined') ExportManager.init();
     if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
@@ -437,12 +514,16 @@ async function initApp() {
         resizeBodyToVisualViewport();
     }
 
-    EditorManager.onChange(() => {
-        if (!AppState.isDirty && AppState.currentFilePath) UI.setUnsaved();
-    });
+    if (typeof EditorManager !== 'undefined') {
+        EditorManager.onChange(() => {
+            if (!AppState.isDirty && AppState.currentFilePath) UI.setUnsaved();
+        });
+    }
 
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
-    document.getElementById('btn-settings').addEventListener('click', () => TokenModal.show());
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        new bootstrap.Modal(document.getElementById('tokenModal')).show();
+    });
 
     window.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
@@ -466,38 +547,22 @@ async function initApp() {
     }
 }
 
-// ==========================================
-// 启动程序与 PWA 开机自检热重载引擎
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(reg => {
             console.log('✅ PWA Service Worker 注册成功!', reg.scope);
-
-            // 1. 每次开机，主动向云端嗅探是否有新版本
             reg.update();
-
-            // 2. 监听后台管家的更新事件
             reg.addEventListener('updatefound', () => {
                 const newWorker = reg.installing;
-                
                 newWorker.addEventListener('statechange', () => {
-                    // 当新版本下载完毕，且旧版本正在运行时触发热重载
                     if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        
-                        // 💥 弹出全局黑色护盾，拦截用户操作
                         UI.showGlobalLoader('🚀 探测到云端新引擎，正在执行热重载...');
-                        
-                        // 延时 1.5 秒保证新缓存写入完成，随后执行硬刷新
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
+                        setTimeout(() => window.location.reload(), 1500);
                     }
                 });
             });
-
         }).catch(err => console.error('❌ PWA 注册失败:', err));
     }
 });

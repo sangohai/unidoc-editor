@@ -3,11 +3,8 @@ const GarbageCollector = {
     orphanedImages: [], // 查找到的废弃图片列表
 
     init() {
-        // 绑定 PC 端和手机端的“清理图床”按钮
-        document.getElementById('btn-gc-pc')?.addEventListener('click', () => this.scan());
-        document.getElementById('btn-gc-mobile')?.addEventListener('click', () => {
-            const offcanvas = bootstrap.Offcanvas.getInstance(document.getElementById('sidebarOffcanvas'));
-            if (offcanvas) offcanvas.hide();
+        // 🌟 修复点：移除了侧边栏的绑定，统一绑定到新的工具栏 GC 按钮
+        document.getElementById('btn-gc-toolbar')?.addEventListener('click', () => {
             this.scan();
         });
 

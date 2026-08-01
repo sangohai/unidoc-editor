@@ -1,25 +1,20 @@
 // connector.js - 核心中间件与事件指令总线 (Command Bus & Telemetry)
 const Connector = {
     engine: null,
-    actionLog: [], // 遥测日志：记录用户的所有操作历史，供未来 AI 分析上下文
+    actionLog: [], 
 
-    // 1. 中间件初始化，绑定底层编辑器引擎
     init(editorEngineInstance) {
         this.engine = editorEngineInstance;
         this.log('SYSTEM', 'Connector (中间件) 初始化成功，已接管引擎。');
     },
 
-    // 2. 核心遥测打印机：记录所有动作
     log(action, payload = '') {
         const time = new Date().toLocaleTimeString();
         const logEntry = `[${time}] COMMAND: ${action} ${payload ? '| VALUE: ' + payload : ''}`;
         this.actionLog.push(logEntry);
-        
-        // 在控制台打印极客蓝色的日志，方便你在 F12 里随时监控数据流！
         console.log(`%c${logEntry}`, 'color: #0d6efd; font-weight: bold;');
     },
 
-    // 3. 唯一的统一指令入口 (UI 层只能调用这个方法)
     execute(action, payload = null) {
         this.log(action, payload);
 
@@ -27,7 +22,6 @@ const Connector = {
             return Toast.show('系统错误：底层引擎未就绪', 'error');
         }
 
-        // 统一异常捕获：如果底层引擎崩溃，中间件能把报错拦下来，绝不让网页死机！
         try {
             switch (action) {
                 // --- 文本修改类指令 ---
@@ -47,24 +41,47 @@ const Connector = {
                 case 'FORMAT_DOCUMENT':
                     this.engine.formatCodeDocument();
                     break;
+
+                // 🌟 新增：AST 树状折叠与提纯指令
+                case 'FOLD_ALL':
+                    this.engine.foldAll();
+                    break;
+                case 'UNFOLD_ALL':
+                    this.engine.unfoldAll();
+                    break;
+                case 'OPTIMIZE_PROMPT':
+                    this.engine.optimizePrompt();
+                    break;
                 
                 // --- 选取与视图类指令 ---
                 case 'SELECT_ALL':
                     this.engine.selectAll();
                     break;
+                case 'SET_ANCHOR':
+                    this.engine.setAnchor();
+                    break;
+                case 'SELECT_TO_HERE':
+                    this.engine.selectToHere();
+                    break;
                 case 'TOGGLE_PREVIEW':
-                    // 让引擎返回解析后的 HTML，由中间件交给 UI（彻底解耦）
-                    return this.engine.togglePreview(payload); // payload: true/false
+                    return this.engine.togglePreview(payload); 
+
+                // --- 环境偏好类指令 ---
                 case 'CHANGE_LANGUAGE':
                     this.engine.setLanguage(payload);
                     break;
-                
-                // --- 环境偏好类指令 (直接操作 CSS 变量，不麻烦引擎) ---
                 case 'CHANGE_FONT_SIZE':
                     document.documentElement.style.setProperty('--editor-font-size', payload + 'px');
                     break;
                 case 'CHANGE_FONT_FAMILY':
                     document.documentElement.style.setProperty('--editor-font-family', payload);
+                    break;
+                case 'CHANGE_SYNTAX_THEME':
+                    // 仅当引擎有此方法时调用（预留接口）
+                    if(this.engine.setSyntaxTheme) this.engine.setSyntaxTheme(payload);
+                    break;
+                case 'COMMAND_PALETTE':
+                    if (window.openCommandPalette) window.openCommandPalette();
                     break;
 
                 default:
