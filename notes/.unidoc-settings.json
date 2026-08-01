@@ -30,7 +30,6 @@
     "SYMBOL",
     "TYPOGRAPHY",
     "|",
-    "FORMAT_DOCUMENT",
     "|",
     "SNIPPETS",
     "SELECT_ALL",
@@ -42,6 +41,7 @@
     "tool-emoji",
     "tool-symbol",
     "tool-typography",
-    "tool-snippets"
+    "tool-snippets",
+    "FORMAT_DOCUMENT"
   ]
 }
