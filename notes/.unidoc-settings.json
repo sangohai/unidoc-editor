@@ -39,6 +39,9 @@
     "FORMAT_IMAGE",
     "FORMAT_LINK",
     "FORMAT_BOLD",
-    "FORMAT_ITALIC"
+    "FORMAT_ITALIC",
+    "tool-emoji",
+    "tool-symbol",
+    "tool-typography"
   ]
 }
