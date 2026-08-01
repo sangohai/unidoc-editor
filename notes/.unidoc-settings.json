@@ -42,6 +42,8 @@
     "FORMAT_ITALIC",
     "tool-emoji",
     "tool-symbol",
-    "tool-typography"
+    "tool-typography",
+    "UNDO",
+    "REDO"
   ]
 }
