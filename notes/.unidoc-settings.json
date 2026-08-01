@@ -41,6 +41,7 @@
     "COMMAND_PALETTE",
     "tool-emoji",
     "tool-symbol",
-    "tool-typography"
+    "tool-typography",
+    "tool-snippets"
   ]
 }
