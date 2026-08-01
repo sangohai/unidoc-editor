@@ -39,6 +39,7 @@
     "GARBAGE_COLLECT",
     "VIEW_CLIPBOARD",
     "COMMAND_PALETTE",
-    "tool-emoji"
+    "tool-emoji",
+    "tool-symbol"
   ]
 }
