@@ -1,5 +1,5 @@
 // sw.js - Service Worker (网络优先策略)
-const CACHE_NAME = 'unidoc-cache-v1.6';
+const CACHE_NAME = 'unidoc-cache-v1.19'; // 只要字符变了就行
 
 // 安装阶段：立刻接管
 self.addEventListener('install', (e) => {

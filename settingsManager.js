@@ -1,12 +1,18 @@
-// settingsManager.js - 负责跨端同步：星标置顶 & 自定义词库
+// settingsManager.js - 负责跨端同步：星标置顶、自定义词库 & 工具栏布局
 const SettingsManager = {
     path: 'notes/.unidoc-settings.json',
     sha: null,
     data: {
         pinned: [],
-        snippets: [
-            { title: "示例问候", content: "你好！这是一条来自自定义词库的快捷短语。" },
-            { title: "示例分隔线", content: "------------------------" }
+        snippets: [],
+        // 🌟 新增：数据驱动的工具栏默认布局配置
+        toolbarLayout: [
+            'UNDO', 'REDO', '|',
+            'FORMAT_BOLD', 'FORMAT_ITALIC', 'FORMAT_LINK', 'FORMAT_IMAGE', 'FORMAT_CODE', '|',
+            'EMOJI', 'SYMBOL', 'TYPOGRAPHY', '|',
+            'FORMAT_DOCUMENT', '|',
+            'SNIPPETS', 'SELECT_ALL', 'SANITIZE_FORMAT', '|',
+            'GARBAGE_COLLECT', 'VIEW_CLIPBOARD', 'COMMAND_PALETTE'
         ]
     },
 
@@ -21,7 +27,22 @@ const SettingsManager = {
         
         if (!this.data.snippets) this.data.snippets = [];
         if (!this.data.pinned) this.data.pinned = [];
-        
+        // 如果云端没有布局数据，补上默认布局
+        if (!this.data.toolbarLayout) {
+            this.data.toolbarLayout = [
+                'UNDO', 'REDO', '|',
+                'FORMAT_BOLD', 'FORMAT_ITALIC', 'FORMAT_LINK', 'FORMAT_IMAGE', 'FORMAT_CODE', '|',
+                'EMOJI', 'SYMBOL', 'TYPOGRAPHY', '|',
+                'FORMAT_DOCUMENT', '|',
+                'SNIPPETS', 'SELECT_ALL', 'SANITIZE_FORMAT', '|',
+                'GARBAGE_COLLECT', 'VIEW_CLIPBOARD', 'COMMAND_PALETTE'
+            ];
+        }
+        // 🌟 初始化工具栏装配车间
+        if (typeof ToolbarManager !== 'undefined') {
+            ToolbarManager.init(this.data.toolbarLayout);
+        }
+
         this.renderSnippetsMenu();
         this.bindModalEvents();
     },
@@ -36,30 +57,22 @@ const SettingsManager = {
         }
     },
 
-    getPinned() {
-        return this.data.pinned || [];
-    },
+    getPinned() { return this.data.pinned || []; },
 
     async togglePin(filePath) {
         const index = this.data.pinned.indexOf(filePath);
-        if (index > -1) {
-            this.data.pinned.splice(index, 1);
-        } else {
-            this.data.pinned.push(filePath);
-        }
+        if (index > -1) this.data.pinned.splice(index, 1);
+        else this.data.pinned.push(filePath);
         await this.save(); 
     },
 
     renderSnippetsMenu() {
         const menu = document.getElementById('snippets-menu');
         if (!menu) return;
-        
         menu.innerHTML = ''; 
         
         if (this.data.snippets.length === 0) {
-            const emptyLi = document.createElement('li');
-            emptyLi.innerHTML = `<span class="dropdown-item text-muted small">词库空空如也~</span>`;
-            menu.appendChild(emptyLi);
+            menu.innerHTML = `<li class="dropdown-item text-muted small">词库空空如也~</li>`;
         }
 
         this.data.snippets.forEach((snip, index) => {
@@ -68,27 +81,14 @@ const SettingsManager = {
                 <span class="fw-bold">${snip.title}</span>
                 <span class="snippet-content-preview small ms-3 text-muted">${snip.content}</span>
             </a>`;
-            
             li.addEventListener('click', (e) => {
                 e.preventDefault();
-                // 💥 修复点：抛弃底层的 EditorManager，直接走高贵的 Connector 中间件！
-                if (typeof Connector !== 'undefined') {
-                    Connector.execute('INSERT_TEXT', snip.content);
-                }
+                if (typeof Connector !== 'undefined') Connector.execute('INSERT_TEXT', snip.content);
             });
             menu.appendChild(li);
         });
 
-        const divider = document.createElement('li');
-        divider.innerHTML = `<hr class="dropdown-divider">`;
-        menu.appendChild(divider);
-
-        const manageBtn = document.createElement('li');
-        manageBtn.innerHTML = `<a class="dropdown-item fw-bold text-primary" href="#" id="btn-manage-snippets">
-            <i class="fa-solid fa-gear me-2"></i>管理词库...
-        </a>`;
-        menu.appendChild(manageBtn);
-
+        menu.innerHTML += `<li><hr class="dropdown-divider"></li><li><a class="dropdown-item fw-bold text-primary" href="#" id="btn-manage-snippets"><i class="fa-solid fa-gear me-2"></i>管理词库...</a></li>`;
         document.getElementById('btn-manage-snippets').addEventListener('click', (e) => {
             e.preventDefault();
             this.openManagerModal();
@@ -103,7 +103,6 @@ const SettingsManager = {
     renderManagerList() {
         const list = document.getElementById('snippets-manager-list');
         list.innerHTML = '';
-        
         if (this.data.snippets.length === 0) {
             list.innerHTML = '<div class="p-3 text-center text-muted small">没有快捷短语，快在下方添加一个吧！</div>';
             return;
@@ -141,7 +140,6 @@ const SettingsManager = {
             const contentInput = document.getElementById('input-snippet-content');
             const title = titleInput.value.trim();
             const content = contentInput.value.trim();
-
             if (!title || !content) return Toast.show('标题和内容都不能为空！', 'warning');
 
             this.data.snippets.push({ title, content });

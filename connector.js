@@ -83,6 +83,21 @@ const Connector = {
                 case 'COMMAND_PALETTE':
                     if (window.openCommandPalette) window.openCommandPalette();
                     break;
+                case 'VIEW_CLIPBOARD':
+                    if (typeof ClipboardManager !== 'undefined') ClipboardManager.viewClipboard();
+                    break;
+                case 'GARBAGE_COLLECT':
+                    if (typeof GarbageCollector !== 'undefined') GarbageCollector.scan();
+                    break;
+                case 'CUSTOMIZE_TOOLBAR':
+                    if (typeof ToolbarManager !== 'undefined') ToolbarManager.openCustomizeModal();
+                    break;
+                case 'UNDO':
+                    if(this.engine.undo) this.engine.undo();
+                    break;
+                case 'REDO':
+                    if(this.engine.redo) this.engine.redo();
+                    break;
 
                 default:
                     console.warn(`未知的指令: ${action}`);
