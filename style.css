@@ -117,3 +117,21 @@ html, body {
 [data-bs-theme="dark"] .cm-editor.cm-focused .cm-selectionBackground {
     background-color: rgba(255, 255, 255, 0.2) !important;
 }
+
+/* 🌟 [Patch-2] 侧边栏拖拽把手样式 */
+#sidebar-resizer {
+    position: absolute;
+    top: 0;
+    right: -3px; /* 骑在边框正中间，增大判定区 */
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    z-index: 1040;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+}
+
+#sidebar-resizer:hover,
+#sidebar-resizer.is-resizing {
+    background-color: var(--bs-primary); /* 拖拽时亮起 */
+}

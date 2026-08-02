@@ -72,7 +72,7 @@
     <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
         
         <!-- 左侧菜单 (极其纯净) -->
-        <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px; flex-shrink: 0;">
+        <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column position-relative" tabindex="-1" id="sidebarOffcanvas" style="width: 260px; flex-shrink: 0;">
             <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
@@ -95,6 +95,8 @@
                 </div>
             </div>
             <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2"><div class="text-muted small p-2">正在加载文件...</div></div>
+            <div id="sidebar-resizer" class="d-none d-md-block"></div>
+
         </div>
 
         <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">

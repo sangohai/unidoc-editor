@@ -264,6 +264,12 @@ function setupSidebarResizer() {
     const sidebar = document.getElementById('sidebarOffcanvas');
     if (!resizer || !sidebar) return;
 
+    // 1. 初始化时读取本地存储的记忆宽度
+    const savedWidth = localStorage.getItem('unidoc_sidebar_width');
+    if (savedWidth) {
+        sidebar.style.width = savedWidth + 'px';
+    }
+
     let isResizing = false;
     let startX = 0;
     let startWidth = 0;
@@ -274,13 +280,14 @@ function setupSidebarResizer() {
         startWidth = sidebar.offsetWidth;
         resizer.classList.add('is-resizing');
         document.body.style.cursor = 'col-resize';
-        e.preventDefault();
+        e.preventDefault(); // 防止拖拽时误选中旁边文本
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         const newWidth = startWidth + (e.clientX - startX);
-        if (newWidth > 150 && newWidth < 600) {
+        // 动态边界：最小 150px，最大放宽到 800px 以适应超长文件名
+        if (newWidth > 150 && newWidth < 800) {
             sidebar.style.width = newWidth + 'px';
         }
     });
@@ -290,7 +297,18 @@ function setupSidebarResizer() {
             isResizing = false;
             resizer.classList.remove('is-resizing');
             document.body.style.cursor = '';
+            
+            // 2. 拖拽结束：记忆宽度并强制触发视口重绘 (拯救 CM6 布局)
+            localStorage.setItem('unidoc_sidebar_width', sidebar.style.width.replace('px', ''));
+            window.dispatchEvent(new Event('resize')); 
         }
+    });
+
+    // 3. 极客彩蛋：双击把手，一键恢复默认宽度
+    resizer.addEventListener('dblclick', () => {
+        sidebar.style.width = '260px';
+        localStorage.setItem('unidoc_sidebar_width', '260');
+        window.dispatchEvent(new Event('resize'));
     });
 }
 
@@ -512,19 +530,41 @@ async function initApp() {
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
 
+    // 🛡️ [Patch-1] PWA 幽灵缓存防御：开发环境自毁与物理隔离
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').then(reg => {
-            console.log('✅ PWA Service Worker 注册成功!', reg.scope);
-            reg.update();
-            reg.addEventListener('updatefound', () => {
-                const newWorker = reg.installing;
-                newWorker.addEventListener('statechange', () => {
-                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                        UI.showGlobalLoader('🚀 探测到云端新引擎，正在执行热重载...');
-                        setTimeout(() => window.location.reload(), 1500);
+        // 精准侦测本地 Live Server 环境
+        const isLocalhost = Boolean(
+            window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '[::1]'
+        );
+
+        if (isLocalhost) {
+            // 🚨 开发模式：主动搜寻并狙击所有残留的幽灵 Service Worker
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                if (registrations.length > 0) {
+                    for (let registration of registrations) {
+                        registration.unregister();
                     }
-                });
+                    console.warn('🚧 [Dev Mode] 已强制物理注销所有 PWA 幽灵缓存，确保代码 100% 实时生效！');
+                    // 强制清理完成后，建议刷新一次确保接管网络的是原生浏览器
+                }
             });
-        }).catch(err => console.error('❌ PWA 注册失败:', err));
+        } else {
+            // 🌐 生产环境：执行正常的 PWA 注册与幽灵缓存热重载防御
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                console.log('✅ PWA Service Worker 注册成功!', reg.scope);
+                reg.update(); // 每次启动强制对比字节码
+                reg.addEventListener('updatefound', () => {
+                    const newWorker = reg.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            UI.showGlobalLoader('🚀 探测到云端新引擎，正在执行热重载...');
+                            setTimeout(() => window.location.reload(), 1500);
+                        }
+                    });
+                });
+            }).catch(err => console.error('❌ PWA 注册失败:', err));
+        }
     }
 });
