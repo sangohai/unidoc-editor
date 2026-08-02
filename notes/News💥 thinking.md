@@ -13,7 +13,8 @@
 
 1 - 將 blue-print 的藍圖 以 markdown + XML的形式記錄，增加  時間戳  和  版本號，確保某個時段的正確內容 被有效參考；
 
-2 - 
+2 -  .md 文件 包含 YAML Front Matter（元數據 + 內容合一）
+
 
 ***       
 
