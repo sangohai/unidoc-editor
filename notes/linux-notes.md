@@ -2,7 +2,7 @@
 
 ***       
 
-#### crunchbang ++        
+####   crunchbang ++        
 crunchbangplusplus 极简Linux 发行版 基于 debian + openbox          
 Home page : https://www.crunchbangplusplus.org/           
 
@@ -18,7 +18,7 @@ network-manager-applet | 網絡管理 | connman, wicd
 
 ***     
 
-#### ArchBANG  linux       
+####    ArchBANG  linux       
 
 ArchBANG is a simple live Archlinux based distribution using Labwc window manager running under Wayland. Light fast and very easy to install.         
 
@@ -29,7 +29,7 @@ https://archbang.org/
 
 ***      
 
-#### Skywave Linux —— 为无线电极客打造的 SDR 专用 Linux 系统
+####    Skywave Linux —— 为无线电极客打造的 SDR 专用 Linux 系统
 
 Skywave Linux 是一款专门为**软件定义无线电（SDR，Software Defined Radio）**和无线电监听打造的 Linux 发行版。它集成了大量成熟的 SDR 软件、数字信号解码工具以及在线无线电资源，帮助用户快速搭建专业的无线电工作站。如果你对以下内容感兴趣：短波广播（SWL）SDR（RTL-SDR、HackRF、Airspy、SDRplay 等）航空频率监听海事通信卫星信号接收数字通信解码无线电传播分析那么 Skywave Linux 可以帮助你快速进入无线电世界，而无需从零开始配置各种软件环境。
 
