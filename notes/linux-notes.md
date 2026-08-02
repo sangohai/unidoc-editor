@@ -49,5 +49,9 @@ Origami Linux 是一款以“折纸（Origami）”为设计理念打造的轻�
 📌 官方网站：https://origami.wf/
 
 ***       
+####   Artix Linux    
 
+Artix Linux 是什么？Artix Linux 是一个基于 Arch Linux 的滚动发行版，它最核心的特征是完全不使用 systemd 作为初始化系统（init system）和系统管理器。与 Arch 官方仓库保持高度兼容，但将 systemd 相关的依赖彻底剥离，替换为用户可自由选择的替代 init 系统。简单说：Artix = Arch 的灵活性 + 自由选择 init 系统的权利。
+
+***    
 
