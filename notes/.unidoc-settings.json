@@ -41,6 +41,9 @@
     "tool-symbol",
     "tool-typography",
     "UNDO",
-    "REDO"
+    "REDO",
+    "FORMAT_ITALIC",
+    "FORMAT_LINK",
+    "FORMAT_IMAGE"
   ]
 }
