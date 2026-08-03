@@ -136,7 +136,6 @@ SummaryModal：结算弹窗。关卡完成后展示通关时间、时间加权�
 在 GateScreen 实现唯一的“玩家昵称输入与验证”，并在通关后将最终成绩刷新上传至全球实时排行榜。
 
 
-
 📁 建议提供的代码文件清单 (Checklist)
 index.html
 作用：我们需要查看 GateScreen、昵称输入框、启动按钮、SummaryModal 以及现有 CDN 脚本的具体 DOM 结构和 ID 命名，确保初始化事件和排行榜渲染位置无误。
