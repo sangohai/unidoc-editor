@@ -135,3 +135,10 @@ html, body {
 #sidebar-resizer.is-resizing {
     background-color: var(--bs-primary); /* 拖拽时亮起 */
 }
+
+/* 🌟 [Patch-3] 确保侧边栏的 relative 定位只在 PC 端生效，不干扰移动端的 Fixed 抽屉 */
+@media (min-width: 768px) {
+    #sidebarOffcanvas {
+        position: relative !important;
+    }
+}
