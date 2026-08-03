@@ -46,3 +46,4 @@ storage: GitHub REST API + .unidoc-settings.json
 2. **绝对解耦**：任何新增的编辑器功能，必须通过 `connector.js` 添加路由，再由 `editor.js` 执行。
 3. **前端限制**：本项目无任何 Node.js/Webpack 构建过程，所有外部依赖必须使用 ESM (如 esm.sh) 或纯 CDN 引入。
 4. **记忆锁定**：所有增量开发均基于当前最新的 `[Snapshot]` 进行 `[Patch-X]` 局部更新，遇大版本重构需建立新快照。
+
