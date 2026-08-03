@@ -11,7 +11,7 @@
 
 ####  Unidoc-Editor :         
 
-1 -   .md 文件  包含  YAML Front Matter（元數據 + 內容合一） 
+1 -   .md 文件  包含  YAML Front Matter（ 元數據 + 內容合一 ） 
 
 2 -  
 
