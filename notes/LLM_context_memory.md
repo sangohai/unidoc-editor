@@ -40,7 +40,8 @@ storage: GitHub REST API + .unidoc-settings.json
 
 ---
 
-# 🛑 架构师开发铁律 (Rules)
+# 🛑 架构师开发铁律 (Rules)  
+
 1. **纯净输出**：每次修改代码时，只需输出需要修改的核心函数或具体逻辑块，禁止在没有要求时输出全量文件以节省 Token。
 2. **绝对解耦**：任何新增的编辑器功能，必须通过 `connector.js` 添加路由，再由 `editor.js` 执行。
 3. **前端限制**：本项目无任何 Node.js/Webpack 构建过程，所有外部依赖必须使用 ESM (如 esm.sh) 或纯 CDN 引入。
