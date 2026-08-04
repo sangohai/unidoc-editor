@@ -55,3 +55,14 @@ Artix Linux 是什么？Artix Linux 是一个基于 Arch Linux 的滚动发行�
 
 ***    
 
+####   Flora Linux Libre —— 坚持自由软件理念的 Debian   
+
+Flora Linux Libre 是一款基于 Debian GNU/Linux 打造的轻量级 Linux 发行版，以自由软件（Libre Software）理念为核心，致力于提供一个完全由自由软件组成的桌面系统。它移除了非自由软件、专有驱动和非自由固件，在保证 Debian 稳定性的同时，为用户提供轻量、简洁、可靠的桌面体验，特别适合关注软件自由、教育以及老旧设备等使用场景。Flora Linux Libre = Debian 的稳定 + 自由软件生态 + 轻量桌面 + 长期可靠。📌 系统基础： Debian GNU/Linux（仅自由软件）
+📌 桌面环境： XFCE / Openbox（不同版本略有区别）
+📌 核心特色： 自由软件、轻量桌面、稳定可靠、低资源占用
+📌 适用场景： 自由软件爱好者、教育、轻量办公、旧电脑复活
+📌 项目主页：https://flora-linux-libre.sourceforge.io/
+
+***      
+
+
