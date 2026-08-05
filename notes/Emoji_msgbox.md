@@ -1,6 +1,7 @@
 ###  Emoji_msgbox   
 
 Emoji Studio 專案討論摘要（V0.1）
+
 一、專案定位（Vision）
 我們不是做一個 Emoji 編輯器
 而是打造一個：
