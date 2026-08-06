@@ -30,7 +30,9 @@ Emoji Studio —— 一個以 Emoji 為素材的創作平台。
 製作 Meme
 分享作品
 Remix 他人的作品
+
 二、核心設計理念
+
 1. Emoji 永遠保持原始資源
 不修改 Emoji 本身。
 所有效果都來自：
@@ -103,6 +105,7 @@ Renderer
 ↓
 
 Export / Share
+
 每個模組都是獨立的。
 未來容易擴充。
 四、Emoji Hub
@@ -113,6 +116,7 @@ OpenMoji
 Twemoji
 所有素材：
 放在 GitHub CDN。
+
 優點：
 所有平台一致
 不依賴系統 Emoji
