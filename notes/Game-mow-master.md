@@ -118,6 +118,7 @@ SummaryModal：结算弹窗。关卡完成后展示通关时间、时间加权�
 [Segment 4: VFX_System] (属于 CanvasManager.js)：负责 spawnVFX (飞行)、spawnFloatingText (带描边漂浮分数) 和物理粒子计算。
 
 [Segment 5: Asset_Bridge] (属于 AssetBridge.js)：游戏唯一真理总表。维护实体属性字典，提供 getComponent() 标准接口，自带 jsDelivr CDN 自动路径拼接与防 404 图像级自动退化回退机制。
+
 四、 核心玩法与游戏规则现状
 生存机制 (Mow for Life)：顶部时间条每帧流逝，割草会增加时间（续命）。时间归零游戏结束，分数清空。
 自动收集（露即所得）：手指划过草丛，草丛被割掉，如果地下埋着宝藏，宝藏不需要玩家二次点击，自动触发 VFX_Flyer 飞入 Dock 栏更新数量。
@@ -137,12 +138,15 @@ SummaryModal：结算弹窗。关卡完成后展示通关时间、时间加权�
 
 
 📁 建议提供的代码文件清单 (Checklist)
+
 index.html
 作用：我们需要查看 GateScreen、昵称输入框、启动按钮、SummaryModal 以及现有 CDN 脚本的具体 DOM 结构和 ID 命名，确保初始化事件和排行榜渲染位置无误。
 
 主入口文件（通常为 main.js）
+
 作用：查看游戏启动、初始化以及各个 Manager（Model-View-Controller）之间是如何实例化并串联的，以便在此处安全地实例化 AudioManager 和 SupabaseManager。
 js/managers/GameManager.js (对应 Segment 1: Core_Loop & Segment 2: Interaction_Logic)
+
 作用：
 寻找割草动作判定点，在此处插入 audioManager.playSFX('swish')。
 寻找触雷/惩罚触发点（通常在 applyShake 强震动附近），插入 audioManager.playSFX('explosion') 或 alarm。
