@@ -50,6 +50,7 @@ storage: GitHub REST API + .unidoc-settings.json
 
 ***     
 
+####   Machine-readable engineering knowledge
 
 capability:
   name: mobile_grid
