@@ -48,6 +48,7 @@ storage: GitHub REST API + .unidoc-settings.json
 4. **记忆锁定**：所有增量开发均基于当前最新的 `[Snapshot]` 进行 `[Patch-X]` 局部更新，遇大版本重构需建立新快照。
 
 
+***     
 
 
 capability:
