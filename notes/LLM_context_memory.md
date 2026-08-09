@@ -47,3 +47,30 @@ storage: GitHub REST API + .unidoc-settings.json
 3. **前端限制**：本项目无任何 Node.js/Webpack 构建过程，所有外部依赖必须使用 ESM (如 esm.sh) 或纯 CDN 引入。
 4. **记忆锁定**：所有增量开发均基于当前最新的 `[Snapshot]` 进行 `[Patch-X]` 局部更新，遇大版本重构需建立新快照。
 
+
+
+
+capability:
+  name: mobile_grid
+
+constraints:
+  - mobile
+  - touch
+  - large_dataset
+
+preferred:
+  rendering: canvas
+  interaction: pointer_events
+  storage: indexeddb
+
+avoid:
+  - thousands_of_dom_nodes
+
+dependencies:
+  - canvas
+  - pointer_events
+
+validation:
+  - 60fps_target
+  - touch_selection
+  - offline_support
