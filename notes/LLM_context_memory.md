@@ -77,6 +77,14 @@ validation:
   - touch_selection
   - offline_support
 
-
 ***      
+
+LLM 下一個核心問題，不是如何獲得更多資訊，而是如何將資訊轉換成具有「關係、上下文、約束、能力、流程與驗證機制」的可執行知識。
+
+甚至可以再濃縮成：
+Information → Knowledge → Structure → Capability → Action
+而現在真正缺失、也最有研究價值的，恰恰是中間這幾個箭頭。
+
+這也解釋了一個很有意思的現象：未來真正強大的 Agent，可能不是「知道最多」的 Agent，而是「最懂得如何組織和調度自己已經知道的東西」的 Agent。
+
 
