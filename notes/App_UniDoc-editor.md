@@ -3,8 +3,8 @@
 ---
 title: UniDoc Editor 系统架构蓝图
 project: UniDoc Editor
-current_snapshot: V1.20-Base
-last_updated: 2026-08-02
+current_snapshot: V1.21-Base
+last_updated: 2026-08-11
 architecture: Serverless Frontend-Only (零后端纯前端架构)
 core_engine: CodeMirror 6 (CM6)
 state_management: Middleware Bus (connector.js)
@@ -32,10 +32,19 @@ storage: GitHub REST API + .unidoc-settings.json
 
 # 🚀 内部版本控制与开发日志 (Changelog)
 
-> **当前基线快照**: `[Snapshot: V1.20-Base]`
+> **当前基线快照**: `[Snapshot: V1.21-Base]` (已整合 V1.20 期间所有 Patch)
 
-### 已合并补丁 (Merged Patches)
+### 历史合并补丁 (已固化至 V1.21)
 - **`[Patch-1]` 架构/PWA防御**: 修改 `main.js` 初始化生命周期，加入 Live Server 物理隔离 Kill Switch，彻底解决本地调试时的 PWA 幽灵缓存问题。
 - **`[Patch-2]` UI/侧边栏增强**: 激活并重构 `main.js` 中的 `setupSidebarResizer`，在 `index.html` 补充 `#sidebar-resizer` 把手，并添加对应 CSS 磁吸动画。加入本地宽度记忆及双击复原彩蛋。
-- **`[Patch-3]` UI/响应式修复**: 移除 `index.html` 侧边栏硬编码的 `position-relative`，改为在 `style.css` 通过媒体查询 `@media (min-width: 768px)` 限制作用域。完美解决移动端 Offcanvas 抽屉被破坏导致挤压编辑器视口的严重 Bug。
+- **`[Patch-3]` UI/响应式修复**: 移除 `index.html` 侧边栏硬编码的 `position-relative`，改为在 `style.css` 通过媒体查询 `@media (min-width: 768px)` 限制作用域。解决移动端 Offcanvas 抽屉挤压编辑器视口的 Bug。
+
+---
+
+# 🛑 架构师开发铁律 (Rules)
+1. **纯净输出**：每次修改代码时，只需输出需要修改的核心函数或具体逻辑块，禁止在没有要求时输出全量文件以节省 Token。
+2. **绝对解耦**：任何新增的编辑器功能，必须通过 `connector.js` 添加路由，再由 `editor.js` 执行。
+3. **前端限制**：本项目无任何 Node.js/Webpack 构建过程，所有外部依赖必须使用 ESM 或纯 CDN 引入。
+4. **记忆锁定**：所有增量开发均基于当前最新的 `[Snapshot]` 进行 `[Patch-X]` 局部更新，遇大版本重构需建立新快照，并开启新对话。
+
 
