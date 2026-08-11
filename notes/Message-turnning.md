@@ -18,4 +18,10 @@ chat mail 服務器 ， 可以使用 matrix 協議搭建隱私通信服務！
 
 
 
+GirardetFatima606@gmail.com----htgm86d0k----GirardetFatima60611909@oaklyn.top----d52pi2bgjvcu4fvqirmcc65zjcgpn6eu----1年
+
+账号----密码---辅助邮箱----2fa密钥
+
+必看教程：https://acnu68d9srli.feishu.cn/wiki/NXFMwuW5GitasBk2aGpcIb6Vn3d?from=from_copylink（登录前一定要看！）
+
 
