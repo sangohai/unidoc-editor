@@ -1,4 +1,4 @@
-###  🫙 Container_Browser  
+###   Container_Browser  
 
 Application Blueprint
 │
