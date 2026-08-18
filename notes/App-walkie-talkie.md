@@ -11,6 +11,8 @@
 传输语音（P2P）
 真正的语音并不是经过服务器，而是手机和平板直接通信。      
 
+*** 
+
 ####  初步定義 和 技術路線  
 
 PWA Application Communication Layer（PWA-ACL）
@@ -43,5 +45,7 @@ JSON / State Sync
  ↓
 多用户 Application Network
 这样走，完全不需要碰 Chrome 内核，也非常符合你目前希望用原生 HTML/CSS/JavaScript + Web APIs做实验的技术路线。
+
+***
 
 
