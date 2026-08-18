@@ -11,4 +11,37 @@
 传输语音（P2P）
 真正的语音并不是经过服务器，而是手机和平板直接通信。      
 
-第一部分：整体架构         
+####  初步定義 和 技術路線  
+
+PWA Application Communication Layer（PWA-ACL）
+它不是一个 Chrome 修改项目，也不是一个新的浏览器。
+它首先就是：
+PWA
+ +
+JavaScript API
+ +
+WebRTC/WebTransport/WebSocket
+ +
+Web Crypto
+ +
+Discovery/Identity
+组成的一个应用层通信架构。
+最终我们需要验证的核心问题只有一个：
+一个普通 PWA 能不能在不依赖特定网站作为通信中枢的情况下，与另一个设备上的 PWA 建立可靠、安全、可控的 Application-to-Application 通信？
+如果答案是 可以，我们再逐步研究：
+文字
+ ↓
+JSON / State Sync
+ ↓
+文件
+ ↓
+语音
+ ↓
+实时协作
+ ↓
+多设备同步
+ ↓
+多用户 Application Network
+这样走，完全不需要碰 Chrome 内核，也非常符合你目前希望用原生 HTML/CSS/JavaScript + Web APIs做实验的技术路线。
+
+
