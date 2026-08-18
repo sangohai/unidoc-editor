@@ -27,10 +27,14 @@ WebRTC/WebTransport/WebSocket
 Web Crypto
  +
 Discovery/Identity
+
 组成的一个应用层通信架构。
+
 最终我们需要验证的核心问题只有一个：
+
 一个普通 PWA 能不能在不依赖特定网站作为通信中枢的情况下，与另一个设备上的 PWA 建立可靠、安全、可控的 Application-to-Application 通信？
 如果答案是 可以，我们再逐步研究：
+
 文字
  ↓
 JSON / State Sync
@@ -44,6 +48,7 @@ JSON / State Sync
 多设备同步
  ↓
 多用户 Application Network
+
 这样走，完全不需要碰 Chrome 内核，也非常符合你目前希望用原生 HTML/CSS/JavaScript + Web APIs做实验的技术路线。
 
 ***
