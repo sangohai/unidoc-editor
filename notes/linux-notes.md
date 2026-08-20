@@ -65,4 +65,14 @@ Flora Linux Libre 是一款基于 Debian GNU/Linux 打造的轻量级 Linux �
 
 ***      
 
+####   BunsenLabs Linux    
+
+BunsenLabs Linux Carbon is a distribution offering a light-weight and easily customizable Openbox desktop. The project is a community continuation of CrunchBang Linux.
+The current release is derived from Debian 13 "Trixie".
+
+BunsenLabs Linux Carbon 是一个提供轻量级且易于定制的 Openbox 桌面环境的发行版。该项目是 CrunchBang Linux 的社区延续。
+
+https://www.bunsenlabs.org/
+
+***
 
