@@ -74,5 +74,11 @@
 
 Github地址https://github.com/palemoky/fight-the-landlord
 
+功能特性：
+
+真随机洗牌，没有任何控牌算法，代码全开源，谁都可以查支持联网对战，掉线能重连回来内置 DouZero AI 机器人，这是快手开源的深度学习斗地主 AI，比那些乱出牌的 LLM 靠谱得多，会算牌、会配合、会拆牌
+
+*** 
+
 
 
