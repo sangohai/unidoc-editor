@@ -61,4 +61,11 @@ GirardetFatima606@gmail.com----htgm86d0k----GirardetFatima60611909@oaklyn.top---
 
 必看教程：https://acnu68d9srli.feishu.cn/wiki/NXFMwuW5GitasBk2aGpcIb6Vn3d?from=from_copylink（登录前一定要看！）
 
+tatumail code:
+d3ecd37e7c2c035400c1aeced481073503297aba5933bea599f0a6545317501c
+
+gemini-plus@tutamail.com  
+56949*****sc321
+
+
 ***  
