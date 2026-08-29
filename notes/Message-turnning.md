@@ -57,7 +57,7 @@ gemini 3  account :
 
 GirardetFatima606@gmail.com----htgm86d0k----GirardetFatima60611909@oaklyn.top----KSNZH2LFPW6O4MP43OVMOHK5EOVFXXVF----1年
 
-账号----密码---辅助邮箱----2fa密钥 ksnz h2lf pw6o 4mp4 3ovm ohk5 eovf xxvf
+账号----密码---辅助邮箱----2fa密钥 ： ksnz h2lf pw6o 4mp4 3ovm ohk5 eovf xxvf
 
 必看教程：https://acnu68d9srli.feishu.cn/wiki/NXFMwuW5GitasBk2aGpcIb6Vn3d?from=from_copylink（登录前一定要看！）
 
