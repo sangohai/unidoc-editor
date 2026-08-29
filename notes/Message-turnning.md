@@ -55,7 +55,7 @@ chat mail 服務器 ， 可以使用 matrix 協議搭建隱私通信服務！
 
 gemini 3  account :
 
-GirardetFatima606@gmail.com----htgm86d0k----GirardetFatima60611909@oaklyn.top----d52pi2bgjvcu4fvqirmcc65zjcgpn6eu----1年
+GirardetFatima606@gmail.com----htgm86d0k----GirardetFatima60611909@oaklyn.top----KSNZH2LFPW6O4MP43OVMOHK5EOVFXXVF----1年
 
 账号----密码---辅助邮箱----2fa密钥
 
