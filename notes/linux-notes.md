@@ -95,5 +95,7 @@ contemporary-looking X11 menu, designed for scripting, ricing and tweaking
 
 Thank you to the people who made these great projects. Mabox wouldn’t be possible without your great work.
 
+https://maboxlinux.org/
+
 ***
 
