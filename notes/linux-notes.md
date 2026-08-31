@@ -76,3 +76,24 @@ https://www.bunsenlabs.org/
 
 ***
 
+####   MaboxLinux   
+
+fast, lightweight and functional Linux Desktop
+The project’s goals are:
+
+provide lightweight, fast and ready to use Linux Desktop, which works nicely even on weaker computers.
+being based on solid and stable foundations, enable quick access to the latest software versions.
+allowing the user to quickly and easily adapt to their own requirements. Both for appearance and functionality.
+Mabox creatively integrates best-in-class components like:
+
+Openbox
+100% complete and stable Window Manager
+tint2
+powerfull panel/taskbar
+Jgmenu
+contemporary-looking X11 menu, designed for scripting, ricing and tweaking
+
+Thank you to the people who made these great projects. Mabox wouldn’t be possible without your great work.
+
+***
+
