@@ -82,7 +82,7 @@ Github地址https://github.com/palemoky/fight-the-landlord
 
                 ┌── Storage
                 │
-Data ───────────┼── Identity
+Data ───|────────┼── Identity
                 │
                 ├── Authorization
                 │
