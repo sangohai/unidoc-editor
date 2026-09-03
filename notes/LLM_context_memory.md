@@ -1,4 +1,4 @@
-###   LLM_context_memory    
+###   LLM_context_memory   &   prompt   construction   ： 
 
 ***
 
@@ -77,7 +77,9 @@ v0.dev 或 Bolt.new / Claude Artifacts： 这类工具甚至不需要你安装�
 
 ***
 
+
 ***
+
 title: UniDoc Editor 系统架构蓝图
 project: UniDoc Editor
 current_snapshot: V1.20-Base
@@ -86,6 +88,7 @@ architecture: Serverless Frontend-Only (零后端纯前端架构)
 core_engine: CodeMirror 6 (CM6)
 state_management: Middleware Bus (connector.js)
 storage: GitHub REST API + .unidoc-settings.json 
+
 ***
 
 #### 🧩 系统架构快照 (Single Source of Truth)
