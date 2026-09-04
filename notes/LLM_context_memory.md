@@ -167,4 +167,6 @@ Information → Knowledge → Structure → Capability → Action
 
 這也解釋了一個很有意思的現象：未來真正強大的 Agent，可能不是「知道最多」的 Agent，而是「最懂得如何組織和調度自己已經知道的東西」的 Agent。
 
+***
+
 
