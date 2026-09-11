@@ -36,7 +36,6 @@ https://jiuse.io/tags/%E6%8D%A2%E5%A6%BB%E7%BE%A4%E4%BA%A4
 ***
 
 
-
 https://github.com/permissionlesstech/bitchat
 
  App Store 直接下载（免费）https://apps.apple.com/us/app/bitchat-mesh/id6748219622
@@ -74,4 +73,5 @@ New email : dllmhai@tutamail.com
 dynadot 域名管理：
 kennethch
 56949*******321@
+
 ***  
