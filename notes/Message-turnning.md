@@ -71,5 +71,7 @@ gemini-plus@tutamail.com
 New email : dllmhai@tutamail.com 
 5694 ***** 321
 
-
+dynadot 域名管理：
+kennethch
+56949*******321@
 ***  
