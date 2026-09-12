@@ -4,6 +4,18 @@
 
 Karpathy 最近这套新工作流，有点意思。它能把一堆原始研究资料，慢慢“长”成一个会自己维护的 Wiki。没有 Vector Database。没有复杂 RAG Pipeline。只有一堆 Markdown 文件，加上一个像全职图书管理员一样工作的 LLM。2026 年 4 月 3 日，OpenAI 联合创始人、前 Tesla AI 负责人、也是那个发明了 “vibe coding” 这个说法的 Andrej Karpathy，在 X 上发了一条内容。
 
+① ddsyasas/llm-wiki
+   ↓
+最接近 Karpathy 原始 LLM Wiki
+
+② ktundwal/librarian
+   ↓
+更接近 Coding Agent 的 Knowledge Layer
+
+③ ramseywise/librarian
+   ↓
+更接近 AI Engineering Knowledge Base + MCP
+
 
 ***
 
