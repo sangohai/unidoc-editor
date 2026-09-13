@@ -35,6 +35,31 @@ https://jiuse.io/tags/%E6%8D%A2%E5%A6%BB%E7%BE%A4%E4%BA%A4
 
 ***
 
+####  Winget  install  &  Path  setting step :
+
+打开 CMD，不要 PowerShell，输入：
+%LOCALAPPDATA%\Microsoft\WindowsApps\winget.exe --version
+
+第 1 步：确认 WindowsApps 在 PATH
+在 CMD 中输入：
+echo %PATH%
+
+第 2 步 ：直接临时测试 PATH 不要马上修改 Windows 的系统环境变量。
+在当前 CMD 输入：
+set PATH=%PATH%;%LOCALAPPDATA%\Microsoft\WindowsApps
+
+第 3 步：永久加入 PATH ：
+打开：
+编辑系统环境变量
+然后：
+环境变量 → 用户变量 → Path → 编辑
+添加：
+%LOCALAPPDATA%\Microsoft\WindowsApps
+或者直接添加你实际对应的完整路径：
+C:\Users\你的Windows用户名\AppData\Local\Microsoft\WindowsApps
+
+
+***
 
 https://github.com/permissionlesstech/bitchat
 
