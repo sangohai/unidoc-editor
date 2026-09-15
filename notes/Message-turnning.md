@@ -41,6 +41,7 @@ https://jiuse.io/tags/%E6%8D%A2%E5%A6%BB%E7%BE%A4%E4%BA%A4
 
 WASARA 的核心原料是甘蔗渣（Bagasse）和竹子。中國南部（如廣東、廣西等地）是全球主要的甘蔗與竹子產區，直接在原料產地附近設廠加工，可以大幅減少碳足跡與運輸成本。
 
+
 ***
 
 ####  Winget  install  &  Path  setting step :
