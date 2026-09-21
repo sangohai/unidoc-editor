@@ -109,4 +109,6 @@ kennethch
 56949*******321@
 
 ***  
+https://api.bakaclient.org/api/v1/client/subscribe?token=3cde63ca89f033fc42ee7429e2a5ddc9
+
 
