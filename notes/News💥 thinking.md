@@ -94,3 +94,5 @@ Data ───|────────┼── Identity
 
 ***
 
+「Secret Emoji 是一種跨平台的內容格式。」
+
