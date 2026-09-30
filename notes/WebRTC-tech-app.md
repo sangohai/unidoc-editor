@@ -21,3 +21,18 @@ WebRTC 不是你的应用本身，而是“设备之间建立实时通道”的�
 
 ***
 
+"Gemini，这是我们 Project Mirage (幻影项目) 的核心记忆蓝图 v2.3。请阅读并确认就绪。
+[核心工作记忆]
+目标: 开发基于 Android PWA 优先的 WebRTC 免安装通信应用。
+技术栈: 前端 (纯 JS/HTML) + 信令服务器 (Cloudflare Workers) + 载体 (SVG + omoji.club CDN)。
+核心玩法: 将加密留言隐藏在 SVG 的 metadata 中，利用 WebRTC RTCDataChannel 进行 P2P 极速投递。
+[当前状态]
+我已经成功部署了信令服务器，我的 WebSocket 地址是： wss://你的域名.workers.dev
+我准备好了 2台PC、2台Wi-Fi手机、1台4G手机。
+[任务要求]
+请直接给我提供用于测试 WebRTC DataChannel 双端直连的极简 index.html 测试代码，我们要测试 4G 手机和 Wi-Fi 电脑的穿墙连通性！"
+
+***
+
+
+
