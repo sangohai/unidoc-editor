@@ -44,3 +44,22 @@ moderation.yaml
 
 原生 HTML/CSS/JS + Bootstrap + IndexedDB + Web Crypto + 一個很小的 Go Relay，不需要 Vite，也不需要先建立大型後端。
 
+***
+
+建議第一個 Prototype 完全不要引入 React、Vite 或其他大型框架：
+
+browser-node/
+├── index.html
+├── app.js
+├── identity.js
+├── storage.js
+├── repository.js
+├── crypto.js
+├── relay.js
+└── manifest.json
+
+原生 JS + Bootstrap + IndexedDB + Web Crypto。
+先讓 Chrome A ↔ Firefox B ↔ omoji.club Relay 跑通，再考慮 AT Protocol。這會是非常乾淨的技術驗證路徑。
+
+***
+
