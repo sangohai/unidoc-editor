@@ -42,3 +42,5 @@ moderation.yaml
 
 這個方向我認為非常值得研究。
 
+原生 HTML/CSS/JS + Bootstrap + IndexedDB + Web Crypto + 一個很小的 Go Relay，不需要 Vite，也不需要先建立大型後端。
+
