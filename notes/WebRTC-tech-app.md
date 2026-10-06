@@ -124,3 +124,133 @@ browser-node
 │
 └── outbox
 
+第一版甚至只需要：
+identity
+resources
+outbox
+例如使用者建立一個 Emoji Resource：
+{
+  "id": "resource_001",
+  "type": "emoji-game",
+  "title": "Emoji Mower",
+  "author": "node_xxxxx",
+  "version": "1.0.0"
+}
+儲存在自己的 IndexedDB。
+此時：
+Internet ❌
+
+Browser
+  │
+  └── IndexedDB
+         │
+         └── Resource
+也能正常工作。
+驗證標準
+關閉瀏覽器 → 再打開：
+Resource 還存在。
+Phase 2 成功。
+
+Phase 3：建立 Signed Resource
+這是整個實驗非常重要的一步。
+瀏覽器 A 建立：
+Resource
+然後使用自己的 Private Key：
+Resource
+   ↓
+Hash / Sign
+   ↓
+Signature
+形成：
+{
+  "resource": {
+    "id": "resource_001",
+    "type": "emoji-game",
+    "title": "Emoji Mower",
+    "author": "node_A",
+    "version": "1.0.0"
+  },
+  "signature": "..."
+}
+Browser B 收到後：
+Resource
+   +
+Signature
+   +
+Public Key
+       ↓
+    Verify
+       ↓
+    Valid
+這裡開始出現非常重要的概念：
+Relay 不需要相信 Alice。
+Relay 可以只是：
+Store
+Forward
+Discover
+真正的驗證在 Browser。
+驗證標準
+故意修改 Resource：
+score: 100
+↓
+score: 999999
+Signature 驗證失敗。
+如果成功：
+Phase 3 成功。
+
+
+Phase 4：建立 Go Relay
+現在才把網絡加入。
+Go Relay 第一版非常簡單。
+POST /publish
+GET  /resource/:id
+GET  /discover
+GET  /sync
+架構：
+Browser A
+    │
+    │ publish
+    ▼
+┌──────────────┐
+│   Go Relay   │
+└──────────────┘
+    │
+    │ discover
+    ▼
+Browser B
+Relay 暫時甚至可以使用：
+JSON files
+作為資料庫。
+不需要 PostgreSQL。
+例如：
+relay/
+├── main.go
+├── data/
+│   ├── resources/
+│   └── events/
+└── handlers/
+驗證標準
+Browser A：
+Create Resource
+        ↓
+Sign
+        ↓
+Publish
+Browser B：
+Discover
+   ↓
+Download
+   ↓
+Verify
+   ↓
+IndexedDB
+如果成功：
+Phase 4 成功。
+
+這時候，你的核心概念第一次真正成立：
+Browser A
+    ↓
+   Relay
+    ↓
+Browser B
+
