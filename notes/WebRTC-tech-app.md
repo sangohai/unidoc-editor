@@ -391,11 +391,11 @@ Chrome                     Firefox
 Node A                      Node B
   │                           │
   └──────────┐   ┌────────────┘
-             ▼   ▼
-          Go Relay
-             │
-             ▼
-          Discover
+                              ▼   ▼
+                            Go Relay
+                                   │
+                                   ▼
+                                 Discover
 操作：
 1. Chrome 建立 Identity
 
@@ -442,6 +442,9 @@ Outbox
 Remix
 如果六個答案都是「可以」，那麼你的核心假設就獲得了第一輪技術驗證。
 
+
+
 第二階段才接近 AT Protocol
+
 MVP 成功後才研究：
 
