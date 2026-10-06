@@ -88,4 +88,39 @@ Phase 1：Browser Identity
 讓瀏覽器產生自己的身份。
 使用 Web Crypto：
 
+Browser
+   │
+   └── Generate Key Pair
+          │
+          ├── Private Key
+          └── Public Key
+
+Private Key 儲存在 IndexedDB。
+不要把 Private Key 放在 localStorage。
+
+驗證標準
+重新整理頁面：
+第一次：
+Generate Identity
+
+第二次：
+Load Existing Identity
+如果仍然是同一個 Identity：
+Phase 1 成功。
+
+
+Phase 2：建立 Local Repository
+現在讓瀏覽器真正擁有自己的資料。
+IndexedDB：
+browser-node
+│
+├── identity
+│
+├── resources
+│
+├── communities
+│
+├── received
+│
+└── outbox
 
