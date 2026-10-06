@@ -254,3 +254,172 @@ Browser A
     ↓
 Browser B
 
+Phase 5：Offline-first + Sync
+現在加入你非常適合的 Local-first 模型。
+假設 Browser A 沒有網絡：
+Create Resource
+      ↓
+IndexedDB
+      ↓
+outbox
+網絡恢復：
+outbox
+   ↓
+Relay
+   ↓
+Sync
+所以：
+Offline
+   ↓
+Local Repository
+   ↓
+Outbox
+   ↓
+Online
+   ↓
+Relay
+   ↓
+Other Nodes
+這一步非常重要，因為它讓 Browser 真正開始像一個「節點」，而不是普通 API Client。
+驗證標準
+斷網：
+建立資料
+恢復網絡：
+自動同步
+另一個瀏覽器：
+看到資料
+Phase 5 成功。
+
+
+Phase 6：把「Resource」變成 Community
+這時候不要急著增加技術複雜度。
+我們開始驗證你的「陌生人社交 / Interest Graph」概念。
+建立：
+Community
+例如：
+{
+  "id": "community_emoji",
+  "name": "Emoji Playground",
+  "description": "Emoji games and experiments",
+  "rules": "...",
+  "resources": [
+    "game_001",
+    "rule_001",
+    "tool_001"
+  ],
+  "author": "node_A"
+}
+然後：
+Community
+      │
+      ├── Emoji Game
+      ├── Emoji Rule
+      ├── Emoji Tool
+      └── Remix
+這時候你會發現：
+Community 不一定需要是一個網站上的資料表。
+它可以是一組可攜帶的資料。
+甚至可以：
+community.json
+rules.md
+resources.json
+組合成一個 Community Object。
+這與你之前一直使用的：
+JSON
+YAML
+Markdown
+工作方式非常契合。
+
+
+Phase 7：真正驗證「Browser = Information Node」
+最後一階段才做最有意思的實驗。
+假設：
+Alice
+建立 Emoji Game。
+Bob 收到。
+Bob 不只是：
+「觀看 Alice 的遊戲。」
+而是：
+Receive
+   ↓
+Verify
+   ↓
+Store
+   ↓
+Remix
+   ↓
+Create New Resource
+   ↓
+Sign
+   ↓
+Publish
+例如：
+Alice
+  │
+  └── Emoji Mower v1
+          │
+          ↓
+        Bob
+          │
+          └── Remix v2
+                  │
+                  ↓
+                Carol
+形成：
+Alice
+  ↓
+Resource
+  ↓
+Bob
+  ↓
+Remix
+  ↓
+Carol
+這時候我們就真正開始看到你所說的：
+「陌生人因為共同興趣而產生弱連接。」
+而不是：
+Follow
+Friend
+Like
+Follower count
+最終 MVP
+完成後，你應該可以用三個瀏覽器視窗展示：
+Chrome                     Firefox
+  │                           │
+  │                           │
+  ▼                           ▼
+Node A                      Node B
+  │                           │
+  └──────────┐   ┌────────────┘
+             ▼   ▼
+          Go Relay
+             │
+             ▼
+          Discover
+操作：
+1. Chrome 建立 Identity
+
+2. Chrome 建立 Emoji Resource
+
+3. Chrome 簽名
+
+4. Chrome Publish
+
+5. Firefox Discover
+
+6. Firefox Download
+
+7. Firefox Verify
+
+8. Firefox 儲存 IndexedDB
+
+9. Firefox Remix
+
+10. Firefox Sign
+
+11. Firefox Publish
+
+12. Chrome Discover Remix
+如果這 12 步全部成立，MVP 就已經成功。
+
+
