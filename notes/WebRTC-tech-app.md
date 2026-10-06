@@ -34,5 +34,58 @@ WebRTC 不是你的应用本身，而是“设备之间建立实时通道”的�
 
 ***
 
+瀏覽器是否可以成為一個具有身份、本地資料、可驗證內容、Relay 通信能力的個人網絡節點，並讓不同瀏覽器之間交換可具象化的信息。
+
+我建議把整個實驗控制在「能跑、能交換、能驗證、能看到結果」四個標準內。
+
+Phase 0：先固定 MVP 邊界
+第一版不要做：
+完整 AT Protocol
+DID 完整生態
+區塊鏈
+聯邦身份系統
+複雜 P2P 路由
+多人即時通信
+AI Agent
+複雜帳號系統
+完整社區系統
+我們只驗證：
+
+Browser
++ Identity
++ Local Data
++ Signed Data
++ Relay
++ Cross-browser Sync
++ Visualization
+
+技術棧：
+
+Frontend
+HTML
+CSS
+JavaScript
+Bootstrap
+
+Local
+IndexedDB
+Web Crypto
+Service Worker（後期）
+
+Backend
+Go
+
+Protocol
+HTTP / JSON
+
+Deployment
+GitHub Pages + Go Relay
+
+不使用 Vite，也不需要 React。
+
+Phase 1：Browser Identity
+第一個實驗只做一件事情：
+讓瀏覽器產生自己的身份。
+使用 Web Crypto：
 
 
