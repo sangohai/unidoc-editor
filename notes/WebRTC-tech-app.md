@@ -63,8 +63,9 @@ Overlay protocol
 而這恰好提供了一個很重要的啟示：
 IPv6 本身未必是「新 Internet」；但 IPv6 + 新的 Identity + Discovery + P2P + Browser，完全有可能成為新型 Internet overlay 的基礎。
 
-***
 
+
+***
 
 
 
