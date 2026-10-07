@@ -57,6 +57,12 @@ Overlay protocol
   Communication
 於是就可以得到一個「邏輯上的新網絡」。
 
+如果把你的問題濃縮成一句話：
+是的，Tor/I2P 等系統可以被理解為「建立在普通 Internet 上的另一套邏輯網絡」；它們不是重新建造物理 Internet，而是在 IP 等基礎通信能力之上重新定義身份、尋址、發現、路由和通信方式。
+
+而這恰好提供了一個很重要的啟示：
+IPv6 本身未必是「新 Internet」；但 IPv6 + 新的 Identity + Discovery + P2P + Browser，完全有可能成為新型 Internet overlay 的基礎。
+
 ***
 
 
