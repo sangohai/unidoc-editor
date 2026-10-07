@@ -21,6 +21,47 @@ WebRTC 不是你的应用本身，而是“设备之间建立实时通道”的�
 
 ***
 
+Internet 本身也可以被當成一個底層 Transport Layer。
+然後在它上面再建立另一個網絡。
+例如：
+Layer 0
+Physical network
+        ↓
+Layer 1
+IPv4 / IPv6
+        ↓
+Layer 2
+TCP / UDP / QUIC
+        ↓
+Layer 3
+Overlay Network
+        ↓
+Layer 4
+Service Discovery
+        ↓
+Layer 5
+Application
+這種思想其實非常重要。
+因為：
+你不需要重新建立電纜、路由器、光纖和 ISP。
+你只需要利用現有 Internet：
+Internet
+    ↓
+Overlay protocol
+    ↓
+重新定義：
+  Identity
+  Addressing
+  Discovery
+  Routing
+  Communication
+於是就可以得到一個「邏輯上的新網絡」。
+
+***
+
+
+
+
 "Gemini，这是我们 Project Mirage (幻影项目) 的核心记忆蓝图 v2.3。请阅读并确认就绪。
 [核心工作记忆]
 目标: 开发基于 Android PWA 优先的 WebRTC 免安装通信应用。
