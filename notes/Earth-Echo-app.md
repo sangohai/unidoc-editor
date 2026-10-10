@@ -5,6 +5,7 @@
 
 
 
+***
 
 "Gemini，我是『一人团队』。我们正式启动 Project EarthEcho (视频明信片) MVP 版本的 Vibe Coding 开发。
 [产品核心灵魂]
