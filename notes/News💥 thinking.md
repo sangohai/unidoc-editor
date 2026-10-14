@@ -1,5 +1,11 @@
 ###    News💥 thinking       
 
+***
+
+Gemini 4 three.js   遊戲演示 👇
+
+https://thtbee.github.io/waggles/strix-hx9/
+
 ***      
 
 ####     lan_postal core :      
