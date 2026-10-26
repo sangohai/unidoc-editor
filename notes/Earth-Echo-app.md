@@ -169,3 +169,5 @@ User - Association  :
 - **下一步指令**: 
   1. 指导主理人在 Backblaze 创建 B2 存储桶，配置 S3 兼容密钥与 CORS。
   2. 启动 **📍 C-2 步 (后端 Workers API 编写)**，打通 Cloudflare 与 B2 的上传链路！]"
+
+"读懂上述状态后，请教我如何在 Backblaze 中创建存储桶，并为 Project EarthEcho 获取 API 密钥！"
