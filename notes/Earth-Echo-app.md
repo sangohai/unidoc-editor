@@ -174,3 +174,15 @@ User - Association  :
 
 ***
 
+❤️  BackBlaze B2 keys : 
+
+keyID:
+0053bce638301480000000001
+keyName:
+earthecho-cf-worker
+applicationKey:
+K005yR56vi4VfyphzGsUNLgWQT2ss9U
+
+***
+
+
