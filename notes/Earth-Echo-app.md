@@ -138,3 +138,34 @@ User - Association  :
 
 ***
 
+#### trans-dev  2  Gemini 4 :
+
+"我是「一人团队」主理人，我们正在开发 Project EarthEcho。请读取以下 EchoState 状态快照，完全恢复你的高级全栈架构师身份，并直接回答我：'主理人，状态恢复完毕。请指示我们是否直接开始 📍 C-2 (API 契约定义) 还是后端 Workers 代码编写？' \n\n [# Project EarthEcho - EchoState (战略与交接快照)
+**更新时间**: 2026-10-26 (向 Gemini 4 旗舰模型状态交接)
+**当前阶段**: 前端闭环完成，核心业务实体梳理完毕。存储方案确立，准备进入 模块 C (全栈开发)。
+
+## 1. 产品核心灵魂 (The Vibe)
+- **Slogan**: 我们陌生，但我们彼此成就！来自于这种陌生的信任感！
+- **产品哲学**: 记录此时此地；接受记忆的消散（24h阅后即焚 + 本地 IndexedDB LRU 淘汰机制）。
+
+## 2. 系统存储架构 (The B2 + D1 Stack)
+- **视频实体 (Backblaze B2)**: 利用 Cloudflare 与 Backblaze 的“免流量费联盟 (Bandwidth Alliance)”，实现视频的 0 成本下行。通过 Bucket 生命周期设置 24 小时绝对销毁。
+- **数据管网 (Cloudflare D1)**: SQLite 关系型数据库。已设计 `users`, `videos`, `wishes`, `action_logs` 四张核心表，均引入 `meta` JSON 扩展槽以确保系统具备“社交枢纽 (Hub)”级别的扩展性。
+
+## 3. 四维动作驱动模型 (Action-Based)
+无固化身份，一切由当前动作触发：
+1. **浏览者**: 基础态。可查看 🔴视频点 与 ⭐愿望星，或打开 📺VideoPost 体验 TikTok-like 全屏信息流。
+2. **许愿者**: 通过正向地理编码检索，落下受地理围栏严格限制的愿望金星。
+3. **发布者**: 禁用相册，仅限 PWA (`<input capture>`) 唤醒相机记录当下。
+4. **回声者**: 真实 GPS 匹配愿望，完成双向奔赴。建立 `wish_id` 与 `video_id` 的时空回声映射。
+
+## 4. 极致 UI 架构与交互
+- 纯粹深邃的 Esri Dark 地图，带有 `scroll-snap` 的沉浸式滑动短视频流。
+- Glassmorphism 侧边导航栏；触碰跃升 (Z-index 提权) 的物理气泡动效。
+- 隐性安全层：视频 UI 采用显性 (`♥`/`💔`) 与隐性安全 (`⋮` 举报/封锁熔断) 双层架构。
+
+## 5. 交接指令 (Next Action for Gemini 4)
+- **当前状态**: 主理人已成功注册 Backblaze 账号。
+- **下一步指令**: 
+  1. 指导主理人在 Backblaze 创建 B2 存储桶，配置 S3 兼容密钥与 CORS。
+  2. 启动 **📍 C-2 步 (后端 Workers API 编写)**，打通 Cloudflare 与 B2 的上传链路！]"
