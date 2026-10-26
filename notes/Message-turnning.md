@@ -2,6 +2,11 @@
 
 We respect your choice and look forward to a bright future. keep walking !
 
+
+正规军方案：Firebase Storage (Spark 免费计划)。Google 旗下的 Firebase 提供 5GB 的免费视频存储，Spark 计划绝对不需要绑卡。我们可以把前端直接对接到 Firebase 存视频，然后把业务数据（经纬度、点赞）存进 Cloudflare D1。
+
+📌赛博朋克黑客方案：Telegram Bot API (无限免费图床/视频床)。这是一个极其硬核的解法：我们建一个私密的 TG 机器人，前端把视频发给这个机器人，TG 会返回一个无限期免费播放的 CDN 链接（单文件限制 20MB，对我们 30 秒视频完全够用）。0 成本，0 绑卡，极其符合我们边缘、叛逆的 Vibe！
+
 ***
 
 Reyna Nguyen 
