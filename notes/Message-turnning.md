@@ -1,7 +1,6 @@
 ### Message-turnning
 
-We respect your choice and look forward to a bright future. keep walking !
-
+***
 
 正规军方案：Firebase Storage (Spark 免费计划)。Google 旗下的 Firebase 提供 5GB 的免费视频存储，Spark 计划绝对不需要绑卡。我们可以把前端直接对接到 Firebase 存视频，然后把业务数据（经纬度、点赞）存进 Cloudflare D1。
 
