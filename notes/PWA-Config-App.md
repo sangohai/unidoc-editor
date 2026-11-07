@@ -8,3 +8,17 @@
 
 ***
 
+⭐  從第一天就採用「可移植架構」
+我不建議你現在就同時開發 PWA 和 Capacitor。
+更好的方式是：
+先完成 PWA，但在架構上預留 Capacitor 的擴展接口。
+
+🔥 值得注意的工具
+Ionic Framework
+它與 Capacitor 關係密切，但兩者不是同一個東西。Ionic 提供 Web UI 元件和設計系統，Capacitor 負責原生執行環境與橋接。
+
+你不一定需要 Ionic 的 UI 元件，因為 Bootstrap 已經能滿足你目前的設計需求。可以只使用 Capacitor，而保留自己的 HTML、CSS 和 JavaScript 架構。
+
+
+
+
