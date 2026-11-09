@@ -33,6 +33,7 @@ Application Model
            ▼
        Application
 
+***
 
 1 - 使用 PWA 建立一個優先適配手機端的 即時的 金融 board 使用多個不同的 msg -box 顯示，美股大盤資訊，黃金走勢，加密貨幣走勢，期權資訊，這些 msg-box 可以根據需求增加或者減少；
 
