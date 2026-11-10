@@ -1,1 +1,69 @@
-# PWA-AegisAudio-app
+####  PWA-AegisAudio-app  :
+
+# 项目名称：AegisAudio —— 本地优先的个人声学隐私护盾 (PWA MVP)
+
+## 0. 项目伦理、合规与声学健康声明 (Ethics, Compliance & Health)
+1. **防御型隐私保护定位 (Defensive Privacy Tool)：** 本项目是一个完全合法、合规的个人隐私保护与信息安全防御工具（性质等同于物理摄像头遮挡贴或商业会议室常用的 Sound Masking 声学掩蔽系统）。其唯一目的是在用户自身的设备周围产生温和的物理声学掩蔽场（如粉红噪音、自然环境音、语音频段均衡掩蔽），防止用户手机中潜在的违规第三方应用在后台利用麦克风进行未经授权的语音识别（ASR）与商业画像窃听。
+2. **严守浏览器沙盒边界：** 本项目 100% 运行在标准浏览器沙盒内，不涉及任何系统越狱、进程注入或破解行为。所有监测功能均基于标准 Web API 的自身状态反馈（如音频流中断事件与本机声学回波分析）。
+3. **听觉与神经健康保护原则 (Health-First Acoustics)：** 为避免长期使用对人体听觉系统或神经系统造成疲劳，本系统的音频合成严禁输出高分贝高频刺耳噪音（禁止 >15kHz 的高能持续输出）。所有声学掩蔽必须采用符合人体工学的粉红噪音（Pink Noise）、褐噪音（Brown Noise）及自然呼吸节律调制（LFO），并在音频链路末端强制挂载动态压缩限幅器（`DynamicsCompressorNode`）以杜绝爆音。
+
+---
+
+## 1. 核心工程哲学：AI-Native 乐高模块化架构 (Lego Architecture)
+本项目旨在实践一套专门适配 LLM 协作编程（Vibe Coding）的**高稳定性、防崩溃架构**。作为协助开发的 AI，你必须严格遵守以下**五条工程铁律**：
+
+1. **高内聚、零耦合（乐高积木原则）：** 每个功能模块必须是完全独立的“积木”（存放在 `src/modules/` 下的独立文件夹中）。模块之间**严禁直接互相引用**，只能通过顶层底座或统一的状态契约（`src/types/contracts.ts`）进行通信。
+2. **文件体积紧箍咒：** 任何单个 `.ts` 或 `.tsx` 文件的代码行数**严格控制在 200 行以内**。如果逻辑变复杂，必须拆分为更小的纯函数辅助文件。
+3. **接口契约锁死：** 在编写任何业务代码前，必须先定义并锁定 `contracts.ts`。在后续迭代局部模块时，未经人类开发者明确允许，**严禁修改全局接口契约**。
+4. **局部崩溃隔离（Error Boundaries）：** 每个 UI 模块外部必须包裹 React `ErrorBoundary`。即便某个可视化或监测模块出现运行时异常，绝不能导致整個应用白屏，底层音频掩蔽引擎必须继续稳健运行。
+5. **底座免手写原则：** PWA 的 Service Worker 与离线缓存策略统一交由 `vite-plugin-pwa` (Workbox) 自动生成，严禁手写复杂的底层缓存拦截逻辑以防产生“僵尸缓存”死锁。
+
+---
+
+## 2. 技术栈选型 (Tech Stack)
+- **构建底座：** Vite + React 18 + TypeScript (严格模式 `strict: true`)
+- **样式与 UI：** Tailwind CSS + Lucide Icons (极简赛博朋克/深色安全仪表盘风格)
+- **PWA 核心：** `vite-plugin-pwa` (100% 纯静态离线运行，零后端依赖)
+- **浏览器原生底层 API 驱动：**
+  - `Web Audio API` (实时声学掩蔽合成、频谱分析、安全限幅)
+  - `MediaDevices.getUserMedia` (麦克风通道占坑监测与环境声学回波采样)
+  - `Screen Wake Lock API` + `Fullscreen API` (配合 OLED 纯黑画面的“假性息屏”常驻机制)
+  - `Web Speech API` (可选验证模块：用于实时演示语音识别在护盾开启后被成功干扰失效)
+
+---
+
+## 3. MVP 模块拆解与接口规划 (Lego Modules Breakdown)
+
+### 底座层 (Core Chassis)
+- **`src/core/AudioEngineContext.ts`**：管理全局唯一的 `AudioContext` 实例，并在主输出节点（Destination）前强制串联一个安全限幅器（`DynamicsCompressorNode`），为所有积木提供安全的音频挂载点。
+- **`src/types/contracts.ts`**：定义所有积木的标准输入输出接口（如 `MaskerModule`, `SensorEvent`, `SystemStatus`）。
+
+### 积木一：健康声学掩蔽发生器 (`src/modules/acoustic-masker/`)
+- **功能：** 利用 Web Audio API 实时生成针对人类语音频段（300Hz - 3400Hz）的温和掩蔽声波。
+- **模式：**
+  1. *深海褐噪音 / 春雨粉红噪音模式*（通过 Buffer 噪声源 + `BiquadFilterNode` 带通/低通滤波实现，保护听觉神经）。
+  2. *咖啡馆伪人声共振峰掩蔽 (Formant Babble)*（利用多个低频振荡器 LFO 动态调制滤波器中心频率，模拟无意义的背景交谈声，专门迷惑后台 ASR 语音识别算法）。
+- **暴露接口：** `start()`, `stop()`, `setMode()`, `setVolume(0-100)`。
+
+### 积木二：麦克风通道占坑与抢占警报器 (`src/modules/mic-canary/`)
+- **功能（提供核心安全感与情绪价值）：** 启动后持续申请并保持一个低功耗的麦克风音频流（Canary Stream）。
+- **监测机制：** 严密监听 `MediaStreamTrack` 的 `onmute`、`onended` 事件，以及 `AudioContext` 的 `statechange` 和页面的 `visibilitychange`。一旦后台有未知高优先级进程强行抢占系统音频焦点导致通道中断，立即生成带精确时间戳的安全警报日志（如：`[警告] 14:32:05 检测到系统音频通道被外部未知进程强行抢占或中断`），并触发视觉闪烁/声音提示。
+
+### 积木三：声学回波与环境异常雷达 (`src/modules/echo-radar/`)
+- **功能（环境感知与可视化）：** 利用 `AnalyserNode` 实时读取麦克风收回来的环境频谱数据（FFT），并在 Canvas 上绘制平滑的声波护盾雷达图。
+- **异常判定逻辑：** 对比本机发出的掩蔽声波基准与麦克风收回来的频谱能量包络。如果检测到特定频段出现异常的声学反射突变或底噪剧烈偏移（如手机被移动、桌面声学共振改变），在雷达界面上标记“环境声学特征偏移”提醒。
+
+### 积木四：OLED 假息屏节能锁 (`src/modules/oled-stealth/`)
+- **功能：** 调用 `navigator.wakeLock.request('screen')` 保持系统不休眠（确保音频线程不被系统后台杀死）。
+- **交互：** 提供“进入潜行省电模式”按钮。点击后触发全屏，并在最顶层渲染 `#000000` 纯黑遮罩（利用 OLED 像素不发光特性实现极致省电）。屏幕上仅保留一个极暗的防烧屏随机游走呼吸点，支持**“双击屏幕唤醒”**恢复仪表盘界面。
+
+### 积木五：ASR 语音识别攻防测试台 (`src/modules/asr-tester/`)
+- **功能（直观验证效果）：** 调用浏览器原生 `webkitSpeechRecognition` / `SpeechRecognition`。让用户对着手机说话，直观对比在“护盾关闭”与“护盾开启”两种状态下，语音转文字算法的识别准确率是如何从清晰变为彻底失效的。
+
+---
+
+## 4. 协作开发工作流指令 (Workflow Instructions for AI)
+请先仔细阅读并确认你已完全理解上述架构理念与安全边界。在接下来的对话中，请严格按照以下节奏与我配合：
+- **Step 1：** 不要一次性输出所有代码！第一步请先为我生成项目初始化目录结构，以及核心契约文件 `src/types/contracts.ts` 和安全音频底座 `src/core/AudioEngineContext.ts` 的代码。
+- **Step 2：** 每完成一个模块，等待我的测试反馈后，我们再像拼乐高一样开发并接入下一个独立模块。
+- **当前指令：** 请回复确认你已理解本《开发文档》，并直接开始执行 **Step 1**。
