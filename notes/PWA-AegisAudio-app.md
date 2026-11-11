@@ -79,3 +79,5 @@
 2. **外部记忆库初始化：** 输出 `doc/blue-print.md` 与初始版本 `doc/version-memory.md`（设定初始内部版本号为 `v0.1.0-scaffold`）的完整内容。
 3. **核心底座代码：** 输出 `index.html`（含 Bootstrap 5 CDN 与纯黑白 OLED 样式框架）、`js/core/contracts.js` 以及 `js/core/audio-engine.js` 的完整代码。
 
+***
+
