@@ -85,3 +85,16 @@
 
 2 - 
 
+***
+
+技術參考文件
+建議你直接收藏以下官方文件，這些是後續開發最重要的參考資料：
+MDN — Web Audio API⁠：整個音頻系統的 API 文件。
+MDN — AnalyserNode⁠：頻率、波形及 FFT 分析。
+MDN — AudioWorklet⁠：自訂音頻處理。
+MDN — MediaRecorder⁠：錄音及媒體流保存。
+MDN — getUserMedia⁠：麥克風採集及權限。
+W3C — Web Audio API 1.1⁠：正式技術規範。
+
+***
+
