@@ -2,6 +2,15 @@
 
 ***       
 
+####  TobbeOS 
+—— 最小主义 Arch Linux，Qtile 平铺桌面 + 轻量网络安装器
+
+TobbeOS 是一款来自挪威社区的 Arch Linux 衍生桌面系统，以 Qtile 平铺窗口管理器为核心，定位比较明确：提供一个已经配置好的平铺桌面，同时尽量保留 Arch Linux 的简洁和可控性。项目创建于 2025 年，开发者 Tobias 主要以个人项目的方式维护。当前公开资料显示，TobbeOS 提供 x86_64 安装镜像，并通过网络安装脚本从 Arch Linux 软件仓库获取软件包。(GitLab)它的主要特点可以概括为：Arch Linux 软件基础Qtile 平铺窗口管理器网络安装方式Btrfs / ext4 可选Fish ShellWezTerm 终端Zen Browser可选安装预配置 Emacs面向喜欢键盘操作和平铺桌面的用户
+项目主页：https://tobbeos.lysakermoen.com/
+
+***
+
+
 ####   crunchbang ++        
 crunchbangplusplus 极简Linux 发行版 基于 debian + openbox          
 Home page : https://www.crunchbangplusplus.org/           
