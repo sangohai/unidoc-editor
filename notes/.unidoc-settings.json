@@ -8,7 +8,6 @@
     "notes/kids-smarting.md",
     "notes/Web-LLM-note.md",
     "notes/Earth-Echo-app.md",
-    "notes/Decentralization-network.md",
     "notes/小丑🃏 & emoji.md"
   ],
   "snippets": [
@@ -26,7 +25,6 @@
     }
   ],
   "toolbarLayout": [
-    "FORMAT_CODE",
     "|",
     "EMOJI",
     "SYMBOL",
@@ -49,6 +47,7 @@
     "UNDO",
     "REDO",
     "FORMAT_ITALIC",
+    "FORMAT_MARK",
     "FORMAT_LINK",
     "FORMAT_IMAGE"
   ]
