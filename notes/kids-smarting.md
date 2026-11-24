@@ -14,7 +14,7 @@
 
 <p class="unidoc-block" data-block-id="b-mwubitb2-fcsu" data-updated="1795501983710">未来真正重要的能力，不再是"谁记得更多"，因为知识可以快速查询，AI 也能提供信息支持。更有价值的是那些不容易被替代的能力：</p>
 
-<p class="unidoc-block" data-block-id="b-mwubitb2-n6ah" data-updated="1795501983710">认知灵活性：面对新规则、新环境能够迅速调整思路。<br>迁移能力：把一个领域学到的方法应用到另一个领域。<br>问题解决能力：面对未知问题，能够分析、尝试和修正。<br>创造力：能够提出新的想法和方案。<br>元认知能力：能够反思自己的思考过程，并持续优化学习策略。    </p>
+<p class="unidoc-block" data-block-id="b-mwubitb2-n6ah" data-updated="1795506493236">认知灵活性：面对新规则、新环境能够迅速调整思路。<br>迁移能力：把一个领域学到的方法应用到另一个领域。<br>问题解决能力：面对未知问题，能够分析、尝试和修正。<br>创造力：能够提出新的想法和方案。<br>元认知能力：能够反思自己的思考过程，并持续优化学习策略。</p>
 
 <p class="unidoc-block" data-block-id="b-mwubitb2-xqjn" data-updated="1795501983710"></p>
 
