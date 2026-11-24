@@ -1,4 +1,4 @@
-<h3 class="unidoc-block" data-block-id="b-mwufhtmz-dqgr" data-updated="1795508655947">輸出 LLM 對話，使用格式</h3>
+<h2 class="unidoc-block" data-block-id="b-mwufhtmz-dqgr" data-updated="1795509538200">輸出 LLM 對話，使用格式</h2>
 
 <h3 class="unidoc-block" data-block-id="b-mwufhtn0-uqkd" data-updated="1795508660760">Chat History → Knowledge Document (.md)</h3>
 
@@ -110,7 +110,7 @@
 
 <p class="unidoc-block" data-block-id="b-mwufhtn4-j18c" data-updated="1795508655952">Example:</p>
 
-<pre class="unidoc-block" data-block-id="b-mwufhtn4-sc9h" data-updated="1795508655952"><code>mermaid<br><br>graph TD<br><br>A[Idea]<br><br>B[Design]<br><br>C[Implementation]<br><br>A --&gt; B<br><br>B --&gt; C<br></code></pre>
+<pre class="unidoc-block" data-block-id="b-mwufhtn4-sc9h" data-updated="1795508655952"><code>mermaidgraph TDA[Idea]B[Design]C[Implementation]A --&gt; BB --&gt; C</code></pre>
 
 <p class="unidoc-block" data-block-id="b-mwufhtn4-ajcn" data-updated="1795508655952"></p>
 
@@ -122,7 +122,7 @@
 
 <p class="unidoc-block" data-block-id="b-mwufhtn4-3r0q" data-updated="1795508655952">Example:</p>
 
-<pre class="unidoc-block" data-block-id="b-mwufhtn4-i6ak" data-updated="1795508655952"><code>text<br>Project/<br><br>README.md<br><br>Context/<br><br>Knowledge/<br><br>Prompt/<br><br>src/<br></code></pre>
+<pre class="unidoc-block" data-block-id="b-mwufhtn4-i6ak" data-updated="1795508655952"><code>textProject/README.mdContext/Knowledge/Prompt/src/</code></pre>
 
 <p class="unidoc-block" data-block-id="b-mwufhtn4-3ezo" data-updated="1795508655952"></p>
 
