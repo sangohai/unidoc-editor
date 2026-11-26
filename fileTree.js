@@ -1,4 +1,4 @@
-// fileTree.js - 侧边栏、极速本地检索与【毫秒级乐观更新 + 云端】星标排位 (v2.1.6 整行高亮版)
+// fileTree.js - 侧边栏、极速本地检索与【0ms乐观UI + 云端防冲突同步】星标排位 (v2.3.4)
 const FileTree = {
     container: null,
     searchInput: null,
@@ -15,8 +15,17 @@ const FileTree = {
         this.onDeleteClick = onDeleteClickCallback; 
         this.onRenameClick = onRenameClickCallback;
         
-        document.getElementById('btn-refresh-tree-pc')?.addEventListener('click', () => this.load());
-        document.getElementById('btn-refresh-tree-mobile')?.addEventListener('click', () => this.load());
+        // 点击刷新按钮时，强制从云端重新拉取最新的 .unidoc-settings.json 星标列表与文件列表
+        document.getElementById('btn-refresh-tree-pc')?.addEventListener('click', () => this.load(true));
+        document.getElementById('btn-refresh-tree-mobile')?.addEventListener('click', () => this.load(true));
+
+        // 当设备窗口从后台切回前台 (focus / visibilitychange) 时，静默同步一次云端星标状态
+        window.addEventListener('focus', () => this.syncPinsFromCloudSilently());
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                this.syncPinsFromCloudSilently();
+            }
+        });
 
         this.initSearchEngine();
     },
@@ -39,58 +48,63 @@ const FileTree = {
     },
 
     _getPinnedList() {
-        let cloudPinned = [];
         if (typeof SettingsManager !== 'undefined' && typeof SettingsManager.getPinned === 'function') {
-            const res = SettingsManager.getPinned();
-            if (Array.isArray(res)) cloudPinned = res;
+            return SettingsManager.getPinned();
         }
-        try {
-            const localPinned = JSON.parse(localStorage.getItem('unidoc_pinned_files') || '[]');
-            if (Array.isArray(localPinned) && localPinned.length > 0 && cloudPinned.length === 0) {
-                return localPinned;
-            }
-        } catch (e) {}
-        return cloudPinned;
+        return [];
     },
 
-    async togglePin(path) {
-        let pinned = [...this._getPinnedList()];
-        const idx = pinned.indexOf(path);
-        const isNowPinned = idx === -1;
-
-        if (isNowPinned) pinned.push(path);
-        else pinned.splice(idx, 1);
-
-        localStorage.setItem('unidoc_pinned_files', JSON.stringify(pinned));
-        if (typeof SettingsManager !== 'undefined' && SettingsManager.data) {
-            if (Array.isArray(SettingsManager.data.pinnedFiles)) {
-                SettingsManager.data.pinnedFiles = [...pinned];
-            } else if (Array.isArray(SettingsManager.data.pinned)) {
-                SettingsManager.data.pinned = [...pinned];
+    // 🌟 切回窗口时静默检查云端星标是否有变化，若有变化自动重排左侧列表！
+    async syncPinsFromCloudSilently() {
+        if (!navigator.onLine || typeof SettingsManager === 'undefined' || !this.currentFilesCache.length) return;
+        try {
+            const hasChanged = await SettingsManager.pullLatest();
+            if (hasChanged) {
+                this.render(this.currentFilesCache);
+                if (typeof AppState !== 'undefined' && AppState.currentFilePath) {
+                    this.setActive(AppState.currentFilePath);
+                }
             }
-        }
+        } catch (e) {}
+    },
 
+    // 🌟 0ms 乐观置顶重排 + 后台防冲突写入云端 .unidoc-settings.json
+    async togglePin(path) {
+        if (typeof SettingsManager === 'undefined') return;
+        if (!Array.isArray(SettingsManager.data.pinned)) SettingsManager.data.pinned = [];
+
+        const pList = SettingsManager.data.pinned;
+        const idx = pList.indexOf(path);
+        const isNowPinned = (idx === -1);
+
+        // 1. 0 毫秒立即修改内存并重新渲染置顶排序（极致跟手！）
+        if (isNowPinned) pList.push(path);
+        else pList.splice(idx, 1);
+
+        localStorage.removeItem('unidoc_pinned_files');
         this.render(this.currentFilesCache);
         if (typeof AppState !== 'undefined' && AppState.currentFilePath) {
             this.setActive(AppState.currentFilePath);
         }
-        Toast.show(isNowPinned ? '⭐ 已星标置顶' : '已取消星标置顶', 'info');
 
+        // 2. 立即推送至 GitHub 云端（内置 409 SHA 冲突自动解决）
         try {
-            if (typeof SettingsManager !== 'undefined' && typeof SettingsManager.save === 'function') {
-                await SettingsManager.save();
-            } else if (typeof SettingsManager !== 'undefined' && typeof SettingsManager.togglePin === 'function') {
-                await SettingsManager.togglePin(path);
-            }
+            await SettingsManager.save();
+            Toast.show(isNowPinned ? '⭐ 已星标置顶 (已同步云端)' : '已取消星标 (已同步云端)', 'success');
         } catch (err) {
-            console.warn('云端星标同步延迟，已保留在本地缓存:', err);
+            Toast.show(`云端星标同步失败: ${err.message}`, 'error');
         }
     },
 
-    async load() {
+    async load(forcePullCloudSettings = false) {
         this.container = document.getElementById('file-tree');
-        this.container.innerHTML = '<div class="text-muted small p-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>正在拉取数据...</div>';
+        this.container.innerHTML = '<div class="text-muted small p-2"><i class="fa-solid fa-spinner fa-spin me-2"></i>正在拉取云端数据...</div>';
         try {
+            // 如果点击了刷新按钮，同时并行拉取最新云端星标配置与文件列表！
+            if (forcePullCloudSettings && typeof SettingsManager !== 'undefined' && typeof SettingsManager.pullLatest === 'function') {
+                await SettingsManager.pullLatest();
+            }
+
             const files = await GitHubAPI.getFiles('notes');
             this.currentFilesCache = files; 
             this.render(files);
@@ -170,7 +184,6 @@ const FileTree = {
             rowDiv.appendChild(itemDiv);
             rowDiv.appendChild(actionDiv);
             
-            // 🌟 点击整行任意位置（除右侧功能图标外）立即触发整行高亮变蓝并加载文档
             rowDiv.addEventListener('click', () => {
                 if (typeof AppState !== 'undefined' && !AppState.isDirty) {
                     this.setActive(file.path);
