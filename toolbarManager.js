@@ -1,16 +1,19 @@
-// toolbarManager.js - 数据驱动的工具栏装配流水线 (带智能分隔符过滤与黑屏重载)
+// toolbarManager.js - 数据驱动的工具栏装配流水线 (v2.1.5 职责分离去重版)
 const ToolbarManager = {
-    container: document.getElementById('editor-toolbar-content'),
+    container: null,
     currentLayout: [],
     
+    // 🌟 职责分离：顶部工具栏仅保留“全局动作”与“行内(Inline)修饰”，块级(Block)转换与代码排版全部交由段落跟随胶囊掌管！
     registry: {
-        'UNDO': { icon: 'fa-rotate-left', title: '撤销', showIn: ['all'] },
-        'REDO': { icon: 'fa-rotate-right', title: '重做', showIn: ['all'] },
-        'FORMAT_BOLD': { icon: 'fa-bold', title: '加粗', showIn: ['markdown'] },
-        'FORMAT_ITALIC': { icon: 'fa-italic', title: '斜体', showIn: ['markdown'] },
-        'FORMAT_LINK': { icon: 'fa-link', title: '链接', showIn: ['markdown'] },
-        'FORMAT_IMAGE': { icon: 'fa-regular fa-image', title: '图片', showIn: ['markdown'] },
-        'FORMAT_CODE': { icon: 'fa-code', title: '代码块', showIn: ['markdown'] },
+        'UNDO': { icon: 'fa-rotate-left', title: '撤销 (Ctrl+Z)', showIn: ['all'] },
+        'REDO': { icon: 'fa-rotate-right', title: '重做 (Ctrl+Y)', showIn: ['all'] },
+        'FORMAT_BOLD': { icon: 'fa-bold', title: '加粗选中文字 <strong>', showIn: ['markdown'] },
+        'FORMAT_ITALIC': { icon: 'fa-italic', title: '斜体选中文字 <em>', showIn: ['markdown'] },
+        'FORMAT_MARK': { icon: 'fa-highlighter', color: 'text-warning', title: '荧光笔高亮选中文字 <mark>', showIn: ['markdown'] },
+        'FORMAT_LINK': { icon: 'fa-link', title: '插入超链接 <a>', showIn: ['markdown'] },
+        'FORMAT_IMAGE': { icon: 'fa-regular fa-image', title: '插入图片 <figure>', showIn: ['markdown'] },
+        'FOLD_ALL': { icon: 'fa-compress', color: 'text-primary', title: '折叠全部 <details>', showIn: ['markdown'] },
+        'UNFOLD_ALL': { icon: 'fa-expand', color: 'text-primary', title: '展开全部 <details>', showIn: ['markdown'] },
         'FORMAT_DOCUMENT': { icon: 'fa-wand-magic-sparkles', title: '原生排版', text: '原生排版', showIn: ['json', 'yaml'] },
         'SELECT_ALL': { icon: 'fa-object-group', title: '全选', showIn: ['all'] },
         'SANITIZE_FORMAT': { icon: 'fa-eraser', title: '清洗冗余格式', showIn: ['all'] },
@@ -26,9 +29,29 @@ const ToolbarManager = {
         'SNIPPETS': { id: 'tool-snippets', icon: 'fa-book-bookmark', title: '自定义词库', showIn: ['all'] }
     },
 
+    // 统一清洗并过滤与跟随胶囊重复的块级工具
+    _sanitizeLayout(layoutArray) {
+        const deprecatedBlockTools = ['FORMAT_H1', 'FORMAT_H2', 'FORMAT_H3', 'FORMAT_DETAILS', 'FORMAT_BLOCKQUOTE', 'FORMAT_CODE'];
+        let cleaned = Array.isArray(layoutArray)
+            ? layoutArray.filter(id => !deprecatedBlockTools.includes(id))
+            : ['UNDO', 'REDO', '|', 'FORMAT_BOLD', 'FORMAT_ITALIC', 'FORMAT_MARK', 'FORMAT_LINK', 'FORMAT_IMAGE', '|', 'FOLD_ALL', 'UNFOLD_ALL', '|', 'EMOJI', 'SYMBOL', 'TYPOGRAPHY', 'SNIPPETS', '|', 'SANITIZE_FORMAT', 'COMMAND_PALETTE'];
+
+        if (!cleaned.includes('FORMAT_MARK')) {
+            const idx = cleaned.indexOf('FORMAT_ITALIC');
+            if (idx !== -1) cleaned.splice(idx + 1, 0, 'FORMAT_MARK');
+            else cleaned.push('FORMAT_MARK');
+        }
+        return cleaned;
+    },
+
     init(layoutArray) {
-        this.currentLayout = layoutArray;
         this.container = document.getElementById('editor-toolbar-content');
+        this.currentLayout = this._sanitizeLayout(layoutArray);
+
+        // 同步修正 SettingsManager 内存中的配置，防止旧云端配置反弹
+        if (typeof SettingsManager !== 'undefined' && SettingsManager.data) {
+            SettingsManager.data.toolbarLayout = [...this.currentLayout];
+        }
         
         const btnSave = document.getElementById('btn-save-toolbar');
         if (btnSave) {
@@ -40,17 +63,17 @@ const ToolbarManager = {
                 try {
                     await SettingsManager.save();
                     setTimeout(() => {
-                        this.render(EditorManager.currentLanguage);
+                        this.render(typeof EditorManager !== 'undefined' ? EditorManager.currentLanguage : 'markdown');
                         UI.hideGlobalLoader();
                         Toast.show('工具栏已更新', 'success');
-                    }, 800);
+                    }, 600);
                 } catch (err) {
                     UI.hideGlobalLoader();
                     Toast.show('配置同步失败', 'error');
                 }
             };
         }
-        this.render('markdown'); 
+        this.render(typeof EditorManager !== 'undefined' ? EditorManager.currentLanguage : 'markdown'); 
     },
 
     updateForLanguage(lang) {
@@ -69,7 +92,13 @@ const ToolbarManager = {
         const list = document.getElementById('toolbar-customize-list');
         list.innerHTML = '';
         
-        const layoutRef = SettingsManager.data.toolbarLayout;
+        if (typeof SettingsManager !== 'undefined' && SettingsManager.data) {
+            SettingsManager.data.toolbarLayout = this._sanitizeLayout(SettingsManager.data.toolbarLayout);
+        }
+        const layoutRef = (typeof SettingsManager !== 'undefined' && SettingsManager.data)
+            ? SettingsManager.data.toolbarLayout
+            : this.currentLayout;
+
         const allTools = this.getAllTools();
         
         allTools.forEach(tool => {
@@ -102,13 +131,15 @@ const ToolbarManager = {
                     const idx = layoutRef.indexOf(id);
                     if (idx > -1) layoutRef.splice(idx, 1); 
                 }
+                this.currentLayout = [...layoutRef];
             });
         });
         
         modal.show();
     },
 
-    render(currentLang) {
+    render(currentLang = 'markdown') {
+        this.container = document.getElementById('editor-toolbar-content');
         if (!this.container) return;
         
         const pool = document.getElementById('toolbar-components-pool');
@@ -167,6 +198,7 @@ const ToolbarManager = {
             else if (this.registry[item]) {
                 const conf = this.registry[item];
                 const btn = document.createElement('button');
+                btn.type = 'button';
                 btn.className = 'btn btn-sm btn-outline-secondary border-0 py-0 px-2 my-1';
                 btn.title = conf.title;
                 btn.dataset.action = item;
@@ -175,6 +207,7 @@ const ToolbarManager = {
                 if (conf.text) innerHTML += `<span class="ms-1" style="font-size: 13px;">${conf.text}</span>`;
                 btn.innerHTML = innerHTML;
 
+                btn.addEventListener('mousedown', (e) => e.preventDefault());
                 btn.addEventListener('click', (e) => {
                     e.preventDefault();
                     if (typeof Connector !== 'undefined') Connector.execute(item);
@@ -184,11 +217,10 @@ const ToolbarManager = {
             }
         });
 
-        // 🌟 永远在最后生成绿色 + 号
         const customizeGroup = document.createElement('div');
         customizeGroup.className = 'ms-2 d-flex align-items-center border-start ps-2 flex-shrink-0 my-1';
         customizeGroup.innerHTML = `
-            <button class="btn btn-sm btn-outline-success border-0 py-0 px-2" data-action="CUSTOMIZE_TOOLBAR" title="自定义工具栏">
+            <button type="button" class="btn btn-sm btn-outline-success border-0 py-0 px-2" data-action="CUSTOMIZE_TOOLBAR" title="自定义工具栏">
                 <i class="fa-solid fa-plus"></i>
             </button>
         `;

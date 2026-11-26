@@ -1,38 +1,68 @@
 ---
-title: UniDoc Editor 系统架构蓝图
+title: UniDoc Editor 系统架构蓝图 (V2 Native-Block 架构)
 project: UniDoc Editor
-current_snapshot: V1.20-Base
-last_updated: 2026-08-02
-architecture: Serverless Frontend-Only (零后端纯前端架构)
-core_engine: CodeMirror 6 (CM6)
+architecture: Serverless Frontend-Only (No Vite / No NPM / Vanilla JS + Live Server)
+core_engine: Native HTML5 Block Canvas (<article> + ContentEditable Blocks)
 state_management: Middleware Bus (connector.js)
-storage: GitHub REST API + .unidoc-settings.json 
+sync_engine: Google Keep Style (IndexedDB Local-First + Block-Level Merge + GitHub REST API)
 ---
 
-# 🧩 系统架构快照 (Single Source of Truth)
+# 🧩 一、 系统全局架构与模块职责 (Single Source of Truth)
 
-## 1. 核心模块解耦职责
-- `main.js`: 核心主板。管理全局状态 (`AppState`)、防键盘遮挡的视口逻辑、PWA 热重载引擎，以及基于 AST 数据驱动的命令控制台。
-- `connector.js`: 中间件总线。拦截所有 UI 点击动作，转化为宏指令下发，输出极客遥测日志。**（绝对禁止 UI 层直接调用编辑器 API）**。
-- `api.js`: GitHub 数据总线。纯文本与 Base64 图片直传，强绑 `?t=` 时间戳防 CDN 缓存。
-- `editor.js`: 纯净的 CM6 底层。利用 `Compartment` 实现动态换肤与只读锁，回归原生 `ContentEditable` 触控交互，内置 Gfm 换行与格式清洗算法。
-- `toolbarManager.js`: 数据驱动装配车间。废弃硬编码，读取云端配置动态渲染组件。
-- `settingsManager.js`: 云配置管家。静默同步云端 `.unidoc-settings.json`。
-- `clipboardManager.js`: 安全管家。接管 Base64 缓存、零宽字符清洗与底层剪贴板粉碎。
-- `fileTree.js`: 侧边栏引擎。零延迟前端过滤搜索 + 星标置顶排位系统。
+## 1. 运行环境与铁律
+- **零构建依赖**：严禁引入 Vite、Webpack、NPM 等构建工具；所有脚本通过 `index.html` 原生 `<script>` 按序挂载。
+- **总线隔离铁律**：UI 层（工具栏、快捷键、命令面板）**绝对禁止**直接调用 `EditorManager` API，一切操作必须通过 `Connector.execute(action, payload)` 下发。
+- **三大护城河黑科技（严禁篡改或丢失）**：
+  1. **PWA 开发自毁防御 (`main.js`)**：侦测到 `localhost` / `127.0.0.1` 自动注销全部 Service Worker，彻底隔离 Live Server 幽灵缓存。
+  2. **移动端视口防上推 (`main.js`)**：基于 `window.visualViewport` 动态锁死 `document.body` 尺寸，防止虚拟键盘挤压顶栏与画布。
+  3. **动态侧边栏记忆拖拽 (`main.js` & `style.css`)**：`#sidebar-resizer` 支持拖拽记忆至 `localStorage`、双击复原 `260px`，移动端响应式切换 Offcanvas。
 
-## 2. 核心设计黑科技 (禁止随意篡改)
-- **开发模式自毁防御**: 只要侦测到 `localhost` 或 `127.0.0.1`，主动反向注销所有 PWA Service Worker 实例，彻底防范 Live Server 幽灵缓存覆盖本地代码。
-- **移动端键盘上推防御**: 利用 `position: fixed` 钉死页面，动态压缩 `document.body` 尺寸触发 Monaco/CM6 重新 layout。
-- **动态侧边栏渲染**: 侧边栏支持动态拖拽，基于 `localStorage` 实现记忆，支持双击一键恢复默认宽度，并联动触发核心引擎重绘。
+## 2. 原生 HTML Tags 三层容器架构 (`editor.js`)
+摒弃 CodeMirror 6，采用浏览器原生 DOM 树进行块级（Block-based）内容管理与自由拖拽排序：
+- **L1 终极画布容器**：`<article id="unidoc-canvas" class="unidoc-canvas">`（本身不可编辑文字，仅负责承载与调度块级标签顺序）。
+- **L2 块级内容标签 (Content Blocks)**：画布的直接子元素，每个块必须携带同步基因属性 `data-block-id="b-xxx"` 与 `data-updated="timestamp"`：
+  - 普通段落块：`<p contenteditable="true">`
+  - 章节标题块：`<h1>`, `<h2>`, `<h3>` (`contenteditable="true"`)
+  - 折叠收纳块：`<details open><summary contenteditable="true">标题</summary><div class="details-body" contenteditable="true">正文</div></details>`
+  - 媒体图片块：`<figure contenteditable="false"><img src="..." data-src="images/xxx.png"><figcaption contenteditable="true">图注</figcaption></figure>`
+  - 引用灵感块：`<blockquote contenteditable="true">`
+  - 清单列表块：`<ul>` / `<ol>` 内部包裹 `<li contenteditable="true">`
+  - 纯文本/代码块：`<pre><code contenteditable="true">`（当打开 `.json`/`.yaml`/`.txt` 时，画布退化为单一全屏 `<pre><code>` 容器以100%兼容配置文件编辑）。
+- **L3 行内修饰标签 (Inline Tags)**：依附于块级标签内部，通过原生 `Selection` / `Range` 包裹：
+  - `<strong>` (加粗)、`<em>` (斜体)、`<mark>` (荧光笔高亮)、`<code>` (行内代码)、`<a href="...">` (超链接)、`<span>` (自定义扩展)。
+
+## 3. Google Keep 级跨设备同步架构 (`IndexedDB` + `GitHubAPI`)
+- **本地优先落盘 (IndexedDB `UniDocDB`)**：打字、格式化或拖拽块顺序时，300ms 防抖直接写入本地 IndexedDB，标记 `isDirty: true`，UI 显示“🟡 本地已存”，0 网络延迟。
+- **无感云端推送触发器**：
+  1. 块失焦 (`focusout` / `blur` 离开当前编辑块且有修改时)
+  2. 阅读/思考停顿 (Idle 8秒无新输入)
+  3. 视觉离开 (`document.visibilitychange === 'hidden'` 切后台、锁屏、换设备)
+  4. 切换其他文档或手动 `Ctrl+S`
+- **唤醒嗅探与块级合并 (Block-Level Merge)**：
+  - 设备切回前台 (`visibilitychange === 'visible'` 或 `window.focus`) 时，静默校验远端 GitHub `sha`。
+  - 若发生跨设备离线冲突，基于 DOM 节点的 `data-block-id` 与 `data-updated` 时间戳进行块级颗粒度智能合并，自动保留多端最新块。
 
 ---
 
-# 🚀 内部版本控制与开发日志 (Changelog)
+# 🔒 二、 不可篡改的核心接口契约 (Interface Contracts)
 
-> **当前基线快照**: `[Snapshot: V1.20-Base]`
+## 1. `EditorManager` (`editor.js`) 必须暴露的接口
+- `async init()`：初始化 `<article id="unidoc-canvas">`，挂载块级悬浮控制手柄与键盘/鼠标/触控事件流。
+- `getContent()` -> `String`：序列化画布内纯净的 HTML 块结构（或 `.json`/`.yaml` 的纯文本），剔除所有 UI 辅助控制手柄 DOM。
+- `setContent(content, lang)`：智能解析内容（老 Markdown 自动通过 `marked` 升维为带 `data-block-id` 的原生 HTML 块；HTML 直接挂载；非笔记格式挂载为 `<pre><code>`），并调用 `handlePreviewLayout(lang)`。
+- `setLanguage(lang)` / `setSyntaxTheme(themeName)`：切换文档模式与阅读色彩主题（`default` / `warm` / `hacker`）。
+- `onChange(callback)`：当任何块内容变更、属性变更或拖拽换位时触发回调。
+- `hasFocus()` -> `Boolean`：供 `ClipboardManager` 判断焦点是否位于画布内。
+- **总线指令响应接口（供 `Connector` 调用）**：
+  - `applyMarkdownFormat(type)`（升级为原生行内/块级标签操作：`bold`, `italic`, `mark`, `link`, `image`, `code`, `h1`, `h2`, `h3`, `details`, `quote`）
+  - `insertTextAtCursor(text)` / `replaceSelection(text)` / `findAndReplace(targetStr, replaceStr)`
+  - `insertImageBlock(fileName, base64Data, relativePath)` / `finalizeImageBlock(relativePath, isSuccess)`
+  - `foldAll()` / `unfoldAll()`（一键收起/展开所有原生 `<details>` 块）
+  - `sanitizeFormat()` / `optimizePrompt()` / `formatCodeDocument()`
+  - `selectAll()` / `setAnchor()` / `selectToHere()`
+  - `togglePreview(isPreviewMode)`（切换纯净只读阅读模式 vs 编辑模式）
+  - `undo()` / `redo()`（基于轻量级 DOM 快照栈的撤销与重做）
 
-### 已合并补丁 (Merged Patches)
-- **`[Patch-1]` 架构/PWA防御**: 修改 `main.js` 初始化生命周期，加入 Live Server 物理隔离 Kill Switch，彻底解决本地调试时的 PWA 幽灵缓存问题。
-- **`[Patch-2]` UI/侧边栏增强**: 激活并重构 `main.js` 中的 `setupSidebarResizer`，在 `index.html` 补充 `#sidebar-resizer` 把手，并添加对应 CSS 磁吸动画。加入本地宽度记忆及双击复原彩蛋。
-- **`[Patch-3]` UI/响应式修复**: 移除 `index.html` 侧边栏硬编码的 `position-relative`，改为在 `style.css` 通过媒体查询 `@media (min-width: 768px)` 限制作用域。完美解决移动端 Offcanvas 抽屉被破坏导致挤压编辑器视口的严重 Bug。
+## 2. `Connector` (`connector.js`) 必须保持的契约
+- `init(editorEngineInstance)`
+- `execute(action, payload)`：拦截并记录极客遥测日志，向下分发至 `EditorManager`、`ClipboardManager`、`ToolbarManager`、`GarbageCollector`。

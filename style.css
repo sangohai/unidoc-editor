@@ -1,14 +1,14 @@
-
 /* 基础容器防滚动与动态视口适配 */
 :root {
     --editor-font-size: 15px; 
-    /* 🌟 新增：全局字体样式变量 */
     --editor-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 html, body {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; height: 100dvh; 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
     margin: 0; padding: 0; overflow: hidden; display: flex; flex-direction: column;
+    background-color: var(--bs-body-bg) !important; /* 🌟 彻底封杀底层黑色渲染真空区 */
+    overscroll-behavior: none; /* 🌟 阻止移动端键盘弹起后滑动页面导致的视口缩放与黑边 */
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -17,46 +17,65 @@ html, body {
     min-width: 0 !important;
 }
 
-/* ================= 侧边栏文件项美化 ================= */
-.file-row .file-actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
-.file-row:hover .file-actions, .file-actions.show-actions { opacity: 1; pointer-events: auto; }
-@media (max-width: 767.98px) {
-    .file-row .file-actions { opacity: 0.8; pointer-events: auto; }
+/* ================= 侧边栏文件项美化 (v2.1.5 整行背景填充与星标高亮) ================= */
+.file-row {
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
+    border-radius: 6px;
+}
+.file-row:hover {
+    background-color: var(--bs-secondary-bg);
 }
 
-.file-row .action-btn { cursor: pointer; transition: color 0.2s, transform 0.1s; }
-.file-row .fa-pen-to-square:hover { color: var(--bs-primary) !important; transform: scale(1.1); }
-.file-row .fa-trash-can:hover { color: var(--bs-danger) !important; transform: scale(1.1); }
+/* 🌟 整行选中背景填充：包含文字区与右侧按钮区统一填充主题蓝 */
+.file-row.active {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+.file-row.active .file-item,
+.file-row.active .icon-indicator,
+.file-row.active .action-btn:not(.star-pinned) {
+    color: #ffffff !important;
+}
+
+.file-row .file-actions { opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.file-row:hover .file-actions, .file-actions.show-actions, .file-row.active .file-actions {
+    opacity: 1; pointer-events: auto;
+}
+@media (max-width: 767.98px) {
+    .file-row .file-actions { opacity: 0.85; pointer-events: auto; }
+}
+
+.file-row .action-btn { cursor: pointer; color: var(--bs-secondary-color); transition: color 0.2s, transform 0.1s; }
+.file-row .fa-pen-to-square:hover { color: var(--bs-info) !important; transform: scale(1.15); }
+.file-row .fa-trash-can:hover { color: var(--bs-danger) !important; transform: scale(1.15); }
 .file-row .fa-star { transition: color 0.2s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .file-row .fa-star:hover { transform: scale(1.3); }
 
-.star-pinned { color: #ffc107 !important; opacity: 1 !important; }
-@media (max-width: 767.98px) { .file-row .file-actions .fa-star.star-pinned { opacity: 1; } }
+/* 星标置顶永远保持璀璨金色 */
+.star-pinned { color: #ffc107 !important; opacity: 1 !important; filter: drop-shadow(0 0 2px rgba(0,0,0,0.25)); }
 
-.file-item { cursor: pointer; user-select: none; font-size: 14px; color: var(--bs-body-color); transition: background-color 0.2s; }
-.file-item:hover { background-color: var(--bs-secondary-bg); }
-.file-item.active { background-color: #0d6efd; color: white; }
+.file-item { cursor: pointer; user-select: none; font-size: 14px; color: var(--bs-body-color); }
 
 /* ================= 侧边栏拖拽缩放 (PC端专属) ================= */
 #sidebar-resizer {
     position: absolute; top: 0; right: -3px; width: 6px; height: 100%;
-    cursor: col-resize; z-index: 1050; background-color: transparent; transition: background-color 0.2s;
+    cursor: col-resize; z-index: 1050; background-color: transparent; transition: background-color 0.2s ease;
 }
-#sidebar-resizer:hover, #sidebar-resizer.is-resizing { background-color: var(--bs-primary); opacity: 0.5; }
+#sidebar-resizer:hover, #sidebar-resizer.is-resizing { background-color: var(--bs-primary); opacity: 0.6; }
 
 @media (min-width: 768px) {
     #sidebarOffcanvas { position: relative !important; }
 }
 
-/* ================= 突破工具栏限制：手机端专属居中弹窗 ================= */
+/* ================= 突破工具栏限制：表情与特殊符号面板 ================= */
 .dropdown-menu.char-picker-panel {
-    width: 260px; max-height: 200px; overflow-y: auto; background-color: var(--bs-body-bg);
+    width: 268px; max-height: 220px; overflow-y: auto; background-color: var(--bs-body-bg);
     z-index: 1055 !important; margin-top: 5px;
 }
 .dropdown-menu.char-picker-panel.show { display: flex !important; flex-wrap: wrap; gap: 4px; }
 
 @media (max-width: 767.98px) {
-    /* 🌟 修复点：将所有需要居中的下拉菜单挂载统一装甲 */
     .mobile-modal-dropdown.show {
         position: fixed !important; top: 50% !important; left: 50% !important;
         transform: translate(-50%, -50%) !important; margin: 0 !important; width: 90vw !important; 
@@ -64,7 +83,6 @@ html, body {
         box-shadow: 0 0 0 100vw rgba(0,0,0,0.5), 0 0.5rem 1rem rgba(0,0,0,0.15) !important; border-radius: 8px;
         z-index: 1060 !important;
     }
-    /* 保证表情面板在居中时依然是 flex 网格 */
     .char-picker-panel.mobile-modal-dropdown.show {
         display: flex !important; align-content: flex-start;
     }
@@ -72,73 +90,427 @@ html, body {
 
 .char-btn {
     cursor: pointer; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center;
-    border-radius: 4px; font-size: 18px; user-select: none; transition: background-color 0.2s; color: var(--bs-body-color);
+    border-radius: 4px; font-size: 18px; user-select: none; transition: background-color 0.15s, transform 0.1s; color: var(--bs-body-color);
 }
-.char-btn:hover, .char-btn:active { background-color: var(--bs-secondary-bg); }
-.char-btn.symbol-btn { font-size: 15px; font-family: monospace; }
+.char-btn:hover, .char-btn:active { background-color: var(--bs-secondary-bg); transform: scale(1.12); }
+.char-btn.symbol-btn { font-size: 14px; font-family: monospace; font-weight: 600; }
 
 .snippet-list-item { cursor: pointer; transition: background-color 0.2s; }
 .snippet-list-item:hover { background-color: var(--bs-secondary-bg); }
 .snippet-content-preview { max-width: 150px; display: inline-block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; color: var(--bs-secondary-color); }
 
-/* ================= CodeMirror 6 样式深度适配 ================= */
-.markdown-body { font-family: var(--editor-font-family); line-height: 1.6; font-size: var(--editor-font-size); color: var(--bs-body-color); }
-.markdown-body h1, .markdown-body h2 { border-bottom: 1px solid var(--bs-border-color); padding-bottom: 0.3em; margin-top: 1.5em; margin-bottom: 16px; }
+/* ================= Markdown 与阅读通用排版 ================= */
+.markdown-body { font-family: var(--editor-font-family); line-height: 1.75; font-size: var(--editor-font-size); color: inherit; }
+.markdown-body h1, .markdown-body h2 { border-bottom: 1px solid rgba(128,128,128,0.25); padding-bottom: 0.3em; margin-top: 1.2em; margin-bottom: 16px; }
 .markdown-body p, .markdown-body ul, .markdown-body ol { margin-bottom: 16px; }
-.markdown-body code { background-color: rgba(120,120,120,0.15); border-radius: 3px; padding: 0.2em 0.4em; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
-.markdown-body pre { background-color: #f6f8fa; border-radius: 6px; padding: 16px; overflow: auto; }
+.markdown-body code { background-color: rgba(120,120,120,0.15); border-radius: 4px; padding: 0.2em 0.4em; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
+.markdown-body pre { background-color: rgba(128,128,128,0.1); border-radius: 6px; padding: 16px; overflow: auto; }
 .markdown-body pre code { background: transparent; padding: 0; }
 
-[data-bs-theme="dark"] .markdown-body pre { background-color: #1e1e1e; }
-[data-bs-theme="dark"] .markdown-body code { background-color: rgba(255,255,255,0.1); }
-
-.cm-editor { height: 100%; outline: none !important; touch-action: auto !important; }
-
-/* 💥 强制穿透 CM6 的每一层内部结构，让字体变量绝对生效！ */
-.cm-editor, .cm-scroller, .cm-content, .cm-line { 
-    font-family: var(--editor-font-family) !important; 
-    font-size: var(--editor-font-size) !important; 
-    line-height: 1.6; 
+/* ================= V2.1.5 Native HTML Block Canvas 专属样式 ================= */
+.unidoc-scroll-container {
+    background-color: var(--bs-body-bg);
+    scroll-behavior: smooth;
 }
 
-/* 🌟 修复点：彻底适配暗黑模式的行号栏与光标！ */
-[data-bs-theme="dark"] .cm-editor { background-color: #1e1e1e; color: #d4d4d4; }
-[data-bs-theme="dark"] .cm-gutters { background-color: #1e1e1e !important; color: #858585 !important; border-right: 1px solid #333 !important; }
-[data-bs-theme="dark"] .cm-activeLineGutter { background-color: #2c313a !important; color: #c6c6c6 !important; }
-[data-bs-theme="dark"] .cm-editor .cm-cursor { border-left-color: #ffffff !important; border-left-width: 2px; }
-
-/* 💥 修复点：重塑 CodeMirror 6 的全选与局部选取的高亮背景色，使其半透明且柔和 */
-.cm-editor .cm-selectionBackground,
-.cm-editor.cm-focused .cm-selectionBackground {
-    background-color: rgba(13, 110, 253, 0.25) !important; /* Bootstrap 经典蓝，25%透明度 */
-}
-/* 暗黑模式下，选区变为半透明的银白色 */
-[data-bs-theme="dark"] .cm-editor .cm-selectionBackground,
-[data-bs-theme="dark"] .cm-editor.cm-focused .cm-selectionBackground {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+.unidoc-canvas {
+    max-width: 840px;
+    min-height: 100%;
+    padding: 36px 24px 140px 24px;
+    font-family: var(--editor-font-family) !important;
+    font-size: var(--editor-font-size) !important;
+    line-height: 1.75;
+    color: var(--bs-body-color);
+    outline: none;
 }
 
-/* 🌟 [Patch-2] 侧边栏拖拽把手样式 */
-#sidebar-resizer {
-    position: absolute;
-    top: 0;
-    right: -3px; /* 骑在边框正中间，增大判定区 */
-    width: 6px;
-    height: 100%;
-    cursor: col-resize;
-    z-index: 1040;
-    background-color: transparent;
-    transition: background-color 0.2s ease;
-}
-
-#sidebar-resizer:hover,
-#sidebar-resizer.is-resizing {
-    background-color: var(--bs-primary); /* 拖拽时亮起 */
-}
-
-/* 🌟 [Patch-3] 确保侧边栏的 relative 定位只在 PC 端生效，不干扰移动端的 Fixed 抽屉 */
-@media (min-width: 768px) {
-    #sidebarOffcanvas {
-        position: relative !important;
+@media (max-width: 767.98px) {
+    .unidoc-canvas {
+        padding: 28px 14px 120px 14px;
     }
+}
+
+.unidoc-block {
+    position: relative;
+    margin-bottom: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+    outline: none !important;
+}
+
+.unidoc-block:hover {
+    background-color: rgba(128, 128, 128, 0.04);
+}
+
+.unidoc-block.active-block {
+    background-color: rgba(13, 110, 253, 0.03);
+    border-color: rgba(13, 110, 253, 0.28);
+}
+
+.unidoc-block.dragging-block {
+    opacity: 0.45;
+    border: 2px dashed var(--bs-primary) !important;
+}
+
+p.unidoc-block:empty::before {
+    content: "输入文字 (Enter 换行，Ctrl+Enter 新建段落，或点击上方胶囊分割/转换标签)...";
+    color: var(--bs-secondary-color);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* 原生折叠收纳块 <details> + <summary> */
+details.unidoc-block {
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    padding: 8px 14px;
+}
+
+details.unidoc-block > summary {
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    padding: 4px 0;
+    user-select: text;
+}
+
+details.unidoc-block > .details-body {
+    margin-top: 8px;
+    padding-top: 8px;
+    padding-left: 12px;
+    border-top: 1px dashed rgba(128,128,128,0.3);
+    border-left: 2px solid var(--bs-primary);
+    outline: none;
+}
+
+blockquote.unidoc-block {
+    border-left: 4px solid var(--bs-primary);
+    background-color: rgba(13, 110, 253, 0.05);
+    padding: 10px 16px;
+    font-style: italic;
+}
+
+figure.unidoc-block {
+    text-align: center;
+    padding: 12px;
+    background-color: var(--bs-tertiary-bg);
+    border-radius: 8px;
+}
+
+figure.unidoc-block figcaption {
+    margin-top: 8px;
+    font-size: 0.88em;
+    color: var(--bs-secondary-color);
+    outline: none;
+}
+
+.unidoc-canvas mark, .unidoc-reader-article mark {
+    background-color: #ffe58f;
+    color: #212529;
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+}
+
+/* 悬浮块控制胶囊 (Block Control Pill) */
+.unidoc-block-pill {
+    position: absolute;
+    z-index: 1045;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px 8px;
+    background-color: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+    transition: top 0.12s ease, left 0.12s ease;
+}
+
+.unidoc-block-pill .pill-btn {
+    border: none;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1.2;
+}
+
+.unidoc-block-pill .pill-btn:hover {
+    background-color: var(--bs-secondary-bg);
+    color: var(--bs-primary);
+}
+
+.unidoc-block-pill .pill-drag-handle { cursor: grab; }
+.unidoc-block-pill .pill-drag-handle:active { cursor: grabbing; }
+
+/* 编辑区阅读色彩主题适配 */
+.unidoc-canvas[data-syntax-theme="warm"] { background-color: #fdf6e3; color: #5c4b37; }
+[data-bs-theme="dark"] .unidoc-canvas[data-syntax-theme="warm"] { background-color: #2b261f; color: #d8c8b8; }
+.unidoc-canvas[data-syntax-theme="hacker"] { background-color: #0a0e0a; color: #00ff41; text-shadow: 0 0 2px rgba(0, 255, 65, 0.3); }
+.unidoc-canvas[data-syntax-theme="hacker"] h1, .unidoc-canvas[data-syntax-theme="hacker"] h2, .unidoc-canvas[data-syntax-theme="hacker"] h3 { color: #ffff00; }
+
+/* ================= 🌟 85% 占屏沉浸式阅读器 Msg-Box 专属样式 ================= */
+.reader-modal-dialog {
+    max-width: 85vw !important;
+    width: 85vw !important;
+    height: 85vh !important;
+    margin: 7.5vh auto !important;
+}
+
+@media (max-width: 767.98px) {
+    .reader-modal-dialog {
+        max-width: 95vw !important;
+        width: 95vw !important;
+        height: 90vh !important;
+        margin: 5vh auto !important;
+    }
+}
+
+.reader-modal-content {
+    height: 100% !important;
+    border-radius: 14px !important;
+    overflow: hidden;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.unidoc-reader-article {
+    max-width: 780px;
+}
+
+/* 三色纸张背景切换圆点按钮 */
+.reader-bg-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(128,128,128,0.4);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.reader-bg-btn:hover { transform: scale(1.15); }
+.reader-bg-btn.active {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.35);
+    transform: scale(1.1);
+}
+
+.bg-opt-white { background-color: #ffffff; }
+.bg-opt-warm  { background-color: #faf3dd; }
+.bg-opt-dark  { background-color: #141414; }
+
+/* 1. 纯白纸张主题 */
+#reader-modal-box[data-reader-bg="white"] {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+#reader-modal-box[data-reader-bg="white"] .reader-modal-header {
+    background-color: #f8f9fa;
+    border-bottom-color: #dee2e6 !important;
+}
+
+/* 2. 护眼淡黄纸张主题 */
+#reader-modal-box[data-reader-bg="warm"] {
+    background-color: #faf3dd !important;
+    color: #3b2f2f !important;
+}
+#reader-modal-box[data-reader-bg="warm"] .reader-modal-header {
+    background-color: #f2e8c9;
+    border-bottom-color: #e2d5b5 !important;
+}
+#reader-modal-box[data-reader-bg="warm"] details.unidoc-block,
+#reader-modal-box[data-reader-bg="warm"] figure.unidoc-block {
+    background-color: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 3. 暗夜纯黑纸张主题 (字体自动反转为柔和纯白) */
+#reader-modal-box[data-reader-bg="dark"] {
+    background-color: #121212 !important;
+    color: #f1f3f5 !important;
+}
+#reader-modal-box[data-reader-bg="dark"] .reader-modal-header {
+    background-color: #1c1c1c;
+    border-bottom-color: #2c2c2c !important;
+    color: #f1f3f5 !important;
+}
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article p,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article h1,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article h2,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article h3,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article li,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article summary,
+#reader-modal-box[data-reader-bg="dark"] .unidoc-reader-article blockquote {
+    color: #f1f3f5 !important;
+}
+#reader-modal-box[data-reader-bg="dark"] details.unidoc-block,
+#reader-modal-box[data-reader-bg="dark"] figure.unidoc-block {
+    background-color: #1e1e1e !important;
+    border-color: #333333 !important;
+}
+
+/* ================= v2.1.6 专项修复补丁 ================= */
+/* 1. 强制左侧文章列表选中时整行（含文字区与右侧图标区）100% 填充主题蓝 */
+#file-tree .file-row.active,
+#file-tree .file-row.active .file-item {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+#file-tree .file-row.active .icon-indicator,
+#file-tree .file-row.active .action-btn:not(.star-pinned) {
+    color: #ffffff !important;
+}
+
+/* 2. 降低跟随胶囊 z-index 至 1020，确保移动端侧边栏抽屉 (z-index: 1045) 打开时胶囊绝对位于抽屉下层 */
+.unidoc-block-pill {
+    z-index: 1020 !important;
+}
+
+/* ================= v2.1.7 阅读器顶栏防挤压与圆形关闭按钮补丁 ================= */
+.reader-bg-btn {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    flex-shrink: 0 !important;
+    aspect-ratio: 1 / 1;
+    border-radius: 50% !important;
+}
+
+/* ⚪ 里面 × 的极简正圆关闭按钮 (PC 与移动端统一) */
+.reader-close-circle-btn {
+    width: 26px !important;
+    height: 26px !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
+    flex-shrink: 0 !important;
+    border-radius: 50% !important;
+    border: 1.5px solid rgba(128, 128, 128, 0.45);
+    background-color: rgba(128, 128, 128, 0.1);
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.reader-close-circle-btn:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+
+/* ================= v2.1.10 右下角 ⠿ 专属拖拽锚点与块凸起特效 ================= */
+.unidoc-block {
+    padding-right: 30px !important; /* 为右下角 ⠿ 预留舒适呼吸空间，绝不遮挡末尾文字 */
+    transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* 右下角专属拖拽把手 ⠿ */
+.unidoc-corner-drag {
+    position: absolute;
+    z-index: 1025;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    color: var(--bs-secondary-color);
+    font-size: 13px;
+    cursor: grab;
+    touch-action: none; /* 🌟 核心：锁定触控手势，防止手机上下拖动块时触发浏览器默认页面滑动 */
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+    transition: transform 0.12s ease, background-color 0.12s ease, color 0.12s ease;
+}
+
+.unidoc-corner-drag:hover,
+.unidoc-corner-drag.is-dragging-handle {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #ffffff !important;
+    transform: scale(1.12);
+}
+
+.unidoc-corner-drag:active {
+    cursor: grabbing;
+}
+
+/* 🌟 按住右下角 ⠿ 时的 Block 3D 凸起悬浮态 */
+.unidoc-block.block-lifted-dragging {
+    position: relative;
+    z-index: 1030 !important;
+    transform: scale(1.02) translateY(-2px);
+    background-color: var(--bs-body-bg) !important;
+    border: 2px solid var(--bs-primary) !important;
+    box-shadow: 0 14px 32px rgba(13, 110, 253, 0.22), 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    opacity: 0.96;
+    user-select: none;
+}
+
+/* ================= v2.1.11 120FPS 像素级跟手与 FLIP 丝滑让位动画 ================= */
+.unidoc-block.block-lifted-dragging {
+    will-change: transform;
+    /* 拖拽过程中关闭 transform 的 transition 延迟，确保 1:1 零延迟紧紧贴合手指/鼠标！ */
+    transition: box-shadow 0.2s ease, background-color 0.15s ease, border-color 0.15s ease !important;
+    z-index: 1030 !important;
+}
+
+.unidoc-corner-drag.is-dragging-handle {
+    will-change: top, left;
+    transition: none !important; /* 把手零延迟紧密跟随卡片右下角 */
+}
+
+/* ================= v2.1.12 巨无霸块拖拽态：自动折叠为紧凑名片 ================= */
+.unidoc-block.block-lifted-dragging {
+    max-height: 72px !important; /* 🌟 无论原本有几百行字，拖拽时自动浓缩为 2 行高的精致卡片 */
+    overflow: hidden !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+}
+
+/* 浓缩卡片底部柔光渐变遮罩，提示内部有长内容被临时收纳 */
+.unidoc-block.block-lifted-dragging::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 26px;
+    background: linear-gradient(to bottom, transparent, var(--bs-body-bg) 90%);
+    pointer-events: none;
+}
+
+/* ================= v2.1.13 根除大块拖拽残影与上下文大块智能限高 ================= */
+/* 当画布处于拖拽态时，让上下文中超过 180px 的巨无霸大块也临时温和限高，彻底消除身高差乒乓闪烁！ */
+.unidoc-canvas.canvas-is-dragging .unidoc-block:not(.block-lifted-dragging) {
+    max-height: 180px !important;
+    overflow: hidden !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* ================= v2.1.14 手机真机边缘自动滚动满速解放补丁 ================= */
+/* 拖拽进行时：必须强制关闭 smooth 平滑动画与滚动锚定，否则手机真机每帧修改 scrollTop 会被浏览器不断打断重算！ */
+.unidoc-scroll-container.container-is-dragging {
+    scroll-behavior: auto !important;
+    overflow-anchor: none !important;
+    -webkit-overflow-scrolling: auto !important;
+}
+
+.unidoc-canvas.canvas-is-dragging {
+    overflow-anchor: none !important;
 }

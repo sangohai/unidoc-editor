@@ -5,7 +5,7 @@ const Connector = {
 
     init(editorEngineInstance) {
         this.engine = editorEngineInstance;
-        this.log('SYSTEM', 'Connector (中间件) 初始化成功，已接管引擎。');
+        this.log('SYSTEM', 'Connector (中间件) 初始化成功，已接管 Native HTML Block 引擎。');
     },
 
     log(action, payload = '') {
@@ -24,12 +24,16 @@ const Connector = {
 
         try {
             switch (action) {
-                // --- 文本修改类指令 ---
+                // --- 原生行内与块级 HTML 标签指令 ---
                 case 'FORMAT_BOLD':
                 case 'FORMAT_ITALIC':
+                case 'FORMAT_MARK':
                 case 'FORMAT_LINK':
                 case 'FORMAT_IMAGE':
                 case 'FORMAT_CODE':
+                case 'FORMAT_H2':
+                case 'FORMAT_DETAILS':
+                case 'FORMAT_BLOCKQUOTE':
                     this.engine.applyMarkdownFormat(action.split('_')[1].toLowerCase());
                     break;
                 case 'INSERT_TEXT':
@@ -42,7 +46,7 @@ const Connector = {
                     this.engine.formatCodeDocument();
                     break;
 
-                // 🌟 新增：AST 树状折叠与提纯指令
+                // --- 原生 <details> 树状折叠与 Prompt 提纯指令 ---
                 case 'FOLD_ALL':
                     this.engine.foldAll();
                     break;
@@ -77,8 +81,7 @@ const Connector = {
                     document.documentElement.style.setProperty('--editor-font-family', payload);
                     break;
                 case 'CHANGE_SYNTAX_THEME':
-                    // 仅当引擎有此方法时调用（预留接口）
-                    if(this.engine.setSyntaxTheme) this.engine.setSyntaxTheme(payload);
+                    if (this.engine.setSyntaxTheme) this.engine.setSyntaxTheme(payload);
                     break;
                 case 'COMMAND_PALETTE':
                     if (window.openCommandPalette) window.openCommandPalette();
@@ -93,10 +96,10 @@ const Connector = {
                     if (typeof ToolbarManager !== 'undefined') ToolbarManager.openCustomizeModal();
                     break;
                 case 'UNDO':
-                    if(this.engine.undo) this.engine.undo();
+                    if (this.engine.undo) this.engine.undo();
                     break;
                 case 'REDO':
-                    if(this.engine.redo) this.engine.redo();
+                    if (this.engine.redo) this.engine.redo();
                     break;
 
                 default:

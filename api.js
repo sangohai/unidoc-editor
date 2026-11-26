@@ -16,7 +16,8 @@ const GitHubAPI = {
             'X-GitHub-Api-Version': '2022-11-28'
         };
 
-        const config = { method, headers };
+        // 🌟 强制声明 cache: 'no-store'，彻底击穿移动端浏览器与 GitHub 边缘节点的旧缓存！
+        const config = { method, headers, cache: 'no-store' };
         if (body) {
             config.body = JSON.stringify(body);
         }

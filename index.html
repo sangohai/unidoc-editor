@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <title>UniDoc Editor</title>
     
     <link rel="manifest" href="manifest.json">
@@ -17,7 +17,7 @@
     <link href="style.css" rel="stylesheet">
 </head>
 <body>
-    <!-- 顶部导航栏 -->
+    <!-- 顶部导航栏 (固定不动 flex-shrink-0) -->
     <nav id="top-navbar" class="navbar navbar-expand navbar-dark bg-dark flex-shrink-0 px-2 px-md-3 shadow-sm">
         <div class="container-fluid p-0">
             <button class="btn text-white d-md-none border-0 px-2 me-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas">
@@ -26,15 +26,15 @@
             <a class="navbar-brand fs-6 fs-md-5 text-truncate fw-bold" href="#"><i class="fa-solid fa-book-journal-whills me-2"></i><span class="d-none d-sm-inline">UniDoc</span></a>
             
             <div class="d-flex align-items-center ms-auto">
-                <!-- 💥 修复点 1：删除了 d-none，让预览按钮永远可见，防丢失 -->
-                <button id="btn-toggle-preview" class="btn btn-sm btn-outline-info me-2">
-                    <i class="fa-solid fa-eye"></i><span class="btn-text d-none d-md-inline ms-1">预览</span>
+                <!-- 🌟 85% 占屏沉浸式阅读弹窗触发器 -->
+                <button id="btn-toggle-preview" class="btn btn-sm btn-outline-info me-2" title="弹出 85% 占屏沉浸式阅读视图">
+                    <i class="fa-solid fa-book-open-reader"></i><span class="btn-text d-none d-md-inline ms-1">预览阅读</span>
                 </button>
 
-                <span id="save-status" class="text-white-50 me-2 me-md-3 small">
-                    <i class="fa-solid fa-cloud me-1"></i><span class="d-none d-md-inline">已保存</span>
+                <span id="save-status" class="text-white-50 me-2 me-md-3 small" style="cursor: pointer;" title="同步状态">
+                    <i class="fa-solid fa-cloud me-1"></i><span class="d-none d-md-inline">已就绪</span>
                 </span>
-                <button id="btn-save" class="btn btn-sm btn-success me-2" title="Ctrl+S / Cmd+S">
+                <button id="btn-save" class="btn btn-sm btn-success me-2" title="立即保存至 GitHub (Ctrl+S / Cmd+S)">
                     <i class="fa-solid fa-floppy-disk"></i><span class="d-none d-md-inline ms-1">保存</span>
                 </button>
 
@@ -68,12 +68,12 @@
         </div>
     </nav>
 
-    <!-- 主体工作区 -->
+    <!-- 主体工作区 (锁定高度，内部左右分栏各自独立滚动) -->
     <div class="workspace d-flex flex-grow-1 overflow-hidden position-relative">
         
-        <!-- 左侧菜单 (极其纯净) -->
-        <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1" id="sidebarOffcanvas" style="width: 260px; flex-shrink: 0;">
-            <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary">
+        <!-- 左侧菜单 (独立滚动 + PC 端鼠标拖拽调宽) -->
+        <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column h-100" tabindex="-1" id="sidebarOffcanvas" style="width: 260px; flex-shrink: 0;">
+            <div class="offcanvas-header border-bottom d-md-none py-2 bg-body-tertiary flex-shrink-0">
                 <h6 class="offcanvas-title fw-bold text-body-secondary"><i class="fa-solid fa-folder-tree me-1"></i> /notes</h6>
                 <div>
                     <button id="btn-new-file-mobile" class="btn btn-sm btn-link text-body-secondary p-0 me-3"><i class="fa-solid fa-plus fs-5"></i></button>
@@ -81,7 +81,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebarOffcanvas"></button>
                 </div>
             </div>
-            <div class="sidebar-header p-2 border-bottom bg-body-tertiary fw-bold text-body-secondary d-none d-md-flex justify-content-between align-items-center">
+            <div class="sidebar-header p-2 border-bottom bg-body-tertiary fw-bold text-body-secondary d-none d-md-flex justify-content-between align-items-center flex-shrink-0">
                 <span><i class="fa-solid fa-folder-tree me-1"></i> /notes 目录</span>
                 <div>
                     <button id="btn-new-file-pc" class="btn btn-sm btn-link text-body-secondary p-0 me-2" title="新建文件"><i class="fa-solid fa-plus"></i></button>
@@ -94,38 +94,36 @@
                     <input type="text" id="input-search-files" class="form-control border-start-0 shadow-none bg-body text-body" placeholder="搜索文档名称...">
                 </div>
             </div>
-            <div id="file-tree" class="file-tree flex-grow-1 overflow-auto p-2"><div class="text-muted small p-2">正在加载文件...</div></div>
+            <!-- 左侧文章列表独立滚动容器 -->
+            <div id="file-tree" class="file-tree flex-grow-1 overflow-y-auto overflow-x-hidden p-2"><div class="text-muted small p-2">正在加载文件...</div></div>
             <div id="sidebar-resizer" class="d-none d-md-block"></div>
-
         </div>
 
-        <div class="main-content d-flex flex-column flex-grow-1 overflow-hidden position-relative">
+        <!-- 右侧主编辑区 (顶部工具栏固定 + 下方画布独立滚动) -->
+        <div class="main-content d-flex flex-column flex-grow-1 h-100 overflow-hidden position-relative">
             
-            <!-- 💥 修复点 2：删除了 display: none !important，工具栏外壳永久显现！ -->
+            <!-- 顶部工具栏 (固定不动 flex-shrink-0) -->
             <div id="editor-toolbar" class="bg-body-tertiary border-bottom p-1 d-flex align-items-center flex-shrink-0">
-                <!-- 装配车间 -->
                 <div id="editor-toolbar-content" class="d-flex align-items-center flex-grow-1 flex-wrap gap-1"></div>
             </div>
 
-            <!-- 编辑器容器 -->
-            <div class="position-relative flex-grow-1 w-100 d-flex">
-                <div id="editor-container" class="flex-grow-1 w-100 overflow-hidden position-relative"></div>
+            <!-- 编辑器独立滚动容器 -->
+            <div class="position-relative flex-grow-1 w-100 d-flex overflow-hidden">
+                <div id="editor-container" class="flex-grow-1 w-100 h-100 overflow-y-auto position-relative"></div>
             </div>
             
-            <div id="preview-container" class="preview-panel bg-body d-none position-absolute top-0 start-0 w-100 h-100 overflow-auto p-3 p-md-5" style="z-index: 10;">
-                <div id="markdown-preview" class="markdown-body mx-auto" style="max-width: 800px;"></div>
-            </div>
+            <div id="preview-container" class="d-none"></div>
         </div>
     </div>
 
     <!-- 🌟 工具栏隐藏零件仓库 -->
     <div id="toolbar-components-pool" class="d-none">
         <div id="tool-emoji" class="dropdown d-inline-block d-none">
-            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside"><i class="fa-regular fa-face-smile"></i></button>
+            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" title="插入表情"><i class="fa-regular fa-face-smile"></i></button>
             <div class="dropdown-menu p-2 shadow char-picker-panel mobile-modal-dropdown" id="emoji-panel" style="z-index: 1060;"></div>
         </div>
         <div id="tool-symbol" class="dropdown d-inline-block d-none">
-            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside">Ω</button>
+            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2 fw-bold" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" title="插入特殊符号">Ω</button>
             <div class="dropdown-menu p-2 shadow char-picker-panel mobile-modal-dropdown" id="symbol-panel" style="z-index: 1060;"></div>
         </div>
         <div id="tool-typography" class="dropdown d-inline-block d-none">
@@ -154,19 +152,47 @@
         </div>
     </div>
 
-    <!-- 所有弹窗 -->
+    <!-- 🌟 85% 占屏沉浸式阅读器 Msg-Box (PC与移动端统一极简控制栏) -->
+    <div class="modal fade" id="readerModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable reader-modal-dialog">
+            <div class="modal-content reader-modal-content shadow-lg border-0" id="reader-modal-box" data-reader-bg="warm">
+                <div class="modal-header py-2 px-3 border-bottom d-flex justify-content-between align-items-center reader-modal-header position-relative">
+                    <!-- 左侧标题：min-width: 0 允许自动收缩截断，绝不挤压右侧按钮 -->
+                    <div class="d-flex align-items-center flex-grow-1 me-2" style="min-width: 0;">
+                        <i class="fa-solid fa-book-open me-2 text-primary flex-shrink-0"></i>
+                        <h6 class="modal-title fw-bold mb-0 text-truncate" id="reader-doc-title">沉浸阅读</h6>
+                    </div>
+                    <!-- 右侧控制组：flex-shrink-0 永远锁死正圆尺寸，置于最上层优先显示 -->
+                    <div class="d-flex align-items-center gap-2 flex-shrink-0" style="z-index: 5;">
+                        <button type="button" class="reader-bg-btn bg-opt-white" data-bg="white" title="纯白背景"></button>
+                        <button type="button" class="reader-bg-btn bg-opt-warm active" data-bg="warm" title="护眼淡黄"></button>
+                        <button type="button" class="reader-bg-btn bg-opt-dark" data-bg="dark" title="黑色背景 (白字)"></button>
+                        <span class="border-end mx-1 opacity-25" style="height: 16px;"></span>
+                        <button type="button" class="reader-close-circle-btn" data-bs-dismiss="modal" title="退出阅读 (Esc)">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body p-3 p-md-5 overflow-y-auto" id="reader-modal-body">
+                    <article id="markdown-preview" class="markdown-body unidoc-reader-article mx-auto"></article>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局 Toast 容器 -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;"></div>
     
-    <!-- 设置与新建等弹窗... -->
+    <!-- 所有业务弹窗 -->
     <div class="modal fade" id="tokenModal" tabindex="-1" data-bs-backdrop="static"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header text-bg-dark border-0"><h5 class="modal-title fs-6"><i class="fa-brands fa-github me-2"></i>GitHub 授权</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-3"><label class="form-label small text-body-secondary">Repository</label><input type="text" id="input-repo" class="form-control form-control-sm" placeholder="如: myname/myrepo"></div><div class="mb-3"><label class="form-label small text-body-secondary">Personal Access Token</label><input type="password" id="input-token" class="form-control form-control-sm" placeholder="ghp_xxxx"></div></div><div class="modal-footer p-1 border-top-0 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-save-token">保存配置并连接</button></div></div></div></div>
-    <div class="modal fade" id="newFileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">新建文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label><div class="input-group"><input type="text" id="input-new-filename" class="form-control" placeholder="例如: config"><button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".yaml">.yaml</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".txt">.txt</a></li></ul></div></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-new">确认创建</button></div></div></div></div>
+    <div class="modal fade" id="newFileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">新建文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">文件名称 (无需输入后缀)</label><div class="input-group"><input type="text" id="input-new-filename" class="form-control" placeholder="例如: my-note"><button class="btn btn-outline-secondary dropdown-toggle bg-body-tertiary" type="button" data-bs-toggle="dropdown" id="btn-new-ext-display">.md</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item ext-select-item" href="#" data-ext=".md">.md (原生块笔记)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".html">.html (纯 HTML 容器)</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".json">.json</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".yaml">.yaml</a></li><li><a class="dropdown-item ext-select-item" href="#" data-ext=".txt">.txt</a></li></ul></div></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-new">确认创建</button></div></div></div></div>
     <div class="modal fade" id="renameFileModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6">重命名文件</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body"><div class="mb-2"><label class="form-label small text-body-secondary">新文件名称</label><div class="input-group"><input type="text" id="input-rename-filename" class="form-control"><span class="input-group-text bg-body-tertiary" id="input-rename-ext">.md</span></div><input type="hidden" id="input-rename-oldpath"><input type="hidden" id="input-rename-sha"></div></div><div class="modal-footer p-1 bg-body"><button type="button" class="btn btn-sm btn-primary w-100" id="btn-confirm-rename">确认重命名</button></div></div></div></div>
     <div class="modal fade" id="gcModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-danger text-white border-0"><h5 class="modal-title fs-6"><i class="fa-solid fa-recycle me-2"></i>图床瘦身扫描报告</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-3"><p id="gc-summary" class="small text-body-secondary mb-2">正在分析...</p><ul id="gc-orphan-list" class="list-group list-group-flush border rounded" style="max-height: 200px; overflow-y: auto;"></ul></div><div class="modal-footer p-2 bg-body"><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">暂不处理</button><button type="button" class="btn btn-sm btn-danger" id="btn-confirm-gc"><i class="fa-solid fa-fire me-1"></i>彻底销毁</button></div></div></div></div>
     <div class="modal fade" id="clipboardModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-user-secret me-2"></i>剪贴板快照</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-2"><textarea id="clipboard-content-view" class="form-control bg-dark text-success font-monospace" rows="5" readonly style="font-size: 13px;"></textarea></div><div class="modal-footer p-1 bg-body justify-content-between"><span class="small text-muted ps-2">如果包含敏感数据，请立即粉碎</span><div><button type="button" class="btn btn-sm btn-danger me-1" id="btn-modal-shred"><i class="fa-solid fa-broom me-1"></i>立刻粉碎</button><button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">关闭</button></div></div></div></div></div>
     <div class="modal fade" id="snippetsModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header bg-body-tertiary"><h5 class="modal-title fs-6"><i class="fa-solid fa-book-bookmark me-2 text-primary"></i>云端快捷词库</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body bg-body p-0"><div id="snippets-manager-list" style="max-height: 250px; overflow-y: auto;"></div><div class="p-3 bg-body-tertiary border-top"><h6 class="fs-6 mb-2">添加新词库</h6><input type="text" id="input-snippet-title" class="form-control form-control-sm mb-2" placeholder="标题 (例如: 问候语)"><textarea id="input-snippet-content" class="form-control form-control-sm mb-2" rows="3" placeholder="插入的具体内容..."></textarea><button type="button" class="btn btn-sm btn-primary w-100" id="btn-add-snippet"><i class="fa-solid fa-plus me-1"></i>保存并同步云端</button></div></div></div></div></div>
     <div class="modal fade" id="commandPaletteModal" tabindex="-1"><div class="modal-dialog modal-dialog-scrollable" style="margin-top: 10vh;"><div class="modal-content bg-body shadow-lg border-0" style="border-radius: 12px;"><div class="modal-header p-2 border-bottom-0"><div class="input-group"><span class="input-group-text bg-transparent border-0 text-primary"><i class="fa-solid fa-magnifying-glass"></i></span><input type="text" id="input-command-search" class="form-control border-0 shadow-none fs-5 bg-transparent" placeholder="输入命令..."></div></div><div class="modal-body p-0"><div id="command-list-container" class="list-group list-group-flush"></div></div></div></div></div>
     
-    <!-- 🌟 工具栏装配车间配置面板 -->
+    <!-- 工具栏装配车间配置面板 -->
     <div class="modal fade" id="toolbarCustomizeModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content bg-body shadow-lg border-0" style="border-radius: 12px;">
@@ -196,6 +222,7 @@
     <script src="modal.js"></script>
     <script src="token.js"></script>
     <script src="api.js"></script>
+    <script src="syncManager.js"></script> <!-- 🌟 新增：Google Keep 级本地优先同步引擎 -->
     <script src="toolbarManager.js"></script>
     <script src="settingsManager.js"></script> 
     <script src="charPicker.js"></script> 

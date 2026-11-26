@@ -1,4 +1,4 @@
-// main.js - 核心调度指挥中心
+// main.js - 核心调度指挥中心 (v2.1.5 沉浸式阅读弹窗与文件树高亮同步版)
 const ThemeManager = {
     init() {
         const savedMode = localStorage.getItem('unidoc_theme_mode') || 'light';
@@ -74,7 +74,7 @@ const UI = {
 
 function getLanguageFromFileName(fileName) {
     const ext = fileName.split('.').pop().toLowerCase();
-    if (ext === 'md') return 'markdown';
+    if (ext === 'md' || ext === 'html') return 'markdown';
     if (ext === 'json') return 'json';
     if (ext === 'yaml' || ext === 'yml') return 'yaml';
     if (ext === 'txt') return 'plaintext';
@@ -82,58 +82,45 @@ function getLanguageFromFileName(fileName) {
 }
 
 async function handleFileSelected(file) {
-    if (AppState.isDirty) {
-        if (!confirm("当前文件有未保存的修改，强制切换将丢失修改。确定要切换吗？")) return;
-    }
-    UI.setLoading();
     const lang = getLanguageFromFileName(file.name);
-    
-    if (typeof EditorManager !== 'undefined') {
-        EditorManager.setContent('加载中，请稍候...', lang); 
+    FileTree.setActive(file.path);
+
+    // 🌟 交由 SyncManager 接管：自动同步上一篇 + IndexedDB 0延迟秒开当前篇 + 后台静默校验远端新版本
+    if (typeof SyncManager !== 'undefined') {
+        try {
+            await SyncManager.openDocument(file, lang);
+            FileTree.setActive(file.path);
+        } catch (error) {
+            Toast.show(`读取失败: ${error.message}`, 'error');
+            if (typeof EditorManager !== 'undefined') {
+                EditorManager.setContent(`读取失败: ${error.message}`, 'plaintext');
+            }
+        }
+        return;
     }
-    
+
+    // 降级直连兜底
+    UI.setLoading();
     try {
         const fileData = await GitHubAPI.getFile(file.path);
         AppState.currentFilePath = file.path;
         AppState.currentFileSha = fileData.sha;
-        
         if (typeof EditorManager !== 'undefined') {
             EditorManager.setContent(fileData.content, lang);
         }
         UI.setSaved();
     } catch (error) {
         Toast.show(`读取失败: ${error.message}`, 'error');
-        if (typeof EditorManager !== 'undefined') {
-            EditorManager.setContent(`读取失败: ${error.message}`, 'plaintext');
-        }
     }
 }
 
 async function saveCurrentFile() {
     if (!AppState.currentFilePath) return Toast.show('没有打开任何文件', 'info');
-    if (!AppState.isDirty || AppState.isSaving) return; 
-
-    AppState.isSaving = true;
-    UI.setSaving();
-    
-    try {
-        const newSha = await GitHubAPI.saveFile(
-            AppState.currentFilePath, 
-            EditorManager.getContent(), 
-            AppState.currentFileSha
-        );
-        AppState.currentFileSha = newSha;
-        UI.setSaved();
-        Toast.show('保存成功！', 'success');
-    } catch (error) {
-        UI.setUnsaved();
-        if (error.status === 409) {
-            Toast.show('保存失败：文件冲突！其他人可能修改了此文件。', 'error');
-        } else {
-            Toast.show(`保存失败: ${error.message}`, 'error');
-        }
-    } finally {
-        AppState.isSaving = false;
+    if (typeof SyncManager !== 'undefined') {
+        // 手动点击保存按钮或按 Ctrl+S 时，立即强制推送到 GitHub 云端
+        AppState.isDirty = true;
+        await SyncManager.syncToCloud(false);
+        return;
     }
 }
 
@@ -143,6 +130,7 @@ async function handleDeleteFile(file) {
     UI.showGlobalLoader('正在删除文件...');
     try {
         await GitHubAPI.deleteFile(file.path, file.sha);
+        if (typeof SyncManager !== 'undefined') await SyncManager.deleteLocalCache(file.path);
         Toast.show('文件已删除', 'success');
         if (AppState.currentFilePath === file.path) {
             AppState.currentFilePath = null;
@@ -187,7 +175,7 @@ function setupNewFileLogic() {
 
         try {
             let initContent = '';
-            if (ext === '.md') initContent = '# ' + baseName;
+            if (ext === '.md' || ext === '.html') initContent = `<h1>${baseName}</h1>\n\n<p></p>`;
             else if (ext === '.json') initContent = '{\n\n}';
 
             const newSha = await GitHubAPI.saveFile(path, initContent, null, 'Create new file via UniDoc');
@@ -196,7 +184,7 @@ function setupNewFileLogic() {
                 await FileTree.load();
                 handleFileSelected({ path: path, name: fileName, sha: newSha });
                 UI.hideGlobalLoader();
-            }, 1500);
+            }, 1000);
         } catch (error) {
             Toast.show(`创建失败: ${error.message}`, 'error');
             UI.statusEl.innerHTML = '';
@@ -244,6 +232,7 @@ function setupRenameLogic() {
             const fileData = await GitHubAPI.getFile(oldPath);
             const newSha = await GitHubAPI.saveFile(newPath, fileData.content, null, `Rename ${oldPath} to ${newPath}`);
             await GitHubAPI.deleteFile(oldPath, oldSha);
+            if (typeof SyncManager !== 'undefined') await SyncManager.renameLocalCache(oldPath, newPath, newSha, fileData.content);
 
             Toast.show('重命名成功！', 'success');
             if (AppState.currentFilePath === oldPath) {
@@ -264,7 +253,6 @@ function setupSidebarResizer() {
     const sidebar = document.getElementById('sidebarOffcanvas');
     if (!resizer || !sidebar) return;
 
-    // 1. 初始化时读取本地存储的记忆宽度
     const savedWidth = localStorage.getItem('unidoc_sidebar_width');
     if (savedWidth) {
         sidebar.style.width = savedWidth + 'px';
@@ -280,13 +268,12 @@ function setupSidebarResizer() {
         startWidth = sidebar.offsetWidth;
         resizer.classList.add('is-resizing');
         document.body.style.cursor = 'col-resize';
-        e.preventDefault(); // 防止拖拽时误选中旁边文本
+        e.preventDefault();
     });
 
     document.addEventListener('mousemove', (e) => {
         if (!isResizing) return;
         const newWidth = startWidth + (e.clientX - startX);
-        // 动态边界：最小 150px，最大放宽到 800px 以适应超长文件名
         if (newWidth > 150 && newWidth < 800) {
             sidebar.style.width = newWidth + 'px';
         }
@@ -297,14 +284,11 @@ function setupSidebarResizer() {
             isResizing = false;
             resizer.classList.remove('is-resizing');
             document.body.style.cursor = '';
-            
-            // 2. 拖拽结束：记忆宽度并强制触发视口重绘 (拯救 CM6 布局)
             localStorage.setItem('unidoc_sidebar_width', sidebar.style.width.replace('px', ''));
             window.dispatchEvent(new Event('resize')); 
         }
     });
 
-    // 3. 极客彩蛋：双击把手，一键恢复默认宽度
     resizer.addEventListener('dblclick', () => {
         sidebar.style.width = '260px';
         localStorage.setItem('unidoc_sidebar_width', '260');
@@ -319,18 +303,19 @@ function setupCommandPalette() {
     if (!searchInput || !listContainer) return;
 
     const commandTree = [
+        { name: "📖 打开 85% 沉浸式阅读视图", action: "TOGGLE_PREVIEW", icon: "fa-book-open-reader text-info" },
         { name: "✨ Prompt 提纯 (剔除冗余助词)", action: "OPTIMIZE_PROMPT", icon: "fa-wand-magic-sparkles text-warning" },
         { name: "折叠所有区块 (Fold All)", action: "FOLD_ALL", icon: "fa-compress text-primary" },
         { name: "展开所有区块 (Unfold All)", action: "UNFOLD_ALL", icon: "fa-expand text-primary" },
         { name: "加粗 (Bold)", action: "FORMAT_BOLD", icon: "fa-bold" },
         { name: "斜体 (Italic)", action: "FORMAT_ITALIC", icon: "fa-italic" },
+        { name: "荧光笔高亮 (Mark)", action: "FORMAT_MARK", icon: "fa-highlighter text-warning" },
         { name: "插入代码块 (Code Block)", action: "FORMAT_CODE", icon: "fa-code" },
         { name: "原生自动排版 (Format JSON)", action: "FORMAT_DOCUMENT", icon: "fa-align-left" },
         { name: "全选文档 (Select All)", action: "SELECT_ALL", icon: "fa-object-group" },
         { name: "格式清洗机 (Sanitize)", action: "SANITIZE_FORMAT", icon: "fa-eraser" },
         { name: "物理锚点：设为起点", action: "SET_ANCHOR", icon: "fa-flag" },
         { name: "物理锚点：选中至此", action: "SELECT_TO_HERE", icon: "fa-bullseye" },
-        { name: "切换 预览/编辑 模式", action: "TOGGLE_PREVIEW", icon: "fa-eye" },
         { name: "粉碎剪贴板 (Shred Clipboard)", action: "SHRED_CLIPBOARD", icon: "fa-broom text-danger" }
     ];
 
@@ -371,7 +356,7 @@ function setupCommandPalette() {
     searchInput.addEventListener('input', (e) => renderCommands(e.target.value));
 }
 
-// 🌟 修复：确保排版绑定事件只在 Connector 和 Engine 挂载成功后才执行！
+// 🌟 绑定排版设置与 85% 占屏沉浸式阅读器弹窗 (支持 白/淡黄/纯黑 三色背景切换)
 function bindTypographyEvents() {
     const fontSlider = document.getElementById('input-font-size');
     const fontDisplay = document.getElementById('font-size-display');
@@ -388,7 +373,6 @@ function bindTypographyEvents() {
         fontFamilySelect.value = savedFontFamily;
         syntaxThemeSelect.value = savedSyntaxTheme;
 
-        // 向下通知渲染 (此时 Connector 必然已准备好)
         if (typeof Connector !== 'undefined') {
             Connector.execute('CHANGE_FONT_SIZE', savedFontSize);
             Connector.execute('CHANGE_FONT_FAMILY', savedFontFamily);
@@ -415,35 +399,44 @@ function bindTypographyEvents() {
         });
     }
 
+    // 🌟 85% 占屏沉浸式阅读器 Modal 控制逻辑
     const toggleBtn = document.getElementById('btn-toggle-preview');
-    if (toggleBtn) {
+    const readerModalEl = document.getElementById('readerModal');
+    const readerBox = document.getElementById('reader-modal-box');
+    const readerPreview = document.getElementById('markdown-preview');
+    const readerTitle = document.getElementById('reader-doc-title');
+
+    if (toggleBtn && readerModalEl && readerBox) {
+        const readerModal = new bootstrap.Modal(readerModalEl);
+        const savedReaderBg = localStorage.getItem('unidoc_reader_bg') || 'warm';
+
+        const applyReaderBg = (bgMode) => {
+            readerBox.setAttribute('data-reader-bg', bgMode);
+            localStorage.setItem('unidoc_reader_bg', bgMode);
+            readerBox.querySelectorAll('.reader-bg-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.bg === bgMode);
+            });
+        };
+        applyReaderBg(savedReaderBg);
+
+        readerBox.querySelectorAll('.reader-bg-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyReaderBg(btn.dataset.bg));
+        });
+
         toggleBtn.addEventListener('click', () => {
-            const preview = document.getElementById('preview-container');
-            const btnIcon = toggleBtn.querySelector('i');
-            const btnText = toggleBtn.querySelector('.btn-text');
-            const toolbar = document.getElementById('editor-toolbar');
-            
-            if (preview.classList.contains('d-none')) {
-                const html = typeof Connector !== 'undefined' ? Connector.execute('TOGGLE_PREVIEW', true) : '';
-                if(html !== undefined) document.getElementById('markdown-preview').innerHTML = html;
-                
-                preview.classList.remove('d-none');
-                btnIcon.classList.replace('fa-eye', 'fa-pen');
-                if(btnText) btnText.innerText = '编辑';
-                toolbar.style.setProperty('display', 'none', 'important');
-            } else {
-                if (typeof Connector !== 'undefined') Connector.execute('TOGGLE_PREVIEW', false);
-                preview.classList.add('d-none');
-                btnIcon.classList.replace('fa-pen', 'fa-eye');
-                if(btnText) btnText.innerText = '预览';
-                toolbar.style.setProperty('display', 'flex', 'important');
+            const html = typeof Connector !== 'undefined' ? Connector.execute('TOGGLE_PREVIEW', true) : '';
+            if (readerPreview) readerPreview.innerHTML = html || '<p class="text-muted">暂无内容</p>';
+            if (readerTitle) {
+                const fileName = AppState.currentFilePath ? AppState.currentFilePath.replace('notes/', '') : '未命名笔记';
+                readerTitle.innerText = fileName;
             }
+            readerModal.show();
         });
     }
 }
 
 // ==========================================
-// 初始化生命周期 (重构顺序，解决依赖崩溃)
+// 初始化生命周期
 // ==========================================
 async function initApp() {
     ThemeManager.init();
@@ -459,15 +452,16 @@ async function initApp() {
     
     FileTree.init(handleFileSelected, handleDeleteFile, window.handleRenameFile);
     
-    // 💥 1. 先等待最核心的编辑器引擎完整下载并初始化完毕
+    // 1. 先等待核心原生画布引擎初始化完毕
     if (typeof EditorManager !== 'undefined') await EditorManager.init();
+    if (typeof SyncManager !== 'undefined') await SyncManager.init();
     
-    // 💥 2. 再让中间件安全地接管引擎
+    // 2. 中间件接管引擎
     if (typeof Connector !== 'undefined') {
         Connector.init(EditorManager);
     }
     
-    // 💥 3. 最后再绑定那些需要调用中间件的排版 UI，彻底根除“引擎未就绪”报错！
+    // 3. 绑定排版与 85% 沉浸式阅读弹窗事件
     bindTypographyEvents();
     
     if (typeof CharPicker !== 'undefined') {
@@ -480,27 +474,51 @@ async function initApp() {
     if (typeof ExportManager !== 'undefined') ExportManager.init();
     if (typeof GarbageCollector !== 'undefined') GarbageCollector.init();
     
+    // 🌟 Android + Gboard 虚拟键盘防黑块与防遮挡引擎
     if (window.visualViewport) {
-        const resizeBodyToVisualViewport = () => {
-            document.body.style.height = window.visualViewport.height + 'px';
-            document.body.style.width = window.visualViewport.width + 'px';
-            window.scrollTo(0, 0); 
-            if (typeof EditorManager !== 'undefined' && EditorManager.instance) {
-                setTimeout(() => EditorManager.instance.layout(), 100);
-            }
+        let rafId = null;
+        const syncViewportWithKeyboard = () => {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                const vv = window.visualViewport;
+                document.documentElement.style.height = vv.height + 'px';
+                document.body.style.height = vv.height + 'px';
+                document.body.style.width = vv.width + 'px';
+
+                // 强制锁死底层视口偏移为 0，防止切换文章后首次点开 Gboard 把图层顶出黑色真空区
+                if (window.scrollY !== 0 || document.documentElement.scrollTop !== 0) {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                }
+
+                // 若当前有正在编辑的原生段落块，确保键盘弹起后光标所在的块平滑浮现到可视区上方
+                if (typeof EditorManager !== 'undefined' && EditorManager.activeBlock && EditorManager.hasFocus()) {
+                    EditorManager.activeBlock.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
         };
-        window.visualViewport.addEventListener('resize', resizeBodyToVisualViewport);
-        window.visualViewport.addEventListener('scroll', resizeBodyToVisualViewport);
-        resizeBodyToVisualViewport();
+        window.visualViewport.addEventListener('resize', syncViewportWithKeyboard);
+        window.visualViewport.addEventListener('scroll', syncViewportWithKeyboard);
+        syncViewportWithKeyboard();
     }
 
     if (typeof EditorManager !== 'undefined') {
-        EditorManager.onChange(() => {
-            if (!AppState.isDirty && AppState.currentFilePath) UI.setUnsaved();
-        });
-    }
+    EditorManager.onChange((latestContent) => {
+        if (!AppState.currentFilePath) return;
+        if (typeof SyncManager !== 'undefined') {
+            SyncManager.onLocalEdit(latestContent);
+        } else if (!AppState.isDirty) {
+            UI.setUnsaved();
+        }
+    });
+}
 
     document.getElementById('btn-save').addEventListener('click', saveCurrentFile);
+    document.getElementById('save-status')?.addEventListener('click', saveCurrentFile); // 🌟 放在这里！
+    document.getElementById('btn-settings').addEventListener('click', () => {
+        TokenModal.show();
+    });
     document.getElementById('btn-settings').addEventListener('click', () => {
         TokenModal.show();
     });
@@ -532,7 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🛡️ [Patch-1] PWA 幽灵缓存防御：开发环境自毁与物理隔离
     if ('serviceWorker' in navigator) {
-        // 精准侦测本地 Live Server 环境
         const isLocalhost = Boolean(
             window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1' ||
@@ -540,21 +557,18 @@ document.addEventListener('DOMContentLoaded', () => {
         );
 
         if (isLocalhost) {
-            // 🚨 开发模式：主动搜寻并狙击所有残留的幽灵 Service Worker
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 if (registrations.length > 0) {
                     for (let registration of registrations) {
                         registration.unregister();
                     }
                     console.warn('🚧 [Dev Mode] 已强制物理注销所有 PWA 幽灵缓存，确保代码 100% 实时生效！');
-                    // 强制清理完成后，建议刷新一次确保接管网络的是原生浏览器
                 }
             });
         } else {
-            // 🌐 生产环境：执行正常的 PWA 注册与幽灵缓存热重载防御
             navigator.serviceWorker.register('sw.js').then(reg => {
                 console.log('✅ PWA Service Worker 注册成功!', reg.scope);
-                reg.update(); // 每次启动强制对比字节码
+                reg.update();
                 reg.addEventListener('updatefound', () => {
                     const newWorker = reg.installing;
                     newWorker.addEventListener('statechange', () => {
