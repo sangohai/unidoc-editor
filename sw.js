@@ -1,5 +1,5 @@
 // sw.js - Service Worker (V2.3 Native Block & Keep Sync 网络优先策略)
-const CACHE_NAME = 'unidoc-cache-v2.3.4-native'; // 🌟 升级版本号，触发所有已安装 PWA 设备自动热重载
+const CACHE_NAME = 'unidoc-cache-v2.3.5-native'; // 🌟 升级版本号，触发所有已安装 PWA 设备自动热重载
 
 // 安装阶段：立刻接管
 self.addEventListener('install', (e) => {

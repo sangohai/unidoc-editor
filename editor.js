@@ -658,42 +658,42 @@ const EditorManager = {
         } else if (tag === 'figure') {
             el = document.createElement('figure');
             el.setAttribute('contenteditable', 'false');
-            el.setAttribute('data-image-tier', 'standard'); // 🌟 预留商业化画质标识 (standard / pro-original)
+            el.setAttribute('data-image-tier', 'standard');
             const img = document.createElement('img');
             const rawDataSrc = innerContent.dataSrc || innerContent.src || '';
             if (rawDataSrc) img.setAttribute('data-src', rawDataSrc);
             img.alt = innerContent.alt || '图片';
             img.className = 'img-fluid rounded shadow-sm';
 
-            // 🌟 跨端图片 100% 显影引擎：若另一台手机/PC 本地无缓存或相对路径 404，自动通过 GitHub API 带 Token 拉取真实图片数据
+            // 🌟 独立数据仓库直连图片引擎：直接从配置的 GitHub 数据仓库拉取 Base64 并缓存，无需等待相对路径 404！
             const cacheRef = (typeof ClipboardManager !== 'undefined') ? ClipboardManager.imageCache : {};
-            if (rawDataSrc && cacheRef[rawDataSrc]) {
+            const cleanRelPath = rawDataSrc.replace(/^notes\//, '');
+
+            if (cleanRelPath && cacheRef[cleanRelPath]) {
+                img.src = cacheRef[cleanRelPath];
+            } else if (rawDataSrc && cacheRef[rawDataSrc]) {
                 img.src = cacheRef[rawDataSrc];
-            } else {
-                img.src = innerContent.src || rawDataSrc;
-                img.onerror = async () => {
-                    img.onerror = null;
-                    if (!rawDataSrc || rawDataSrc.startsWith('data:')) return;
-                    const cleanRelPath = rawDataSrc.replace(/^notes\//, '');
-                    if (cacheRef[cleanRelPath]) {
-                        img.src = cacheRef[cleanRelPath];
-                        return;
-                    }
+            } else if (rawDataSrc.startsWith('data:') || rawDataSrc.startsWith('http')) {
+                img.src = rawDataSrc;
+            } else if (cleanRelPath.startsWith('images/')) {
+                // 先放一个极简透明占位，立即异步从独立数据仓库拉取真实图片
+                img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                (async () => {
                     try {
-                        const apiPath = cleanRelPath.startsWith('images/') ? `notes/${cleanRelPath}` : cleanRelPath;
-                        const data = await GitHubAPI._request(`/contents/${apiPath}?t=${Date.now()}`);
+                        const data = await GitHubAPI._request(`/contents/notes/${cleanRelPath}?t=${Date.now()}`);
                         if (data && data.content) {
                             const ext = cleanRelPath.split('.').pop().toLowerCase() || 'png';
                             const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : (ext === 'gif' ? 'image/gif' : (ext === 'webp' ? 'image/webp' : 'image/png'));
-                            const cleanBase64 = data.content.replace(/\s+/g, '');
-                            const fullDataUrl = `data:${mime};base64,${cleanBase64}`;
+                            const fullDataUrl = `data:${mime};base64,${data.content.replace(/\s+/g, '')}`;
                             cacheRef[cleanRelPath] = fullDataUrl;
                             img.src = fullDataUrl;
                         }
                     } catch (err) {
-                        console.warn('从 GitHub API 同步图片失败:', err.message);
+                        console.warn('从独立数据仓库加载图片失败:', err.message);
                     }
-                };
+                })();
+            } else {
+                img.src = innerContent.src || rawDataSrc;
             }
 
             const caption = document.createElement('figcaption');

@@ -401,13 +401,18 @@ const SyncManager = {
     },
 
     // ==========================================
-    // 🌟 核心 5：前台 10 秒智能心跳轮询 + 生命周期极速同步
+    // 🌟 核心 5：前台 10 秒智能心跳轮询 (同时自动同步【文档内容】与【左侧星标列表】！)
     // ==========================================
     _startSmartHeartbeat() {
         if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
-        // 每 10 秒钟：只要页面处于前台可见状态，且当前没有正在敲字，自动静默检查云端是否有其他设备的新增内容！
         this.heartbeatTimer = setInterval(() => {
             if (document.visibilityState === 'visible' && navigator.onLine && !this.isSyncing) {
+                // 1. 无论当前是否打开了文章，每 10 秒自动静默同步一次左侧星标置顶状态！
+                if (typeof FileTree !== 'undefined' && typeof FileTree.syncPinsFromCloudSilently === 'function') {
+                    FileTree.syncPinsFromCloudSilently();
+                }
+
+                // 2. 自动同步当前打开的文档内容
                 if (typeof AppState !== 'undefined' && AppState.currentFilePath) {
                     if (AppState.isDirty && (Date.now() - this.lastEditTime >= 3500)) {
                         this.syncToCloud(true);
@@ -475,7 +480,14 @@ const SyncManager = {
         if (!force && (now - this.lastWakeCheckTime < 5000)) return;
         this.lastWakeCheckTime = now;
 
-        if (typeof AppState === 'undefined' || !AppState.currentFilePath || this.isSyncing || !navigator.onLine) return;
+        if (this.isSyncing || !navigator.onLine) return;
+
+        // 🌟 唤醒或轻触屏幕时，立即顺手同步左侧星标列表！
+        if (typeof FileTree !== 'undefined' && typeof FileTree.syncPinsFromCloudSilently === 'function') {
+            FileTree.syncPinsFromCloudSilently();
+        }
+
+        if (typeof AppState === 'undefined' || !AppState.currentFilePath) return;
 
         const path = AppState.currentFilePath;
         const lang = typeof EditorManager !== 'undefined' ? EditorManager.currentLanguage : 'markdown';
