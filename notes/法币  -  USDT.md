@@ -1,8 +1,8 @@
 <h3 class="unidoc-block" data-block-id="b-mwxbss0k-rz5y" data-updated="1795683847124">法币  -  USDT</h3>
 
-<h2 class="unidoc-block" data-block-id="b-mwxbss0k-j1y1" data-updated="1795683852605">产品战略思考：打破法币与加密货币的边界，构建统一的价值交换网络（Universal Value Exchange）</h2>
+<h3 class="unidoc-block" data-block-id="b-mwxbss0k-j1y1" data-updated="1795683854770">产品战略思考：打破法币与加密货币的边界，构建统一的价值交换网络（Universal Value Exchange）</h3>
 
-<p class="unidoc-block" data-block-id="b-mwxbss0k-lkor" data-updated="1795683847124">一、真正要解决的问题</p>
+<p class="unidoc-block" data-block-id="b-mwxbss0k-lkor" data-updated="1795683870852">一、真正要解决的问题：</p>
 
 <p class="unidoc-block" data-block-id="b-mwxbss0k-ess5" data-updated="1795683847124">我的目标，并不是开发一个简单的 <strong>USDT 买卖工具</strong>，而是希望解决一个更大的问题：</p>
 
