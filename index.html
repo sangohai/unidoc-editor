@@ -34,8 +34,11 @@
                 <span id="save-status" class="text-white-50 me-2 me-md-3 small" style="cursor: pointer;" title="同步状态">
                     <i class="fa-solid fa-cloud me-1"></i><span class="d-none d-md-inline">已就绪</span>
                 </span>
-                <button id="btn-save" class="btn btn-sm btn-success me-2" title="立即保存至 GitHub (Ctrl+S / Cmd+S)">
-                    <i class="fa-solid fa-floppy-disk"></i><span class="d-none d-md-inline ms-1">保存</span>
+                <!-- 🌟 方案 A：合二为一的智能动态同步胶囊 (彻底消除手动保存焦虑) -->
+                <button id="btn-save" class="btn btn-sm rounded-pill px-2 px-md-3 me-2 d-flex align-items-center sync-pill-btn is-synced" title="自动同步已开启 (Ctrl+S 可强制立即同步)">
+                    <span id="save-status" class="small d-flex align-items-center">
+                        <i class="fa-solid fa-cloud-check me-1"></i><span>已自动同步</span>
+                    </span>
                 </button>
 
                 <!-- 导出与主题菜单 -->
@@ -118,6 +121,31 @@
 
     <!-- 🌟 工具栏隐藏零件仓库 -->
     <div id="toolbar-components-pool" class="d-none">
+        <!-- 原生多色荧光笔 <mark> 调色盘与自由颜色拾取器 -->
+        <div id="tool-mark" class="dropdown d-inline-block d-none">
+            <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" title="荧光笔高亮调色盘 <mark>">
+                <i class="fa-solid fa-highlighter text-warning"></i>
+            </button>
+            <div class="dropdown-menu p-2 shadow mobile-modal-dropdown" id="mark-color-panel" style="width: 230px; z-index: 1060;">
+                <div class="small text-body-secondary fw-bold mb-2 px-1"><i class="fa-solid fa-palette me-1"></i>荧光笔高亮 &lt;mark&gt;</div>
+                <div class="d-flex justify-content-between align-items-center gap-1 mb-2 px-1">
+                    <button type="button" class="mark-swatch-btn" data-color="#ffe58f" style="background:#ffe58f;" title="经典明黄"></button>
+                    <button type="button" class="mark-swatch-btn" data-color="#b7eb8f" style="background:#b7eb8f;" title="薄荷柔绿"></button>
+                    <button type="button" class="mark-swatch-btn" data-color="#91caff" style="background:#91caff;" title="天空浅蓝"></button>
+                    <button type="button" class="mark-swatch-btn" data-color="#ffadd2" style="background:#ffadd2;" title="珊瑚柔粉"></button>
+                    <button type="button" class="mark-swatch-btn" data-color="#d3adf7" style="background:#d3adf7;" title="薰衣草紫"></button>
+                </div>
+                <div class="d-flex align-items-center justify-content-between border-top pt-2 px-1 gap-2">
+                    <label class="small text-body-secondary mb-0 d-flex align-items-center" style="cursor:pointer;" title="调用系统原生调色盘">
+                        <input type="color" id="input-custom-mark-color" value="#ffd666" class="form-control form-control-color form-control-sm me-1 p-0 border-0" style="width:24px;height:24px;cursor:pointer;">
+                        <span>自由取色</span>
+                    </label>
+                    <button type="button" id="btn-clear-mark" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:12px;" title="移除选中文字的高亮">
+                        <i class="fa-solid fa-eraser me-1"></i>清除高亮
+                    </button>
+                </div>
+            </div>
+        </div>
         <div id="tool-emoji" class="dropdown d-inline-block d-none">
             <button class="btn btn-sm btn-outline-secondary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" title="插入表情"><i class="fa-regular fa-face-smile"></i></button>
             <div class="dropdown-menu p-2 shadow char-picker-panel mobile-modal-dropdown" id="emoji-panel" style="z-index: 1060;"></div>
@@ -150,7 +178,7 @@
             <button class="btn btn-sm btn-outline-primary border-0 py-0 px-2" type="button" data-bs-toggle="dropdown" title="自定义快捷词库"><i class="fa-solid fa-book-bookmark"></i></button>
             <ul class="dropdown-menu shadow-sm mobile-modal-dropdown" id="snippets-menu" style="font-size: 13px; max-height: 300px; overflow-y: auto; z-index: 1060;"></ul>
         </div>
-    </div>
+    </div> <!-- 🚨 就是这个闭合的 </div>！必须有它把 #toolbar-components-pool 关上，下面的弹窗才不会被隐藏！ -->
 
     <!-- 🌟 85% 占屏沉浸式阅读器 Msg-Box (PC与移动端统一极简控制栏) -->
     <div class="modal fade" id="readerModal" tabindex="-1">

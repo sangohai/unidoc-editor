@@ -494,27 +494,32 @@ const SyncManager = {
         const localRec = await this.getLocalRecord(path);
         await this._verifyWithRemoteInBackground(path, lang, localRec || { path, sha: AppState.currentFileSha, isDirty: false });
     },
-
+    // 🌟 方案 A：合体智能同步胶囊状态机 (平时低调无焦虑，打字时琥珀色可点击立即同步)
     _updateStatusUI(state) {
         const el = document.getElementById('save-status');
+        const btn = document.getElementById('btn-save');
         if (!el) return;
+
+        btn?.classList.remove('is-synced', 'is-dirty', 'is-syncing', 'is-offline');
 
         switch (state) {
             case 'LOCAL_SAVING':
-                el.innerHTML = '<i class="fa-solid fa-pen-nib me-1 text-warning"></i><span class="d-none d-md-inline text-warning">写入本地...</span>';
-                break;
             case 'LOCAL_SAVED':
-                el.innerHTML = '<i class="fa-solid fa-hard-drive me-1 text-warning"></i><span class="d-none d-md-inline text-warning">本地已存 (待同步)</span>';
+                btn?.classList.add('is-dirty');
+                el.innerHTML = '<i class="fa-solid fa-bolt me-1"></i><span>已存本地 · 点击同步</span>';
                 break;
             case 'OFFLINE_SAVED':
-                el.innerHTML = '<i class="fa-solid fa-cloud-bolt me-1 text-warning"></i><span class="d-none d-md-inline text-warning">离线已存本地</span>';
+                btn?.classList.add('is-offline');
+                el.innerHTML = '<i class="fa-solid fa-cloud-bolt me-1"></i><span>离线已存本地</span>';
                 break;
             case 'CLOUD_SYNCING':
-                el.innerHTML = '<i class="fa-solid fa-rotate fa-spin me-1 text-info"></i><span class="d-none d-md-inline text-info">云端同步中...</span>';
+                btn?.classList.add('is-syncing');
+                el.innerHTML = '<i class="fa-solid fa-rotate fa-spin me-1"></i><span>正在同步云端...</span>';
                 break;
             case 'CLOUD_SYNCED':
             default:
-                el.innerHTML = '<i class="fa-solid fa-cloud-check me-1 text-success"></i><span class="d-none d-md-inline text-success">云端已同步</span>';
+                btn?.classList.add('is-synced');
+                el.innerHTML = '<i class="fa-solid fa-cloud-check me-1"></i><span>已自动同步</span>';
                 break;
         }
     }

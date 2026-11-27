@@ -1,25 +1,23 @@
 # 🧠 UniDoc Editor 开发记忆胶囊 (Dev Memory Snapshot)
 
 ## 【当前版本号与阶段名称】
-- **Version**: `v2.3.3-gold-master` (V2 原生块级与 Keep 同步架构黄金正式版)
-- **Stage**: 全栈纯前端重构 100% 竣工锁死，准备推送 GitHub Pages 线上 PWA 生产环境
+- **Version**: `v2.4.6-ux-polished` (V2 持续打磨完全体)
+- **Stage**: 完成多色荧光笔调色盘、五级标题、智能同步胶囊、点击激活跟随菜单、强制顶部对齐、无效空块自动净化与 Mermaid 纵向结构显示优化
 
-## 【已竣工并永久锁死的核心模块清单（全量验证通过）】
-- [x] `index.html`: 响应式三栏独立滚动、85% 占屏三色沉浸阅读器 `#readerModal`（白/护眼淡黄/暗夜黑白字，防挤压正圆控制组与 `⚪+×` 按钮）、`interactive-widget=resizes-content` Android 键盘适配、挂载 `syncManager.js`。
-- [x] `editor.js`:
-  - `<article id="unidoc-canvas">` 原生 HTML 块级引擎（`<p>`, `<h1>~<h3>`, `<details><summary>`, `<figure><img><figcaption>`, `<blockquote>`, `<ul>/<ol>`, `<pre><code>`），历史纯 Markdown 文档无损自动升维。
-  - **120FPS 真机满速拖拽物理引擎**：右下角专属 `⠿` 锚点 (`#unidoc-corner-drag`)、0ms 凸起并将长块浓缩为 72px 名片、拖拽态解除 `scroll-behavior: smooth` 死锁、18px 指尖高敏连续换位、顶部/底部天地双锁防越界。
-  - **跨设备图片 100% 显影引擎**：`<figure>` 内置 `img.onerror` 自动回退机制，当相对路径 404 时自动通过 GitHub API 携带 Token 拉取 Base64 数据渲染并写入内存缓存。
-  - 段落内 1 次 `Enter` 精准换行、`Ctrl+Enter` 新建块、`lastSavedRange` 光标记忆锁、顶部胶囊 `[✂️ 向上/向下分割]` 与 `[🔗 向上/向下合并]` 子菜单。
-- [x] `syncManager.js`:
-  - Google Keep 级本地优先引擎：原生 IndexedDB (`UniDocKeepDB`) 250ms 本地秒存。
-  - 无感同步状态机：失焦 1 秒 / 停顿 3.5 秒 / 切后台 (`visibilitychange`) 自动静默推送 GitHub；前台 10 秒智能心跳 + 轻触唤醒自动拉取远端更新。
-  - 跨设备并发冲突基于 `data-block-id` 与 `data-updated` 块级时间戳无感自动合并。
-- [x] `clipboardManager.js`:
-  - 支持 `Ctrl+V` 剪贴板粘贴图片 + 点击工具栏 `[🖼️ 图片]` 唤起 PC 本地文件夹 / 手机本地相册。
-  - **原生 `<canvas>` 阶梯式强制图片压缩引擎**：默认长边限制 `1600px`、画质 `0.80` 阶梯压缩，强制将任意大图体积压至 `<= 2MB`（通常 200KB~400KB），预留 `isProUser` 商业化付费无损原图开关。
-- [x] `exportManager.js`:
-  - 修复 `URL.revokeObjectURL` 瞬时销毁导致的首次点击保存报错（改为 15 秒延迟安全释放）。
-  - 新增 `_getHydratedReadingHTML()`：导出独立 HTML 网页与打印 PDF 时自动内嵌画布已显影的 Base64 高清图片，并在所有 `<img>` 解码完成后精准唤起 `window.print()`。
-- [x] `sw.js`: 升级缓存标识为 `unidoc-cache-v2.3.0-native`，激活时自动销毁 V1 旧缓存，放行 `api.github.com` 确保实时同步心跳穿透。
-- [x] `main.js`, `style.css`, `connector.js`, `toolbarManager.js`, `charPicker.js`, `fileTree.js`, `api.js`: 全部协同锁死。
+## 【本轮 (v2.4.0 -> v2.4.6) 新增并锁死的核心特性】
+1. **方案 A 智能同步状态胶囊 (`index.html` & `syncManager.js` & `style.css`)**：
+   - 合并 `#save-status` 与 `#btn-save` 为单一圆角动态胶囊（`.sync-pill-btn`），平时低调显示 `已自动同步`，有未同步修改时变为醒目琥珀色 `已存本地 · 点击同步`。
+2. **原生多色荧光笔 `<mark>` 调色盘 (`index.html` & `toolbarManager.js` & `editor.js`)**：
+   - 零外部库依赖，在 `#toolbar-components-pool` 新增 `#tool-mark` 下拉面板，内置 5 种护眼高光色卡、原生 `<input type="color">` 自由拾取器及“清除高亮”按钮；支持光标停留在已有 `<mark>` 内直接实时换色。
+3. **跟随菜单防打扰机制 (`editor.js`)**：
+   - 移除 `pointerover` 鼠标滑过频繁弹窗逻辑；仅当用户点击/聚焦某个 Block 进入内容编辑态时才显示顶部跟随胶囊与右下角 `⠿` 拖拽锚点，点击画布空白处或按 `Esc` 即刻隐去。
+4. **打开文章 100% 强制归顶 + 历史空块/空行净水器 (`editor.js`)**：
+   - `setContent()` 首尾双重锁定 `this.container.scrollTop = 0`，根除短文章从底部显示及顶部幽灵空白块问题。
+   - 新增 `_isNodeEffectivelyEmpty()` 与 `_cleanBlockInnerHtml()`，自动过滤历史文档与网页摘录中的无效幽灵空块（如 `<p><br></p>`, `<p>&nbsp;</p>`）并收敛连续空行。
+5. **五级标题 (`<h1>`~`<h5>`) 与 Mermaid / 代码块纵向无损结构 (`editor.js` & `style.css`)**：
+   - 跟随菜单、分割判定与 `#` 快捷触发词全面扩展至 `<h1>` ~ `<h5>`。
+   - `<pre><code>` 改用 `<br>` 转 `\n` + `textContent` 提取，配合 `white-space: pre-wrap` 保持从上到下的自然纵向结构，方便直接提取纯文本喂给 LLM。
+
+## 【全项目已竣工并锁死的文件清单】
+- [x] `index.html`, `style.css`, `main.js`, `editor.js`, `syncManager.js`, `settingsManager.js`, `fileTree.js`, `toolbarManager.js`, `clipboardManager.js`, `exportManager.js`, `charPicker.js`, `connector.js`, `api.js`, `sw.js` (`unidoc-cache-v2.4.6-native`)
+- [x] `doc/blueprint.md`, `doc/dev-memory.md`

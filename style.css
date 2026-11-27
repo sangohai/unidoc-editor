@@ -514,3 +514,72 @@ figure.unidoc-block figcaption {
 .unidoc-canvas.canvas-is-dragging {
     overflow-anchor: none !important;
 }
+
+/* ================= v2.4.5 智能同步胶囊、多彩荧光笔色卡与 Mermaid 防挤压补丁 ================= */
+/* 1. 方案 A：顶栏合体智能动态同步胶囊 */
+.sync-pill-btn {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    transition: all 0.2s ease;
+}
+.sync-pill-btn.is-synced {
+    border-color: rgba(25, 135, 84, 0.45);
+    background-color: rgba(25, 135, 84, 0.18);
+    color: #75b798 !important;
+}
+.sync-pill-btn.is-dirty {
+    border-color: #ffc107;
+    background-color: #ffc107;
+    color: #212529 !important;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+.sync-pill-btn.is-syncing {
+    border-color: #0dcaf0;
+    background-color: rgba(13, 202, 240, 0.2);
+    color: #0dcaf0 !important;
+}
+.sync-pill-btn.is-offline {
+    border-color: #fd7e14;
+    background-color: rgba(253, 126, 20, 0.2);
+    color: #fd7e14 !important;
+}
+
+/* 2. 原生荧光笔 <mark> 调色盘圆形色卡 */
+.mark-swatch-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.mark-swatch-btn:hover {
+    transform: scale(1.18);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* 3. Mermaid 源码块与 <pre><code> 从上到下自然纵向结构 (保留全部换行与缩进，取消横向滚动条) */
+pre.unidoc-block,
+.unidoc-canvas pre,
+.unidoc-reader-article pre {
+    overflow-x: hidden !important;
+    white-space: pre-wrap !important;       /* 🌟 100% 保留从上到下的换行与空格结构，超宽自动向下折行 */
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    background-color: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    padding: 14px 16px !important;
+}
+pre.unidoc-block > code,
+.unidoc-canvas pre > code,
+.unidoc-reader-article pre > code {
+    display: block;
+    width: 100%;
+    white-space: pre-wrap !important;       /* 🌟 从上到下完整显示原来的多行结构 */
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9em;
+    line-height: 1.65;
+}

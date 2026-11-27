@@ -708,7 +708,7 @@ const EditorManager = {
             el = document.createElement('pre');
             const code = document.createElement('code');
             code.setAttribute('contenteditable', String(!this.isReadOnly));
-            code.innerText = typeof innerContent === 'string' ? innerContent : '';
+            code.textContent = typeof innerContent === 'string' ? innerContent : '';
             el.appendChild(code);
         } else if (tag === 'ul' || tag === 'ol') {
             el = document.createElement(tag);
@@ -829,7 +829,14 @@ const EditorManager = {
     // ==========================================
     // 画布事件流绑定 (Enter 回归自然块内换行，Ctrl+Enter 新建块)
     // ==========================================
+    hideBlockControls() {
+        this.blockToolbar?.classList.add('d-none');
+        this.cornerDragHandle?.classList.add('d-none');
+        this.canvas?.querySelectorAll('.unidoc-block.active-block').forEach(el => el.classList.remove('active-block'));
+    },
+
     _bindCanvasEvents() {
+        // 🌟 1. 仅当用户真正点击或聚焦某个块进行内容编辑时，才唤起跟随菜单与右下角拖拽锚点（滑动浏览时 0 打扰！）
         this.canvas.addEventListener('focusin', (e) => {
             const block = e.target.closest('.unidoc-block');
             if (block && !this.isPointerDragging) {
@@ -838,14 +845,35 @@ const EditorManager = {
             }
         });
 
-        // 🌟 PC 端鼠标滑过任意块（或手机轻触任意块）即刻吸附显示右下角 ⠿ 拖拽锚点
-        this.canvas.addEventListener('pointerover', (e) => {
-            if (this.isPointerDragging || this.isReadOnly || this.currentLanguage !== 'markdown') return;
+        this.canvas.addEventListener('mouseup', () => this._saveCurrentRange());
+        this.canvas.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                this.hideBlockControls();
+                if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+            this._saveCurrentRange();
+        });
+
+        this.canvas.addEventListener('click', (e) => {
             const block = e.target.closest('.unidoc-block');
-            if (block && !this.hasFocus()) {
+            if (block) {
                 this._updatePillPosition(block);
+                this._saveCurrentRange();
+            } else if (e.target === this.canvas) {
+                // 点击画布空白边距时，主动收起跟随菜单，回归纯净阅读视野
+                this.hideBlockControls();
             }
         });
+
+        // 容器滚动时，若当前正在编辑某块，让跟随胶囊与该块保持位置同步
+        this.container.addEventListener('scroll', () => {
+            if (this.activeBlock && !this.isPointerDragging && !this.blockToolbar?.classList.contains('d-none')) {
+                this._updatePillPosition(this.activeBlock);
+            }
+        }, { passive: true });
 
         this.canvas.addEventListener('input', () => {
             this._saveCurrentRange();
@@ -883,7 +911,7 @@ const EditorManager = {
                 return;
             }
 
-            // 普通 Enter 键：在段落 <p> / <blockquote> 内直接自然换行 (<br>)，不再强行拆碎段落
+            // 普通 Enter 键：在段落 <p> / <blockquote> 内直接自然换行 (<br>)
             if (e.key === 'Enter' && !e.shiftKey) {
                 if (tag === 'details' && e.target.tagName.toLowerCase() === 'summary') {
                     e.preventDefault();
@@ -907,7 +935,6 @@ const EditorManager = {
                         const range = sel.getRangeAt(0);
                         range.deleteContents();
 
-                        // 🌟 检测光标是否处于当前段落的“视觉最末尾”（忽略空白幽灵文本节点）
                         const tailCheckRange = document.createRange();
                         tailCheckRange.setStart(range.endContainer, range.endOffset);
                         tailCheckRange.setEndAfter(block.lastChild || block);
@@ -917,7 +944,6 @@ const EditorManager = {
                         const br = document.createElement('br');
                         range.insertNode(br);
 
-                        // 如果是在段落最末尾按回车，且后面没有垫底 <br>，立即补一个垫底 <br> 撑开新行，确保按 1 次回车即刻换行！
                         if (!hasVisibleTail) {
                             const extraBr = document.createElement('br');
                             br.after(extraBr);
@@ -955,47 +981,45 @@ const EditorManager = {
                 else if (text === '>>>') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'details'); }
             }
         });
-
-        this.canvas.addEventListener('dragstart', (e) => {
-            const block = e.target.closest('.unidoc-block');
-            if (!block || this.isReadOnly) return;
-            this.draggedBlock = block;
-            block.classList.add('dragging-block');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-
-        this.canvas.addEventListener('dragover', (e) => {
-            if (!this.draggedBlock) return;
-            e.preventDefault();
-            const targetBlock = e.target.closest('.unidoc-block');
-            if (!targetBlock || targetBlock === this.draggedBlock) return;
-
-            const rect = targetBlock.getBoundingClientRect();
-            const isAfter = (e.clientY - rect.top) > (rect.height / 2);
-            if (isAfter) targetBlock.after(this.draggedBlock);
-            else targetBlock.before(this.draggedBlock);
-        });
-
-        this.canvas.addEventListener('dragend', () => {
-            if (this.draggedBlock) {
-                this.draggedBlock.classList.remove('dragging-block');
-                this.draggedBlock.removeAttribute('draggable');
-                this._updatePillPosition(this.draggedBlock);
-                this.draggedBlock = null;
-                this._triggerChange();
-            }
-        });
     },
 
     // ==========================================
     // 内容解析与序列化
     // ==========================================
+    _isNodeEffectivelyEmpty(node) {
+        if (!node) return true;
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent.replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '') === '';
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return true;
+        const tag = node.tagName.toLowerCase();
+        if (tag === 'img' || tag === 'figure' || tag === 'hr' || tag === 'iframe') return false;
+        if (node.querySelector && node.querySelector('img, svg, video, iframe')) return false;
+        const pureText = (node.textContent || '').replace(/[\u200B-\u200D\uFEFF\u00A0\s]/g, '');
+        return pureText.length === 0;
+    },
+
+    // 清理块内部首尾多余的 <br> 以及连续超过 2 个以上的冗余空行
+    _cleanBlockInnerHtml(htmlStr) {
+        if (typeof htmlStr !== 'string') return '';
+        return htmlStr
+            .replace(/[\u200B-\u200D\uFEFF]/g, '')
+            .replace(/^(?:\s|&nbsp;|<br\s*\/?>)+/i, '')
+            .replace(/(?:\s|&nbsp;|<br\s*\/?>)+$/i, '')
+            .replace(/(?:<br\s*\/?>\s*){3,}/gi, '<br><br>');
+    },
+
     setContent(content, lang = 'markdown') {
         if (!this.canvas) return;
         this.setLanguage(lang);
         this.canvas.innerHTML = '';
-        this.blockToolbar?.classList.add('d-none');
+        this.hideBlockControls();
         this.lastSavedRange = null;
+        this.activeBlock = null;
+
+        // 🌟 核心修复 1：打开或切换文章时，立即重置滚动容器与画布到最顶部 (0, 0)，彻底根除短文章从底部显示、顶部出现巨大空白块的 Bug！
+        if (this.container) this.container.scrollTop = 0;
+        this.canvas.scrollTop = 0;
 
         const raw = (content || '').trim();
 
@@ -1004,6 +1028,7 @@ const EditorManager = {
             this.canvas.appendChild(codeBlock);
             this._resetHistory();
             this.handlePreviewLayout(lang);
+            if (this.container) this.container.scrollTop = 0;
             return;
         }
 
@@ -1011,6 +1036,7 @@ const EditorManager = {
             this.canvas.appendChild(this.createBlockElement('p', ''));
             this._resetHistory();
             this.handlePreviewLayout(lang);
+            if (this.container) this.container.scrollTop = 0;
             return;
         }
 
@@ -1024,10 +1050,11 @@ const EditorManager = {
         tempDiv.innerHTML = htmlToParse;
 
         Array.from(tempDiv.childNodes).forEach(node => {
+            // 🌟 核心修复 2：自动跳过所有无效的空文本节点与幽灵空块（如 <p></p>, <p><br></p>, <p>&nbsp;</p>）
+            if (this._isNodeEffectivelyEmpty(node)) return;
+
             if (node.nodeType === Node.TEXT_NODE) {
-                if (node.textContent.trim()) {
-                    this.canvas.appendChild(this.createBlockElement('p', node.textContent));
-                }
+                this.canvas.appendChild(this.createBlockElement('p', node.textContent.trim()));
                 return;
             }
             if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -1072,18 +1099,25 @@ const EditorManager = {
                     bodyHTML = clone.innerHTML;
                 }
                 const detBlock = this.createBlockElement('details', {
-                    summary: sumEl ? sumEl.innerHTML : '折叠标题',
-                    body: bodyHTML || '<p>折叠内容...</p>'
+                    summary: sumEl ? this._cleanBlockInnerHtml(sumEl.innerHTML) : '折叠标题',
+                    body: this._cleanBlockInnerHtml(bodyHTML) || '<p>折叠内容...</p>'
                 }, existingId, existingUpdated);
                 if (!node.hasAttribute('open')) detBlock.removeAttribute('open');
                 this.canvas.appendChild(detBlock);
             } else if (tag === 'pre') {
-                const codeText = node.innerText;
+                node.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+                const codeText = (node.textContent || '').replace(/\r\n/g, '\n').replace(/^\n+|\n+$/g, '');
                 this.canvas.appendChild(this.createBlockElement('pre', codeText, existingId, existingUpdated));
             } else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'blockquote', 'ul', 'ol'].includes(tag)) {
-                this.canvas.appendChild(this.createBlockElement(tag, node.innerHTML, existingId, existingUpdated));
+                const cleanedInner = (tag === 'ul' || tag === 'ol') ? node.innerHTML : this._cleanBlockInnerHtml(node.innerHTML);
+                if (cleanedInner) {
+                    this.canvas.appendChild(this.createBlockElement(tag, cleanedInner, existingId, existingUpdated));
+                }
             } else {
-                this.canvas.appendChild(this.createBlockElement('p', node.innerHTML, existingId, existingUpdated));
+                const cleanedInner = this._cleanBlockInnerHtml(node.innerHTML);
+                if (cleanedInner) {
+                    this.canvas.appendChild(this.createBlockElement('p', cleanedInner, existingId, existingUpdated));
+                }
             }
         });
 
@@ -1093,6 +1127,11 @@ const EditorManager = {
 
         this._resetHistory();
         this.handlePreviewLayout(lang);
+
+        // 渲染完毕后的下一帧再次确保滚动条 100% 锁定在最顶端 (0, 0)
+        requestAnimationFrame(() => {
+            if (this.container) this.container.scrollTop = 0;
+        });
     },
 
     getContent() {
@@ -1178,88 +1217,71 @@ const EditorManager = {
     // ==========================================
     // 总线指令响应接口 (Connector Actions)
     // ==========================================
-    applyMarkdownFormat(formatType) {
+    applyHighlightColor(color = '#ffe58f') {
         if (this.isReadOnly) return;
-
-        if (['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'blockquote'].includes(formatType)) {
-            const targetBlock = this.activeBlock || this.canvas.lastElementChild;
-            if (targetBlock) {
-                const currentTag = targetBlock.tagName.toLowerCase();
-                this.convertBlockTag(targetBlock, currentTag === formatType ? 'p' : formatType);
-            }
-            return;
-        }
-
-        if (formatType === 'details') {
-            const newDetails = this.createBlockElement('details', {
-                summary: '点击展开/折叠标题',
-                body: '<p>在此输入折叠收纳内容...</p>'
-            });
-            if (this.activeBlock) this.activeBlock.after(newDetails);
-            else this.canvas.appendChild(newDetails);
-            this._focusBlock(newDetails, false);
-            this._triggerChange();
-            return;
-        }
-
-        if (formatType === 'image') {
-            if (typeof ClipboardManager !== 'undefined' && typeof ClipboardManager.openLocalImagePicker === 'function') {
-                ClipboardManager.openLocalImagePicker();
-            }
-            return;
-        }
-
         this._restoreSavedRange();
+
         const selection = window.getSelection();
-        if (!selection || selection.rangeCount === 0) return;
+        if (!selection || selection.rangeCount === 0) {
+            return Toast.show('请先涂黑选中要高亮的文字', 'info');
+        }
         const range = selection.getRangeAt(0);
         if (!this.canvas.contains(range.commonAncestorContainer)) return;
 
-        const selectedText = range.toString();
+        // 情况 A：用户点击了“清除高亮” (color === null)
+        if (!color) {
+            const parentMark = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+                ? range.commonAncestorContainer.closest('mark')
+                : range.commonAncestorContainer.parentElement?.closest('mark');
 
-        if (formatType === 'code' && (selectedText.includes('\n') || !selectedText)) {
-            const codeBlock = this.createBlockElement('pre', selectedText || '// 在此输入代码');
-            if (this.activeBlock) this.activeBlock.after(codeBlock);
-            else this.canvas.appendChild(codeBlock);
-            this._focusBlock(codeBlock, false);
+            if (parentMark && this.canvas.contains(parentMark)) {
+                const textNode = document.createTextNode(parentMark.textContent);
+                parentMark.replaceWith(textNode);
+                this._triggerChange();
+                Toast.show('🧹 已清除该处高亮', 'info');
+            } else {
+                // 若选中区域内部包含多个 <mark>，批量剥离
+                const fragment = range.extractContents();
+                const tempDiv = document.createElement('div');
+                tempDiv.appendChild(fragment);
+                tempDiv.querySelectorAll('mark').forEach(m => {
+                    m.replaceWith(document.createTextNode(m.textContent));
+                });
+                const cleanFrag = document.createDocumentFragment();
+                while (tempDiv.firstChild) cleanFrag.appendChild(tempDiv.firstChild);
+                range.insertNode(cleanFrag);
+                this._triggerChange();
+                Toast.show('🧹 已清除选中区域的高亮', 'info');
+            }
+            return;
+        }
+
+        // 情况 B：如果当前光标已经在一个 <mark> 标签内部，直接实时更换它的背景颜色！
+        const existingMark = range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+            ? range.commonAncestorContainer.closest('mark')
+            : range.commonAncestorContainer.parentElement?.closest('mark');
+
+        if (existingMark && this.canvas.contains(existingMark) && (range.collapsed || existingMark.textContent === range.toString())) {
+            existingMark.style.backgroundColor = color;
+            existingMark.style.color = '#121212';
+            this._saveCurrentRange();
             this._triggerChange();
             return;
         }
 
-        let wrapperEl;
-        switch (formatType) {
-            case 'bold':
-                wrapperEl = document.createElement('strong');
-                wrapperEl.textContent = selectedText || '加粗文字';
-                break;
-            case 'italic':
-                wrapperEl = document.createElement('em');
-                wrapperEl.textContent = selectedText || '斜体文字';
-                break;
-            case 'mark':
-                wrapperEl = document.createElement('mark');
-                wrapperEl.textContent = selectedText || '高亮重点';
-                break;
-            case 'code':
-                wrapperEl = document.createElement('code');
-                wrapperEl.textContent = selectedText || 'code';
-                break;
-            case 'link': {
-                const href = prompt('请输入链接 URL:', 'https://');
-                if (!href) return;
-                wrapperEl = document.createElement('a');
-                wrapperEl.href = href;
-                wrapperEl.target = '_blank';
-                wrapperEl.textContent = selectedText || href;
-                break;
-            }
-            default:
-                return;
+        const selectedText = range.toString();
+        if (!selectedText) {
+            return Toast.show('请先选中需要涂上荧光笔的文字', 'info');
         }
 
+        const markEl = document.createElement('mark');
+        markEl.style.backgroundColor = color;
+        markEl.style.color = '#121212';
+        markEl.textContent = selectedText;
+
         range.deleteContents();
-        range.insertNode(wrapperEl);
-        range.selectNodeContents(wrapperEl);
+        range.insertNode(markEl);
+        range.selectNodeContents(markEl);
         selection.removeAllRanges();
         selection.addRange(range);
         this._saveCurrentRange();
@@ -1347,14 +1369,23 @@ const EditorManager = {
 
     sanitizeFormat() {
         if (!this.canvas || this.isReadOnly) return;
-        const cleanStr = (str) => str.replace(/\t/g, '    ').replace(/[\u200B-\u200D\uFEFF\u202A-\u202E]/g, '').replace(/[ \t]+$/gm, '');
-        this.canvas.querySelectorAll('.unidoc-block').forEach(b => {
-            if (b.tagName.toLowerCase() !== 'figure') {
-                b.innerHTML = cleanStr(b.innerHTML);
+        const blocks = Array.from(this.canvas.querySelectorAll('.unidoc-block'));
+        let removedCount = 0;
+
+        blocks.forEach(b => {
+            const tag = b.tagName.toLowerCase();
+            if (tag === 'figure') return;
+            if (this._isNodeEffectivelyEmpty(b) && this.canvas.children.length > 1) {
+                b.remove();
+                removedCount++;
+            } else if (tag !== 'pre') {
+                b.innerHTML = this._cleanBlockInnerHtml(b.innerHTML);
             }
         });
+
+        this.hideBlockControls();
         this._triggerChange();
-        Toast.show('🧼 全文隐形字符与冗余格式水洗完成！', 'success');
+        Toast.show(`🧼 格式水洗完成！(已清除隐形字符与 ${removedCount} 个无效空块)`, 'success');
     },
 
     optimizePrompt() {

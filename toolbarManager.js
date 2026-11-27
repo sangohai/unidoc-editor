@@ -1,35 +1,33 @@
-// toolbarManager.js - 数据驱动的工具栏装配流水线 (v2.1.5 职责分离去重版)
+// toolbarManager.js - 数据驱动的工具栏装配流水线 (v2.4.5 原生多色荧光笔调色盘版)
 const ToolbarManager = {
     container: null,
     currentLayout: [],
     
-    // 🌟 职责分离：顶部工具栏仅保留“全局动作”与“行内(Inline)修饰”，块级(Block)转换与代码排版全部交由段落跟随胶囊掌管！
     registry: {
         'UNDO': { icon: 'fa-rotate-left', title: '撤销 (Ctrl+Z)', showIn: ['all'] },
         'REDO': { icon: 'fa-rotate-right', title: '重做 (Ctrl+Y)', showIn: ['all'] },
         'FORMAT_BOLD': { icon: 'fa-bold', title: '加粗选中文字 <strong>', showIn: ['markdown'] },
         'FORMAT_ITALIC': { icon: 'fa-italic', title: '斜体选中文字 <em>', showIn: ['markdown'] },
-        'FORMAT_MARK': { icon: 'fa-highlighter', color: 'text-warning', title: '荧光笔高亮选中文字 <mark>', showIn: ['markdown'] },
         'FORMAT_LINK': { icon: 'fa-link', title: '插入超链接 <a>', showIn: ['markdown'] },
         'FORMAT_IMAGE': { icon: 'fa-regular fa-image', title: '插入图片 <figure>', showIn: ['markdown'] },
         'FOLD_ALL': { icon: 'fa-compress', color: 'text-primary', title: '折叠全部 <details>', showIn: ['markdown'] },
         'UNFOLD_ALL': { icon: 'fa-expand', color: 'text-primary', title: '展开全部 <details>', showIn: ['markdown'] },
         'FORMAT_DOCUMENT': { icon: 'fa-wand-magic-sparkles', title: '原生排版', text: '原生排版', showIn: ['json', 'yaml'] },
         'SELECT_ALL': { icon: 'fa-object-group', title: '全选', showIn: ['all'] },
-        'SANITIZE_FORMAT': { icon: 'fa-eraser', title: '清洗冗余格式', showIn: ['all'] },
+        'SANITIZE_FORMAT': { icon: 'fa-eraser', title: '清洗无效空行与冗余格式', showIn: ['all'] },
         'GARBAGE_COLLECT': { icon: 'fa-recycle', color: 'text-danger', title: '清理无用图片', showIn: ['all'] },
         'VIEW_CLIPBOARD': { icon: 'fa-clipboard-check', color: 'text-info', title: '查看剪贴板', showIn: ['all'] },
         'COMMAND_PALETTE': { icon: 'fa-bolt', color: 'text-warning', title: '命令控制台', showIn: ['all'] }
     },
 
     complexComponents: {
+        'FORMAT_MARK': { id: 'tool-mark', icon: 'fa-highlighter', color: 'text-warning', title: '多彩荧光笔 <mark>', showIn: ['markdown'] },
         'EMOJI': { id: 'tool-emoji', icon: 'fa-face-smile', title: '表情面板', showIn: ['markdown'] },
         'SYMBOL': { id: 'tool-symbol', textIcon: 'Ω', title: '特殊符号', showIn: ['markdown'] },
         'TYPOGRAPHY': { id: 'tool-typography', icon: 'fa-text-height', title: '阅读排版设置', showIn: ['all'] },
         'SNIPPETS': { id: 'tool-snippets', icon: 'fa-book-bookmark', title: '自定义词库', showIn: ['all'] }
     },
 
-    // 统一清洗并过滤与跟随胶囊重复的块级工具
     _sanitizeLayout(layoutArray) {
         const deprecatedBlockTools = ['FORMAT_H1', 'FORMAT_H2', 'FORMAT_H3', 'FORMAT_DETAILS', 'FORMAT_BLOCKQUOTE', 'FORMAT_CODE'];
         let cleaned = Array.isArray(layoutArray)
@@ -48,10 +46,11 @@ const ToolbarManager = {
         this.container = document.getElementById('editor-toolbar-content');
         this.currentLayout = this._sanitizeLayout(layoutArray);
 
-        // 同步修正 SettingsManager 内存中的配置，防止旧云端配置反弹
         if (typeof SettingsManager !== 'undefined' && SettingsManager.data) {
             SettingsManager.data.toolbarLayout = [...this.currentLayout];
         }
+
+        this._bindMarkColorPickerEvents();
         
         const btnSave = document.getElementById('btn-save-toolbar');
         if (btnSave) {
@@ -74,6 +73,47 @@ const ToolbarManager = {
             };
         }
         this.render(typeof EditorManager !== 'undefined' ? EditorManager.currentLanguage : 'markdown'); 
+    },
+
+    // 🌟 绑定原生多色荧光笔面板事件 (防失焦保护)
+    _bindMarkColorPickerEvents() {
+        const panel = document.getElementById('mark-color-panel');
+        if (!panel || panel.dataset.bound === 'true') return;
+        panel.dataset.bound = 'true';
+
+        panel.addEventListener('mousedown', (e) => {
+            if (e.target.tagName.toLowerCase() !== 'input') {
+                e.preventDefault();
+            }
+        });
+
+        // 5 种预设护眼色卡点击即涂
+        panel.querySelectorAll('.mark-swatch-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const color = btn.dataset.color;
+                if (typeof EditorManager !== 'undefined' && typeof EditorManager.applyHighlightColor === 'function') {
+                    EditorManager.applyHighlightColor(color);
+                }
+            });
+        });
+
+        // 原生 <input type="color"> 自由拾取颜色
+        const customInput = document.getElementById('input-custom-mark-color');
+        customInput?.addEventListener('input', (e) => {
+            const color = e.target.value;
+            if (typeof EditorManager !== 'undefined' && typeof EditorManager.applyHighlightColor === 'function') {
+                EditorManager.applyHighlightColor(color);
+            }
+        });
+
+        // 一键清除高亮 <mark>
+        document.getElementById('btn-clear-mark')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (typeof EditorManager !== 'undefined' && typeof EditorManager.applyHighlightColor === 'function') {
+                EditorManager.applyHighlightColor(null);
+            }
+        });
     },
 
     updateForLanguage(lang) {
