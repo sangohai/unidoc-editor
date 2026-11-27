@@ -123,6 +123,8 @@ const EditorManager = {
                     <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="h1"><i class="fa-solid fa-heading me-2 text-primary"></i>一级标题 &lt;h1&gt;</a></li>
                     <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="h2"><i class="fa-solid fa-heading me-2 text-info"></i>二级标题 &lt;h2&gt;</a></li>
                     <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="h3"><i class="fa-solid fa-heading me-2 text-success"></i>三级标题 &lt;h3&gt;</a></li>
+                    <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="h4"><i class="fa-solid fa-heading me-2 text-warning"></i>四级标题 &lt;h4&gt;</a></li>
+                    <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="h5"><i class="fa-solid fa-heading me-2 text-secondary"></i>五级标题 &lt;h5&gt;</a></li>
                     <li><hr class="dropdown-divider my-1"></li>
                     <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="details"><i class="fa-solid fa-caret-right me-2 text-warning"></i>折叠收纳 &lt;details&gt;</a></li>
                     <li><a class="dropdown-item rounded py-1" href="#" data-convert-tag="blockquote"><i class="fa-solid fa-quote-left me-2 text-muted"></i>灵感引用 &lt;blockquote&gt;</a></li>
@@ -508,7 +510,7 @@ const EditorManager = {
         const block = this.activeBlock;
         if (!block || this.isReadOnly) return;
         const tag = block.tagName.toLowerCase();
-        if (!['p', 'h1', 'h2', 'h3', 'blockquote'].includes(tag)) {
+        if (!['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'blockquote'].includes(tag)) {
             return Toast.show('当前块类型不支持直接切分，请先转为普通段落 <p>', 'info');
         }
 
@@ -718,7 +720,7 @@ const EditorManager = {
                 el.innerHTML = lines.length ? lines.map(l => `<li>${l}</li>`).join('') : '<li>列表项</li>';
             }
         } else {
-            const validTags = ['p', 'h1', 'h2', 'h3', 'blockquote'];
+            const validTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'blockquote'];
             const finalTag = validTags.includes(tag) ? tag : 'p';
             el = document.createElement(finalTag);
             el.setAttribute('contenteditable', String(!this.isReadOnly));
@@ -890,7 +892,7 @@ const EditorManager = {
                     if (body) body.focus();
                     return;
                 }
-                if (['h1', 'h2', 'h3'].includes(tag)) {
+                if (['h1', 'h2', 'h3', 'h4', 'h5'].includes(tag)) {
                     e.preventDefault();
                     const newP = this.createBlockElement('p', '');
                     block.after(newP);
@@ -947,6 +949,8 @@ const EditorManager = {
                 if (text === '#') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'h1'); }
                 else if (text === '##') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'h2'); }
                 else if (text === '###') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'h3'); }
+                else if (text === '####') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'h4'); }
+                else if (text === '#####') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'h5'); }
                 else if (text === '>') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'blockquote'); }
                 else if (text === '>>>') { e.preventDefault(); block.innerHTML = ''; this.convertBlockTag(block, 'details'); }
             }
@@ -1076,7 +1080,7 @@ const EditorManager = {
             } else if (tag === 'pre') {
                 const codeText = node.innerText;
                 this.canvas.appendChild(this.createBlockElement('pre', codeText, existingId, existingUpdated));
-            } else if (['p', 'h1', 'h2', 'h3', 'blockquote', 'ul', 'ol'].includes(tag)) {
+            } else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'blockquote', 'ul', 'ol'].includes(tag)) {
                 this.canvas.appendChild(this.createBlockElement(tag, node.innerHTML, existingId, existingUpdated));
             } else {
                 this.canvas.appendChild(this.createBlockElement('p', node.innerHTML, existingId, existingUpdated));
@@ -1177,7 +1181,7 @@ const EditorManager = {
     applyMarkdownFormat(formatType) {
         if (this.isReadOnly) return;
 
-        if (['h1', 'h2', 'h3', 'p', 'blockquote'].includes(formatType)) {
+        if (['h1', 'h2', 'h3', 'h4', 'h5', 'p', 'blockquote'].includes(formatType)) {
             const targetBlock = this.activeBlock || this.canvas.lastElementChild;
             if (targetBlock) {
                 const currentTag = targetBlock.tagName.toLowerCase();
